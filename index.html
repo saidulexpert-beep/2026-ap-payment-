@@ -188,10 +188,6 @@
     </div>
 
 <script>
-    // Configuration
-    const API_KEY = 'K2fcHX0LFHjCdVHzPAleKMBWYAdOsh9l4LdIyGp8CDmfqZZKzP';
-    const BASE_API_URL = 'https://client-pg.daweblab.com/api/payment';
-
     const firebaseConfig = {
       apiKey: "AIzaSyAEV4zkuTcRYIFP2AMmKJTyDUTzSYLnbbM",
       authDomain: "used-mail-shop.firebaseapp.com",
@@ -263,7 +259,7 @@
         });
     }
 
-    // সরাসরি ব্রাউজার থেকে API-তে পেমেন্ট তৈরির রিকোয়েস্ট
+    // Vercel Serverless API-এর মাধ্যমে পেমেন্ট তৈরি
     async function initiatePayment() {
         if (!currentUser) return showToastPopup('প্রথমে লগইন করুন');
         const amount = document.getElementById('amountInput').value.trim();
@@ -286,10 +282,9 @@
         };
 
         try {
-            const res = await fetch(`${BASE_API_URL}/create`, {
+            const res = await fetch('/api/payment?action=create', {
                 method: 'POST',
                 headers: {
-                    'API-KEY': API_KEY,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
@@ -306,13 +301,13 @@
                 btn.innerHTML = '<i class="fa-solid fa-lock" style="color: #facc15;"></i> Continue to Payment';
             }
         } catch (err) {
-            showToastPopup('CORS বা নেটওয়ার্ক ত্রুটির কারণে রিকোয়েস্ট ব্যর্থ হয়েছে');
+            showToastPopup('সার্ভার কানেকশন ব্যর্থ হয়েছে');
             btn.disabled = false; 
             btn.innerHTML = '<i class="fa-solid fa-lock" style="color: #facc15;"></i> Continue to Payment';
         }
     }
 
-    // সরাসরি ব্রাউজার থেকে পেমেন্ট ভেরিফিকেশন
+    // Vercel Serverless API-এর মাধ্যমে পেমেন্ট ভেরিফিকেশন
     async function checkReturnPaymentStatus() {
         const urlParams = new URLSearchParams(window.location.search);
         const transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid');
@@ -322,10 +317,9 @@
             showToastPopup('পেমেন্ট ভেরিফাই করা হচ্ছে...');
 
             try {
-                const res = await fetch(`${BASE_API_URL}/verify`, {
+                const res = await fetch('/api/payment?action=verify', {
                     method: 'POST',
                     headers: {
-                        'API-KEY': API_KEY,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ transaction_id: transactionId })

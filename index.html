@@ -9,8 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
-    <!-- Firebase SDK -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <!-- Telegram WebApp SDK -->
@@ -27,7 +28,7 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 16px 10px; }
-        .payment-modal { width: 100%; max-width: 395px; background: #ffffff; border-radius: 24px; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.2); overflow: hidden; position: relative; min-height: 620px; display: flex; flex-direction: column; }
+        .payment-modal { width: 100%; max-width: 395px; background: #ffffff; border-radius: 24px; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.2); overflow: hidden; position: relative; min-height: 640px; display: flex; flex-direction: column; }
         .step-container { display: none; flex-direction: column; width: 100%; height: 100%; animation: fadeIn 0.25s ease-in-out; flex: 1; }
         .step-container.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
@@ -36,58 +37,65 @@
         .tg-icon-circle { width: 80px; height: 80px; background: #e0f2fe; color: var(--telegram-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 16px; box-shadow: 0 8px 20px rgba(34, 158, 217, 0.2); }
         .auth-title { font-size: 24px; font-weight: 800; color: var(--text-dark); margin-bottom: 6px; }
         .auth-sub { font-size: 13.5px; color: var(--text-gray); margin-bottom: 25px; line-height: 1.4; }
-        
-        .btn-tg-login { width: 100%; background: var(--telegram-color); color: #ffffff; border: none; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(34, 158, 217, 0.35); transition: 0.2s transform; text-decoration: none; }
-        .btn-tg-login:active { transform: scale(0.98); }
         .tg-widget-wrap { margin-top: 15px; display: flex; justify-content: center; width: 100%; min-height: 45px; }
 
         .landing-header { width: 100%; background: #ffffff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
         .header-balance-box { display: flex; flex-direction: column; }
         .header-balance-box .b-title { font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; }
-        .header-balance-box .b-val { font-size: 18px; font-weight: 800; color: #10b981; }
+        .header-balance-box .b-val { font-size: 19px; font-weight: 800; color: #10b981; }
         .header-right-actions { display: flex; align-items: center; gap: 8px; }
         .header-icon-btn { width: 38px; height: 38px; border-radius: 50%; background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; font-size: 15px; }
         .header-icon-btn .notif-dot { position: absolute; top: 8px; right: 9px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: none; } 
 
-        .step-1-content { padding: 20px 24px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; }
-        .main-avatar-wrap { width: 85px; height: 85px; border-radius: 24px; background: #050b14; border: 2.5px solid #38bdf8; box-shadow: 0 10px 25px rgba(56, 189, 248, 0.35); overflow: hidden; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; }
+        .step-1-content { padding: 18px 20px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; }
+        .main-avatar-wrap { width: 75px; height: 75px; border-radius: 20px; background: #050b14; border: 2.5px solid #38bdf8; box-shadow: 0 8px 20px rgba(56, 189, 248, 0.35); overflow: hidden; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; }
         .main-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
-        .shop-heading { font-size: 22px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; }
+        .shop-heading { font-size: 20px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; }
         .user-tg-badge { font-size: 12px; color: var(--telegram-color); font-weight: 700; background: #e0f2fe; padding: 4px 12px; border-radius: 20px; margin-top: 4px; display: inline-flex; align-items: center; gap: 5px; }
-        .line-sep { width: 100%; height: 1px; background: #f1f5f9; margin: 14px 0; }
-        .note-card { background-color: #fffdf0; border-left: 4.5px solid #f59e0b; border-radius: 6px 14px 14px 6px; padding: 12px 14px; text-align: left; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.06); width: 100%; }
-        .note-card h5 { color: #92400e; font-size: 13.5px; font-weight: 700; margin-bottom: 4px; }
-        .note-card p { font-size: 12px; color: #78350f; line-height: 1.4; }
-        .input-box-wrap { width: 100%; text-align: left; margin-bottom: 16px; }
-        .input-box-wrap label { display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px; }
-        .amount-field { width: 100%; padding: 12px 16px; font-size: 16.5px; font-weight: 700; color: #1e293b; border: 2px solid #60a5fa; border-radius: 14px; outline: none; transition: all 0.2s ease; text-align: center; }
-        .amount-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
-        .btn-continue-gradient { width: 100%; background: linear-gradient(135deg, var(--brand-purple) 0%, #4f46e5 100%); color: #ffffff; border: none; padding: 15px; border-radius: 14px; font-size: 15.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(120, 84, 247, 0.35); transition: 0.2s transform; margin-top: auto; }
+        .line-sep { width: 100%; height: 1px; background: #f1f5f9; margin: 12px 0; }
+        .note-card { background-color: #fffdf0; border-left: 4px solid #f59e0b; border-radius: 6px 12px 12px 6px; padding: 10px 12px; text-align: left; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.06); width: 100%; }
+        .note-card h5 { color: #92400e; font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+        .note-card p { font-size: 11.5px; color: #78350f; line-height: 1.4; }
 
-        .success-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
-        .success-icon { font-size: 65px; color: #10b981; margin-bottom: 12px; animation: scaleIn 0.4s ease-out; }
-        .success-title { font-size: 22px; font-weight: 800; color: #1e293b; margin-bottom: 6px; }
-        .success-msg { font-size: 14px; color: #64748b; margin-bottom: 24px; line-height: 1.5; }
-        .txid-box { background: #f8fafc; padding: 16px 20px; border-radius: 12px; border: 1px dashed #cbd5e1; font-size: 14.5px; color: #334155; margin-bottom: 28px; width: 100%; text-align: left; }
-        .txid-box div { margin-bottom: 8px; }
+        /* Quick Amount Selection System */
+        .input-box-wrap { width: 100%; text-align: left; margin-bottom: 12px; }
+        .input-box-wrap label { display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px; }
+        .amount-field { width: 100%; padding: 11px 14px; font-size: 17px; font-weight: 700; color: #1e293b; border: 2px solid #60a5fa; border-radius: 12px; outline: none; transition: all 0.2s ease; text-align: center; }
+        .amount-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+        
+        .quick-amount-title { font-size: 11.5px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; margin-bottom: 6px; text-align: left; width: 100%; }
+        .quick-amount-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%; margin-bottom: 16px; }
+        .quick-chip { background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 7px 0; border-radius: 10px; font-size: 13px; font-weight: 700; color: #334155; cursor: pointer; transition: all 0.15s ease; text-align: center; }
+        .quick-chip:hover { border-color: var(--brand-purple); color: var(--brand-purple); background: #f5f3ff; }
+        .quick-chip.selected { border-color: var(--brand-purple); background: #7854f7; color: #ffffff; box-shadow: 0 4px 10px rgba(120, 84, 247, 0.25); }
+
+        .btn-continue-gradient { width: 100%; background: linear-gradient(135deg, var(--brand-purple) 0%, #4f46e5 100%); color: #ffffff; border: none; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 20px rgba(120, 84, 247, 0.35); transition: 0.2s transform; margin-top: auto; }
+        .btn-continue-gradient:active { transform: scale(0.98); }
+
+        .success-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; text-align: center; }
+        .success-icon { font-size: 60px; color: #10b981; margin-bottom: 12px; animation: scaleIn 0.4s ease-out; }
+        .success-title { font-size: 21px; font-weight: 800; color: #1e293b; margin-bottom: 4px; }
+        .success-msg { font-size: 13.5px; color: #64748b; margin-bottom: 20px; line-height: 1.4; }
+        .txid-box { background: #f8fafc; padding: 14px 18px; border-radius: 12px; border: 1px dashed #cbd5e1; font-size: 14px; color: #334155; margin-bottom: 24px; width: 100%; text-align: left; }
+        .txid-box div { margin-bottom: 6px; }
         .txid-box span { font-weight: 700; color: var(--text-dark); }
-        .txid-box .highlight-txid { color: var(--brand-purple); font-family: monospace; font-size: 15.5px; }
+        .txid-box .highlight-txid { color: var(--brand-purple); font-family: monospace; font-size: 15px; }
         @keyframes scaleIn { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        .toast-popup { position: absolute; top: 20px; left: 50%; transform: translateX(-50%) translateY(-30px); background: #1e293b; color: #ffffff; padding: 12px 20px; border-radius: 20px; font-size: 13.5px; font-weight: 600; opacity: 0; pointer-events: none; transition: 0.3s all; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); width: 85%; text-align: center; line-height: 1.4; }
+        .toast-popup { position: absolute; top: 15px; left: 50%; transform: translateX(-50%) translateY(-30px); background: #1e293b; color: #ffffff; padding: 10px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: 0.3s all; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); width: 85%; text-align: center; }
         .toast-popup.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         .notif-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; flex-direction: column; justify-content: flex-end; opacity: 0; transition: 0.3s opacity; }
         .notif-overlay.show { display: flex; opacity: 1; }
         .notif-modal-content { background: #ffffff; width: 100%; height: 80%; border-radius: 24px 24px 0 0; display: flex; flex-direction: column; transform: translateY(100%); transition: 0.3s transform; }
         .notif-overlay.show .notif-modal-content { transform: translateY(0); }
-        .notif-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f1f5f9; }
-        .notif-header h3 { font-size: 18px; font-weight: 700; color: #1e293b; }
+        .notif-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid #f1f5f9; }
+        .notif-header h3 { font-size: 17px; font-weight: 700; color: #1e293b; }
         .notif-header button { background: none; border: none; font-size: 20px; color: #64748b; cursor: pointer; }
-        .notif-list { padding: 16px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; flex: 1; }
-        .notif-item { padding: 14px; border-radius: 12px; background: #f8fafc; border-left: 4px solid var(--text-gray); font-size: 13.5px; color: #334155; line-height: 1.5; }
+        .notif-list { padding: 14px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+        .notif-item { padding: 12px; border-radius: 12px; background: #f8fafc; border-left: 4px solid var(--text-gray); font-size: 13px; color: #334155; line-height: 1.4; }
         .notif-item.unread { font-weight: 700; background: #f0fdf4; border-left-color: #10b981; }
-        .notif-time { font-size: 11px; color: #94a3b8; margin-top: 6px; display: block; font-weight: 500; }
+        .notif-time { font-size: 11px; color: #94a3b8; margin-top: 5px; display: block; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -106,24 +114,21 @@
         </div>
     </div>
 
-    <!-- STEP: TELEGRAM AUTH (Default Active) -->
+    <!-- STEP: TELEGRAM AUTH -->
     <div id="step-auth" class="step-container active">
         <div class="auth-container">
             <div class="tg-icon-circle">
                 <i class="fa-brands fa-telegram"></i>
             </div>
             <h2 class="auth-title">টেলিগ্রাম লগইন</h2>
-            <p class="auth-sub">ডিপোজিট সম্পন্ন করতে আপনার টেলিগ্রাম একাউন্টের মাধ্যমে লগইন করুন।</p>
+            <p class="auth-sub">ডিপোজিট করতে টেলিগ্রাম একাউন্টের মাধ্যমে লগইন সম্পন্ন করুন।</p>
             
-            <!-- Telegram Login Widget Container -->
             <div class="tg-widget-wrap" id="tgWidgetWrap">
-                <!-- 
-                  YOUR_BOT_USERNAME এর জায়গায় আপনার টেলিগ্রাম বটের ইউজারনেম দিন (@ ছাড়া)
-                -->
+                <!-- Telegram Login Widget (আপনার বটের ইউজারনেম দিন) -->
                 <script async src="https://telegram.org/js/telegram-widget.js?22" 
                         data-telegram-login="SocialSmmShopBot" 
                         data-size="large" 
-                        data-radius="14" 
+                        data-radius="12" 
                         data-onauth="onTelegramAuth(user)" 
                         data-request-access="write"></script>
             </div>
@@ -157,15 +162,29 @@
             <div class="user-tg-badge" id="userTgBadge">
                 <i class="fa-brands fa-telegram"></i> <span id="tgUsernameText">@user</span>
             </div>
+            
             <div class="line-sep"></div>
+            
             <div class="note-card">
                 <h5>Payment Note</h5>
                 <p>মিনিমাম ডিপোজিট <b>১০ টাকা</b>। বিকাশ, নগদ ও রকেটের মাধ্যমে ইনস্ট্যান্ট অটোমেটিক পেমেন্ট এড হবে।</p>
             </div>
 
+            <!-- Amount Input -->
             <div class="input-box-wrap">
-                <label for="amountInput">ডিপোজিট এমাউন্ট (মিনিমাম ১০ ৳)</label>
-                <input type="number" id="amountInput" class="amount-field" value="10" placeholder="10" min="10">
+                <label for="amountInput">টাকার পরিমাণ লিখুন (মিনিমাম ১০ ৳)</label>
+                <input type="number" id="amountInput" class="amount-field" value="10" placeholder="10" min="10" oninput="handleAmountInput()">
+            </div>
+
+            <!-- Quick Amount Selector -->
+            <div class="quick-amount-title">Quick Select Amount</div>
+            <div class="quick-amount-grid">
+                <div class="quick-chip selected" onclick="setQuickAmount(10)">১০ ৳</div>
+                <div class="quick-chip" onclick="setQuickAmount(50)">৫০ ৳</div>
+                <div class="quick-chip" onclick="setQuickAmount(100)">১০০ ৳</div>
+                <div class="quick-chip" onclick="setQuickAmount(200)">২০০ ৳</div>
+                <div class="quick-chip" onclick="setQuickAmount(500)">৫০০ ৳</div>
+                <div class="quick-chip" onclick="setQuickAmount(1000)">১০০০ ৳</div>
             </div>
 
             <button id="btnPayGateway" class="btn-continue-gradient" onclick="initiatePayment()">
@@ -178,7 +197,7 @@
     <div id="step-5" class="step-container">
         <div class="success-wrapper">
             <i class="fa-solid fa-circle-check success-icon"></i>
-            <h3 style="color: #10b981; font-size: 18px; font-weight: 700; margin-bottom: 4px;">পেমেন্ট সফল হয়েছে!</h3>
+            <h3 style="color: #10b981; font-size: 17px; font-weight: 700; margin-bottom: 4px;">পেমেন্ট সফল হয়েছে!</h3>
             <h2 class="success-title">Payment Successful!</h2>
             <p class="success-msg">আপনার ডিপোজিট সফলভাবে ভেরিফাই হয়ে ব্যালেন্সে যুক্ত হয়েছে।</p>
             
@@ -209,15 +228,13 @@
         firebase.initializeApp(firebaseConfig);
     }
     const database = firebase.database();
+    const auth = firebase.auth();
 
     let currentUser = null;
 
-    // Telegram Login Callback (Widget থেকে কল হবে)
+    // Telegram Login Callback
     window.onTelegramAuth = function(user) {
-        if (!user || !user.id) {
-            showToastPopup('টেলিগ্রাম অথেনটিকেশন ব্যর্থ হয়েছে!');
-            return;
-        }
+        if (!user || !user.id) return showToastPopup('টেলিগ্রাম লগইন ব্যর্থ হয়েছে!');
         handleTelegramLoginSuccess(user);
     };
 
@@ -244,40 +261,32 @@
             document.getElementById('userPhotoDisplay').src = currentUser.photo_url;
         }
 
-        // Firebase-এ ইউজার প্রোফাইল সেভ/আপডেট
-        const userRef = database.ref(`users/${currentUser.uid}`);
-        userRef.once('value', snapshot => {
-            if (!snapshot.exists()) {
-                userRef.set({
-                    telegram_id: currentUser.id,
-                    username: currentUser.username,
-                    balance: 0,
-                    createdAt: firebase.database.ServerValue.TIMESTAMP
-                });
-            } else {
-                userRef.update({
-                    username: currentUser.username,
-                    lastLogin: firebase.database.ServerValue.TIMESTAMP
-                });
-            }
-        });
+        // Firebase Anonymous Auth ব্যাকগ্রাউন্ডে সাইন-ইন যাতে ডাটাবেজ পারমিশন সহজে কাজ করে
+        auth.signInAnonymously().catch(() => {});
 
+        // Firebase-এ ইউজার ডাটাবেজ তৈরি / চেক
+        const userRef = database.ref(`users/${currentUser.uid}`);
+        userRef.child('username').set(currentUser.username);
+        userRef.child('telegram_id').set(currentUser.id);
+        
+        // ব্যালেন্স ও নোটিফিকেশন লিসেনার চালু
         listenUserData(currentUser.uid);
         listenForNotifications(currentUser.uid);
+
         changeStep(1);
         checkReturnPaymentStatus();
     }
 
-    // পেজ লোড হলে টেলিগ্রাম ওয়েবঅ্যাপ বা লোকাল সেশন চেক
+    // পেজ লোড হ্যান্ডলার
     window.addEventListener('DOMContentLoaded', () => {
-        // ১. টেলিগ্রাম মিনি অ্যাপ (Web App) থেকে ওপেন করলে অটো-লগইন
+        // ১. টেলিগ্রাম ওয়েবঅ্যাপ থেকে ওপেন করলে
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
             const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
             handleTelegramLoginSuccess(tgUser);
             return;
         }
 
-        // ২. আগে লগইন করা থাকলে
+        // ২. লোকালস্টোরেজ থেকে চেক
         const savedUser = localStorage.getItem('tg_auth_user');
         if (savedUser) {
             try {
@@ -292,10 +301,91 @@
         }
     });
 
+    // ফায়ারবেস থেকে রিয়েলটাইম ব্যালেন্স লিসেন
     function listenUserData(uid) {
         database.ref(`users/${uid}/balance`).on('value', snapshot => {
-            const balance = snapshot.val() || 0;
-            document.getElementById('userBalanceDisplay').textContent = `${parseFloat(balance).toFixed(2)} BDT`;
+            const balance = snapshot.val();
+            const num = (balance !== null && !isNaN(balance)) ? parseFloat(balance) : 0;
+            document.getElementById('userBalanceDisplay').textContent = `${num.toFixed(2)} BDT`;
+        });
+    }
+
+    // ফায়ারবেস থেকে রিয়েলটাইম নোটিফিকেশন ডট লিসেন (কোনো ইনডেক্স এরর ছাড়াই কাজ করবে)
+    function listenForNotifications(uid) {
+        database.ref(`users/${uid}/notifications`).on('value', snapshot => {
+            const dot = document.querySelector('.notif-dot');
+            if (!dot) return;
+
+            let hasUnread = false;
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const item = child.val();
+                    if (item && item.read === false) {
+                        hasUnread = true;
+                    }
+                });
+            }
+            dot.style.display = hasUnread ? 'block' : 'none';
+        });
+    }
+
+    // নোটিফিকেশন লিস্ট লোড ও ডিসপ্লে
+    function loadNotificationsList() {
+        if (!currentUser) return;
+        const uid = currentUser.uid;
+        const listDiv = document.getElementById('notifList');
+        listDiv.innerHTML = '<div style="text-align:center; padding: 20px; color:#64748b;"><i class="fa-solid fa-spinner fa-spin"></i> লোড হচ্ছে...</div>';
+        
+        database.ref(`users/${uid}/notifications`).once('value', snapshot => {
+            listDiv.innerHTML = '';
+            if (snapshot.exists()) {
+                const notifs = [];
+                snapshot.forEach(child => { 
+                    notifs.push({ id: child.key, ...child.val() }); 
+                });
+                
+                // নতুন নোটিফিকেশন উপরে দেখানোর জন্য সর্ট
+                notifs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                
+                notifs.slice(0, 15).forEach(data => {
+                    const div = document.createElement('div');
+                    div.className = `notif-item ${data.read === false ? 'unread' : ''}`;
+                    const dateObj = data.timestamp ? new Date(data.timestamp) : new Date();
+                    div.innerHTML = `${data.message || ''} <span class="notif-time">${dateObj.toLocaleDateString()} - ${dateObj.toLocaleTimeString()}</span>`;
+                    listDiv.appendChild(div);
+
+                    if (data.read === false) {
+                        database.ref(`users/${uid}/notifications/${data.id}`).update({ read: true });
+                    }
+                });
+            } else {
+                listDiv.innerHTML = '<div style="text-align:center; color:#64748b; font-size: 13.5px; margin-top:30px;">কোনো নোটিফিকেশন নেই</div>';
+            }
+        });
+    }
+
+    // কুইক এমাউন্ট সিলেক্টর ফাংশন
+    function setQuickAmount(val) {
+        document.getElementById('amountInput').value = val;
+        
+        // বাটন সিলেক্টেড স্টাইল আপডেট
+        document.querySelectorAll('.quick-chip').forEach(chip => {
+            if (parseInt(chip.textContent) === val) {
+                chip.classList.add('selected');
+            } else {
+                chip.classList.remove('selected');
+            }
+        });
+    }
+
+    function handleAmountInput() {
+        const val = parseInt(document.getElementById('amountInput').value);
+        document.querySelectorAll('.quick-chip').forEach(chip => {
+            if (parseInt(chip.textContent) === val) {
+                chip.classList.add('selected');
+            } else {
+                chip.classList.remove('selected');
+            }
         });
     }
 
@@ -306,7 +396,6 @@
         const amountInput = document.getElementById('amountInput').value.trim();
         const amount = parseFloat(amountInput);
 
-        // মিনিমাম ১০ টাকা ভ্যালিডেশন
         if (isNaN(amount) || amount < 10) {
             return showToastPopup('মিনিমাম ডিপোজিট ১০ টাকা');
         }
@@ -352,7 +441,7 @@
         }
     }
 
-    // পেমেন্ট রিটার্ন চেক
+    // পেমেন্ট রিটার্ন চেক ও ব্যালেন্স আপডেট
     async function checkReturnPaymentStatus() {
         const urlParams = new URLSearchParams(window.location.search);
         const transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid');
@@ -400,12 +489,12 @@
                 txRef.set({
                     txid: txid,
                     amount: depositAmount,
-                    gateway: 'DaWebLab',
+                    gateway: 'InstantPay',
                     details: fullData,
                     timestamp: firebase.database.ServerValue.TIMESTAMP
                 }).then(() => {
                     database.ref(`users/${uid}/balance`).transaction(currentBalance => {
-                        return (currentBalance || 0) + depositAmount;
+                        return (parseFloat(currentBalance) || 0) + depositAmount;
                     });
 
                     database.ref(`users/${uid}/notifications`).push({
@@ -425,40 +514,6 @@
 
     function closeNotifModal() {
         document.getElementById('notifModal').classList.remove('show');
-    }
-
-    function loadNotificationsList() {
-        if (!currentUser) return;
-        const uid = currentUser.uid;
-        const listDiv = document.getElementById('notifList');
-        listDiv.innerHTML = '<div style="text-align:center; padding: 20px; color:#64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
-        
-        database.ref(`users/${uid}/notifications`).orderByChild('timestamp').limitToLast(10).once('value', snapshot => {
-            listDiv.innerHTML = '';
-            if (snapshot.exists()) {
-                const notifs = [];
-                snapshot.forEach(child => { notifs.push({ id: child.key, ...child.val() }); });
-                notifs.reverse();
-                
-                notifs.forEach(data => {
-                    const div = document.createElement('div');
-                    div.className = `notif-item ${!data.read ? 'unread' : ''}`;
-                    const dateObj = new Date(data.timestamp);
-                    div.innerHTML = `${data.message} <span class="notif-time">${dateObj.toLocaleDateString()} - ${dateObj.toLocaleTimeString()}</span>`;
-                    listDiv.appendChild(div);
-                    if (!data.read) database.ref(`users/${uid}/notifications/${data.id}`).update({ read: true });
-                });
-            } else {
-                listDiv.innerHTML = '<div style="text-align:center; color:#64748b; font-size: 14px; margin-top:20px;">কোনো নোটিফিকেশন নেই</div>';
-            }
-        });
-    }
-
-    function listenForNotifications(uid) {
-        database.ref(`users/${uid}/notifications`).orderByChild('read').equalTo(false).on('value', snapshot => {
-            const dot = document.querySelector('.notif-dot');
-            if (dot) dot.style.display = snapshot.exists() ? 'block' : 'none';
-        });
     }
 
     function changeStep(stepId) {

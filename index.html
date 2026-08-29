@@ -81,6 +81,7 @@
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
             transition: all 0.25s ease;
             position: relative;
+            z-index: 10;
         }
         .product-card:hover {
             box-shadow: 0 8px 22px rgba(27, 100, 218, 0.08);
@@ -95,6 +96,7 @@
             transition: all 0.2s ease;
             box-shadow: 0 4px 12px rgba(27, 100, 218, 0.25);
             cursor: pointer;
+            pointer-events: auto;
         }
         .btn-buy:hover { background: #1551b3; }
         .btn-buy:active { transform: scale(0.97); }
@@ -118,6 +120,7 @@
             transition: all 0.2s ease;
             box-shadow: 0 3px 10px rgba(234, 88, 12, 0.25);
             cursor: pointer;
+            pointer-events: auto;
         }
         .btn-order-orange:hover { background: #c2410c; }
         .btn-order-orange:active { transform: scale(0.97); }
@@ -169,6 +172,10 @@
             flex-direction: column;
             align-items: flex-end;
             gap: 10px;
+            pointer-events: none; /* Prevents blocking clicks underneath */
+        }
+        .support-widget-container > * {
+            pointer-events: auto; /* Re-enables clicks for buttons inside */
         }
         .fab-support-main {
             width: 52px;
@@ -410,7 +417,7 @@
         </div>
 
         <!-- MAIN CONTENT AREA -->
-        <main class="flex-grow pb-28">
+        <main class="flex-grow pb-36">
 
             <!-- HOME PAGE -->
             <div id="home-page" class="p-4 space-y-4 sub-page">
@@ -713,7 +720,7 @@
         <div id="notification-list-container" class="space-y-3 flex-grow overflow-y-auto pb-10"></div>
     </div>
 
-    <!-- 1. INSTANT BUY NOW MODAL (WITH QUANTITY CONTROLLER) -->
+    <!-- 1. INSTANT BUY NOW MODAL -->
     <div id="buy-now-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[70] p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 relative text-center shadow-2xl">
             <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto">
@@ -1004,7 +1011,7 @@
             }
         }
 
-        // --- AUTOMATED GATEWAY PAYMENT SYSTEM ---
+        // --- AUTOMATED GATEWAY PAYMENT SYSTEM (REQUESTED CODE INTEGRATED) ---
         window.setAutoQuickAmount = function(val) {
             document.getElementById('autoDepositAmountInput').value = val;
             document.querySelectorAll('.quick-amount-pill').forEach(chip => {
@@ -1040,15 +1047,18 @@
             btn.disabled = true; 
             btn.innerHTML = `<span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span> Processing...`;
 
-            const returnUrl = window.location.href.split('?')[0];
+            const returnUrl = window.location.origin + window.location.pathname;
+            const orderId = "TXN" + Date.now();
 
             const payload = {
                 amount: String(amount),
+                order_id: orderId,
                 cus_name: userData.name || userData.username || "User",
-                cus_email: "user_" + userData.tgChatId + "@mail.com",
+                cus_email: "user_" + userData.tgChatId + "@gmail.com",
                 cus_phone: "01700000000",
-                success_url: returnUrl + "?status=success&amount=" + amount,
+                success_url: returnUrl + "?status=success&amount=" + amount + "&order_id=" + orderId,
                 cancel_url: returnUrl + "?status=cancel",
+                redirect_url: returnUrl + "?status=success&amount=" + amount + "&order_id=" + orderId,
                 metadata: {
                     uid: String(userData.tgChatId),
                     telegram_id: userData.tgChatId,
@@ -1064,16 +1074,19 @@
                 });
                 
                 const data = await res.json();
+                
                 let payUrl = data.payment_url || data.url || (data.data && (data.data.payment_url || data.data.url)) || data.redirect_url;
 
                 if (payUrl) {
                     window.location.href = payUrl;
                 } else {
-                    showAlert(data.message || data.error || 'পেমেন্ট গেটওয়েতে সমস্যা হচ্ছে!');
+                    const errorMsg = data.message || data.error || (data.data && data.data.message) || 'পেমেন্ট গেটওয়েতে সমস্যা হচ্ছে!';
+                    showAlert(errorMsg);
                     btn.disabled = false; 
                     btn.innerHTML = originalBtnHtml;
                 }
             } catch (err) {
+                console.error("Payment Gateway Error:", err);
                 showAlert('পেমেন্ট সার্ভার কানেকশন ব্যর্থ হয়েছে। কিছুক্ষণ পর চেষ্টা করুন।');
                 btn.disabled = false; 
                 btn.innerHTML = originalBtnHtml;
@@ -1093,7 +1106,7 @@
         async function checkReturnPaymentStatus() {
             const urlParams = new URLSearchParams(window.location.search);
             const urlStatus = (urlParams.get('status') || '').toLowerCase();
-            let transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid') || urlParams.get('trx_id') || urlParams.get('payment_id');
+            let transactionId = urlParams.get('order_id') || urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid') || urlParams.get('trx_id') || urlParams.get('payment_id');
 
             if (urlStatus === 'cancel' || urlStatus === 'cancelled' || urlStatus === 'failed') {
                 localStorage.removeItem('pending_deposit_amount');
@@ -1116,7 +1129,7 @@
                     const res = await fetch('/api/payment?action=verify', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ transaction_id: transactionId })
+                        body: JSON.stringify({ transaction_id: transactionId, order_id: transactionId })
                     });
                     verifyData = await res.json();
                     
@@ -1391,7 +1404,7 @@
             }
         };
 
-        // --- PRODUCT RENDERING (CLEAN CARDS WITHOUT STEPPERS) ---
+        // --- PRODUCT RENDERING (CLEAN PRODUCT CARDS WITH DIRECT CLICK EVENT) ---
         async function renderProductsBySelection() {
             const container = document.getElementById('product-list-container');
             container.innerHTML = getLoadingHTML();
@@ -1462,7 +1475,6 @@
 
                     <div class="flex items-center justify-between pt-2 border-t border-gray-100 text-xs">
                         <div class="flex items-center gap-2">
-                            <!-- Stock display logic (Completely clean & empty if hideStock is true) -->
                             ${isStockHidden ? '<span></span>' : `
                                 <span class="font-semibold ${outOfStock ? 'text-orange-500' : 'text-emerald-600'}">
                                     Stock: <b>${stock}</b>
@@ -1476,20 +1488,20 @@
                             ` : ''}
                         </div>
 
-                        <!-- Clean Buttons (Click to open respective modal with quantity) -->
-                        <div>
+                        <!-- Action Buttons -->
+                        <div class="relative z-20">
                             ${!outOfStock ? `
-                                <button class="btn-buy px-5 py-2 text-xs flex items-center gap-1" onclick="openBuyModal(${idx})">
+                                <button type="button" class="btn-buy px-5 py-2 text-xs flex items-center gap-1" onclick="openBuyModal(${idx})">
                                     <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
                                     <span>Buy Now</span>
                                 </button>
                             ` : isManualAllowed ? `
-                                <button class="btn-order-orange px-4 py-2 text-xs flex items-center gap-1" onclick="openManualModal(${idx})">
+                                <button type="button" class="btn-order-orange px-4 py-2 text-xs flex items-center gap-1" onclick="openManualModal(${idx})">
                                     <i data-lucide="clock" class="w-3.5 h-3.5"></i>
                                     <span>Order Now</span>
                                 </button>
                             ` : `
-                                <button disabled class="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-400 cursor-not-allowed">
+                                <button disabled type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-400 cursor-not-allowed">
                                     Out of Stock
                                 </button>
                             `}
@@ -1500,31 +1512,35 @@
             lucide.createIcons();
         }
 
-        // --- 1. INSTANT BUY MODAL LOGIC (EXACT SAME UX AS SCREENSHOT) ---
+        // --- 1. INSTANT BUY MODAL LOGIC ---
         window.openBuyModal = function(index) {
-            const item = displayedProductsCache[index];
-            if (!item) return;
+            try {
+                const item = displayedProductsCache[index];
+                if (!item) return;
 
-            const unitPrice = parseFloat(item.priceBdt || 0);
-            const userBal = userData?.balance || 0;
-            const maxCanAfford = unitPrice > 0 ? Math.floor(userBal / unitPrice) : 1;
-            const maxAllowed = Math.min(item.stock, maxCanAfford > 0 ? maxCanAfford : 1);
+                const unitPrice = parseFloat(item.priceBdt || 0);
+                const userBal = userData?.balance || 0;
+                const maxCanAfford = unitPrice > 0 ? Math.floor(userBal / unitPrice) : 1;
+                const maxAllowed = Math.min(item.stock, maxCanAfford > 0 ? maxCanAfford : 1);
 
-            activeBuyModalData = {
-                product: item,
-                unitPrice: unitPrice,
-                stock: item.stock,
-                maxAllowed: maxAllowed,
-                qty: 1
-            };
+                activeBuyModalData = {
+                    product: item,
+                    unitPrice: unitPrice,
+                    stock: item.stock,
+                    maxAllowed: maxAllowed,
+                    qty: 1
+                };
 
-            document.getElementById('buy-modal-title').textContent = `${item.type} (Buy Now)`;
-            document.getElementById('buy-modal-stock-display').textContent = `${item.stock} টি`;
-            document.getElementById('buy-modal-qty-input').value = 1;
-            updateBuyModalPriceDisplay();
+                document.getElementById('buy-modal-title').textContent = `${item.type} (Buy Now)`;
+                document.getElementById('buy-modal-stock-display').textContent = `${item.stock} টি`;
+                document.getElementById('buy-modal-qty-input').value = 1;
+                updateBuyModalPriceDisplay();
 
-            document.getElementById('buy-now-modal').classList.remove('hidden');
-            lucide.createIcons();
+                document.getElementById('buy-now-modal').classList.remove('hidden');
+                lucide.createIcons();
+            } catch(e) {
+                console.error("Open Buy Modal Error:", e);
+            }
         };
 
         function updateBuyModalPriceDisplay() {
@@ -1660,26 +1676,30 @@
 
         // --- 2. ORDER NOW (MANUAL PRE-ORDER) MODAL LOGIC ---
         window.openManualModal = function(index) {
-            const item = displayedProductsCache[index];
-            if (!item) return;
+            try {
+                const item = displayedProductsCache[index];
+                if (!item) return;
 
-            const unitPrice = item.manualPrice !== undefined ? parseFloat(item.manualPrice) : parseFloat(item.priceBdt || 0);
-            const timeoutMinutes = item.manualDurationMinutes || appConfig.manualOrderTimeoutMinutes || 30;
+                const unitPrice = item.manualPrice !== undefined ? parseFloat(item.manualPrice) : parseFloat(item.priceBdt || 0);
+                const timeoutMinutes = item.manualDurationMinutes || appConfig.manualOrderTimeoutMinutes || 30;
 
-            activeManualModalData = {
-                product: item,
-                unitPrice: unitPrice,
-                timeoutMinutes: timeoutMinutes,
-                qty: 1
-            };
+                activeManualModalData = {
+                    product: item,
+                    unitPrice: unitPrice,
+                    timeoutMinutes: timeoutMinutes,
+                    qty: 1
+                };
 
-            document.getElementById('manual-modal-title').textContent = `${item.type} (Order Now)`;
-            document.getElementById('manual-modal-duration').textContent = `${timeoutMinutes} মিনিট`;
-            document.getElementById('manual-modal-qty-input').value = 1;
-            updateManualModalPriceDisplay();
+                document.getElementById('manual-modal-title').textContent = `${item.type} (Order Now)`;
+                document.getElementById('manual-modal-duration').textContent = `${timeoutMinutes} মিনিট`;
+                document.getElementById('manual-modal-qty-input').value = 1;
+                updateManualModalPriceDisplay();
 
-            document.getElementById('manual-order-modal').classList.remove('hidden');
-            lucide.createIcons();
+                document.getElementById('manual-order-modal').classList.remove('hidden');
+                lucide.createIcons();
+            } catch(e) {
+                console.error("Open Manual Modal Error:", e);
+            }
         };
 
         function updateManualModalPriceDisplay() {
@@ -1835,7 +1855,7 @@
                 return showAlert("নিজের অ্যাকাউন্টে ব্যালেন্স পাঠানো যাবে না।");
             }
 
-            const totalCost = amount * 1.02; // 2% charge
+            const totalCost = amount * 1.02;
             if (!confirm(`২% চার্জসহ মোট ৳${totalCost.toFixed(2)} কাটা হবে। আপনি কি নিশ্চিত?`)) return;
 
             const btn = document.getElementById('submit-send-btn');

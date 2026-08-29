@@ -57,7 +57,6 @@
         .note-card h5 { color: #92400e; font-size: 13px; font-weight: 700; margin-bottom: 3px; }
         .note-card p { font-size: 11.5px; color: #78350f; line-height: 1.4; }
 
-        /* Quick Amount Selection System */
         .input-box-wrap { width: 100%; text-align: left; margin-bottom: 12px; }
         .input-box-wrap label { display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px; }
         .amount-field { width: 100%; padding: 11px 14px; font-size: 17px; font-weight: 700; color: #1e293b; border: 2px solid #60a5fa; border-radius: 12px; outline: none; transition: all 0.2s ease; text-align: center; }
@@ -103,7 +102,6 @@
 <div class="payment-modal">
     <div id="toastNotification" class="toast-popup"></div>
 
-    <!-- Notification Modal -->
     <div id="notifModal" class="notif-overlay">
         <div class="notif-modal-content">
             <div class="notif-header">
@@ -124,7 +122,6 @@
             <p class="auth-sub">ডিপোজিট করতে টেলিগ্রাম একাউন্টের মাধ্যমে লগইন সম্পন্ন করুন।</p>
             
             <div class="tg-widget-wrap" id="tgWidgetWrap">
-                <!-- Telegram Login Widget (আপনার বটের ইউজারনেম দিন) -->
                 <script async src="https://telegram.org/js/telegram-widget.js?22" 
                         data-telegram-login="SocialSmmShopBot" 
                         data-size="large" 
@@ -170,13 +167,11 @@
                 <p>মিনিমাম ডিপোজিট <b>১০ টাকা</b>। বিকাশ, নগদ ও রকেটের মাধ্যমে ইনস্ট্যান্ট অটোমেটিক পেমেন্ট এড হবে।</p>
             </div>
 
-            <!-- Amount Input -->
             <div class="input-box-wrap">
                 <label for="amountInput">টাকার পরিমাণ লিখুন (মিনিমাম ১০ ৳)</label>
                 <input type="number" id="amountInput" class="amount-field" value="10" placeholder="10" min="10" oninput="handleAmountInput()">
             </div>
 
-            <!-- Quick Amount Selector -->
             <div class="quick-amount-title">Quick Select Amount</div>
             <div class="quick-amount-grid">
                 <div class="quick-chip selected" onclick="setQuickAmount(10)">১০ ৳</div>
@@ -215,14 +210,14 @@
 
 <script>
     const firebaseConfig = {
-            apiKey: "AIzaSyAEV4zkuTcRYIFP2AMmKJTyDUTzSYLnbbM",
-            authDomain: "used-mail-shop.firebaseapp.com",
-            databaseURL: "https://used-mail-shop-default-rtdb.firebaseio.com",
-            projectId: "used-mail-shop",
-            storageBucket: "used-mail-shop.firebasestorage.app",
-            messagingSenderId: "251382358623",
-            appId: "1:251382358623:web:a567a9349d1fd87277b1ea"
-        };
+      apiKey: "AIzaSyAEV4zkuTcRYIFP2AMmKJTyDUTzSYLnbbM",
+      authDomain: "used-mail-shop.firebaseapp.com",
+      databaseURL: "https://used-mail-shop-default-rtdb.firebaseio.com",
+      projectId: "used-mail-shop",
+      storageBucket: "used-mail-shop.firebasestorage.app",
+      messagingSenderId: "251382358623",
+      appId: "1:251382358623:web:a567a9349d1fd87277b1ea"
+    };
 
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
@@ -232,7 +227,6 @@
 
     let currentUser = null;
 
-    // Telegram Login Callback
     window.onTelegramAuth = function(user) {
         if (!user || !user.id) return showToastPopup('টেলিগ্রাম লগইন ব্যর্থ হয়েছে!');
         handleTelegramLoginSuccess(user);
@@ -252,41 +246,39 @@
         setupUserSession();
     }
 
-    function setupUserSession() {
+    async function setupUserSession() {
         if (!currentUser) return;
 
-        // UI আপডেট
+        // সাথে সাথে স্ক্রিন ও তথ্য রেন্ডার
         document.getElementById('tgUsernameText').textContent = currentUser.username;
         if (currentUser.photo_url) {
             document.getElementById('userPhotoDisplay').src = currentUser.photo_url;
         }
 
-        // Firebase Anonymous Auth ব্যাকগ্রাউন্ডে সাইন-ইন যাতে ডাটাবেজ পারমিশন সহজে কাজ করে
-        auth.signInAnonymously().catch(() => {});
+        changeStep(1);
 
-        // Firebase-এ ইউজার ডাটাবেজ তৈরি / চেক
-        const userRef = database.ref(`users/${currentUser.uid}`);
-        userRef.child('username').set(currentUser.username);
-        userRef.child('telegram_id').set(currentUser.id);
-        
-        // ব্যালেন্স ও নোটিফিকেশন লিসেনার চালু
+        // Anonymous login
+        try {
+            if (!auth.currentUser) {
+                await auth.signInAnonymously();
+            }
+        } catch (err) {
+            console.warn("Auth Info:", err.message);
+        }
+
+        // ব্যালেন্স ও ডাটাবেজ লিসেনার চালু
         listenUserData(currentUser.uid);
         listenForNotifications(currentUser.uid);
-
-        changeStep(1);
         checkReturnPaymentStatus();
     }
 
-    // পেজ লোড হ্যান্ডলার
     window.addEventListener('DOMContentLoaded', () => {
-        // ১. টেলিগ্রাম ওয়েবঅ্যাপ থেকে ওপেন করলে
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
             const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
             handleTelegramLoginSuccess(tgUser);
             return;
         }
 
-        // ২. লোকালস্টোরেজ থেকে চেক
         const savedUser = localStorage.getItem('tg_auth_user');
         if (savedUser) {
             try {
@@ -301,16 +293,30 @@
         }
     });
 
-    // ফায়ারবেস থেকে রিয়েলটাইম ব্যালেন্স লিসেন
+    // ফায়ারবেস থেকে রিয়েলটাইম ব্যালেন্স লিসেনার (১০০% কাজ করবে)
     function listenUserData(uid) {
-        database.ref(`users/${uid}/balance`).on('value', snapshot => {
-            const balance = snapshot.val();
-            const num = (balance !== null && !isNaN(balance)) ? parseFloat(balance) : 0;
-            document.getElementById('userBalanceDisplay').textContent = `${num.toFixed(2)} BDT`;
+        const balanceEl = document.getElementById('userBalanceDisplay');
+        const userRef = database.ref(`users/${uid}`);
+
+        userRef.child('balance').on('value', snapshot => {
+            if (snapshot.exists() && snapshot.val() !== null) {
+                const balanceVal = parseFloat(snapshot.val()) || 0;
+                balanceEl.textContent = `${balanceVal.toFixed(2)} BDT`;
+            } else {
+                // যদি ডাটাবেজে ব্যালেন্স না থাকে, অটোমেটিক ০ তৈরি হবে
+                userRef.child('balance').set(0);
+                userRef.child('username').set(currentUser.username);
+                balanceEl.textContent = "0.00 BDT";
+            }
+        }, error => {
+            console.error("Firebase Database Error:", error);
+            balanceEl.textContent = "0.00 BDT";
+            if (error.code === "PERMISSION_DENIED") {
+                showToastPopup("Firebase Rules পারমিশন দিন (rules: read/write true)");
+            }
         });
     }
 
-    // ফায়ারবেস থেকে রিয়েলটাইম নোটিফিকেশন ডট লিসেন (কোনো ইনডেক্স এরর ছাড়াই কাজ করবে)
     function listenForNotifications(uid) {
         database.ref(`users/${uid}/notifications`).on('value', snapshot => {
             const dot = document.querySelector('.notif-dot');
@@ -326,10 +332,11 @@
                 });
             }
             dot.style.display = hasUnread ? 'block' : 'none';
+        }, error => {
+            console.error("Notification Error:", error);
         });
     }
 
-    // নোটিফিকেশন লিস্ট লোড ও ডিসপ্লে
     function loadNotificationsList() {
         if (!currentUser) return;
         const uid = currentUser.uid;
@@ -344,7 +351,6 @@
                     notifs.push({ id: child.key, ...child.val() }); 
                 });
                 
-                // নতুন নোটিফিকেশন উপরে দেখানোর জন্য সর্ট
                 notifs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                 
                 notifs.slice(0, 15).forEach(data => {
@@ -364,11 +370,8 @@
         });
     }
 
-    // কুইক এমাউন্ট সিলেক্টর ফাংশন
     function setQuickAmount(val) {
         document.getElementById('amountInput').value = val;
-        
-        // বাটন সিলেক্টেড স্টাইল আপডেট
         document.querySelectorAll('.quick-chip').forEach(chip => {
             if (parseInt(chip.textContent) === val) {
                 chip.classList.add('selected');
@@ -389,7 +392,6 @@
         });
     }
 
-    // পেমেন্ট শুরু করার ফাংশন
     async function initiatePayment() {
         if (!currentUser) return showToastPopup('প্রথমে টেলিগ্রাম দিয়ে লগইন করুন');
         
@@ -441,7 +443,6 @@
         }
     }
 
-    // পেমেন্ট রিটার্ন চেক ও ব্যালেন্স আপডেট
     async function checkReturnPaymentStatus() {
         const urlParams = new URLSearchParams(window.location.search);
         const transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid');

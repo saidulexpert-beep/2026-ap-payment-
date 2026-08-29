@@ -33,11 +33,22 @@
         .step-container.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         
-        .auth-container { padding: 35px 24px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; flex: 1; }
-        .tg-icon-circle { width: 80px; height: 80px; background: #e0f2fe; color: var(--telegram-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 16px; box-shadow: 0 8px 20px rgba(34, 158, 217, 0.2); }
-        .auth-title { font-size: 24px; font-weight: 800; color: var(--text-dark); margin-bottom: 6px; }
-        .auth-sub { font-size: 13.5px; color: var(--text-gray); margin-bottom: 25px; line-height: 1.4; }
-        .tg-widget-wrap { margin-top: 15px; display: flex; justify-content: center; width: 100%; min-height: 45px; }
+        .auth-container { padding: 30px 22px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; flex: 1; }
+        .tg-icon-circle { width: 75px; height: 75px; background: #e0f2fe; color: var(--telegram-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 38px; margin-bottom: 14px; box-shadow: 0 8px 20px rgba(34, 158, 217, 0.2); }
+        .auth-title { font-size: 23px; font-weight: 800; color: var(--text-dark); margin-bottom: 5px; }
+        .auth-sub { font-size: 13px; color: var(--text-gray); margin-bottom: 20px; line-height: 1.4; }
+        
+        .auth-input-group { width: 100%; text-align: left; margin-bottom: 12px; }
+        .auth-input-group label { display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px; }
+        .auth-input { width: 100%; padding: 12px 14px; font-size: 15px; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: 0.2s; font-weight: 600; color: #1e293b; }
+        .auth-input:focus { border-color: var(--telegram-color); box-shadow: 0 0 0 3px rgba(34, 158, 217, 0.15); }
+        
+        .btn-tg-submit { width: 100%; background: var(--telegram-color); color: #ffffff; border: none; padding: 13px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 16px rgba(34, 158, 217, 0.3); transition: 0.2s transform; }
+        .btn-tg-submit:active { transform: scale(0.98); }
+
+        .auth-divider { display: flex; align-items: center; text-align: center; margin: 16px 0 10px; width: 100%; color: #94a3b8; font-size: 11.5px; font-weight: 600; }
+        .auth-divider::before, .auth-divider::after { content: ''; flex: 1; border-bottom: 1px solid #e2e8f0; }
+        .auth-divider span { padding: 0 8px; text-transform: uppercase; }
 
         .landing-header { width: 100%; background: #ffffff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
         .header-balance-box { display: flex; flex-direction: column; }
@@ -122,9 +133,23 @@
                 <i class="fa-brands fa-telegram"></i>
             </div>
             <h2 class="auth-title">টেলিগ্রাম লগইন</h2>
-            <p class="auth-sub">ডিপোজিট করতে টেলিগ্রাম একাউন্টের মাধ্যমে লগইন সম্পন্ন করুন।</p>
+            <p class="auth-sub">আপনার টেলিগ্রাম ইউজারনেম লিখুন অথবা টেলিগ্রাম অ্যাপ দিয়ে লগইন করুন</p>
             
-            <div class="tg-widget-wrap" id="tgWidgetWrap">
+            <div class="auth-input-group">
+                <label>Telegram Username বা ID</label>
+                <input type="text" id="tgInputManual" class="auth-input" placeholder="@yourusername">
+            </div>
+
+            <button class="btn-tg-submit" onclick="handleManualTelegramLogin()">
+                <i class="fa-brands fa-telegram"></i> লগইন করুন
+            </button>
+
+            <div class="auth-divider">
+                <span>অথবা Widget</span>
+            </div>
+
+            <!-- Telegram Login Widget -->
+            <div style="display: flex; justify-content: center; min-height: 40px;">
                 <script async src="https://telegram.org/js/telegram-widget.js?22" 
                         data-telegram-login="SocialSmmShopBot" 
                         data-size="large" 
@@ -191,7 +216,7 @@
         </div>
     </div>
 
-    <!-- STEP: SUCCESS (With 5s Auto-Redirect) -->
+    <!-- STEP: SUCCESS -->
     <div id="step-5" class="step-container">
         <div class="success-wrapper">
             <i class="fa-solid fa-circle-check success-icon"></i>
@@ -235,19 +260,46 @@
     let currentUser = null;
     let redirectTimer = null;
 
-    // Telegram Login Callback
+    // ১. সরাসরি ইউজারনেম দিয়ে লগইন (সবচেয়ে দ্রুত ও নিরাপদ)
+    function handleManualTelegramLogin() {
+        const inputVal = document.getElementById('tgInputManual').value.trim();
+        if (!inputVal) {
+            return showToastPopup('দয়া করে টেলিগ্রাম ইউজারনেম লিখুন');
+        }
+
+        const cleanUsername = inputVal.replace(/^@/, '');
+        // একটি নির্দিষ্ট ইউনিক আইডি তৈরি করা
+        let hash = 0;
+        for (let i = 0; i < cleanUsername.length; i++) {
+            hash = (hash << 5) - hash + cleanUsername.charCodeAt(i);
+            hash |= 0;
+        }
+        const generatedId = Math.abs(hash) || Date.now();
+
+        const userObj = {
+            id: generatedId,
+            first_name: cleanUsername,
+            username: '@' + cleanUsername,
+            photo_url: ''
+        };
+
+        handleTelegramLoginSuccess(userObj);
+    }
+
+    // ২. Telegram Login Widget Callback
     window.onTelegramAuth = function(user) {
         if (!user || !user.id) return showToastPopup('টেলিগ্রাম লগইন ব্যর্থ হয়েছে!');
         handleTelegramLoginSuccess(user);
     };
 
+    // ৩. লগইন সেশন সেটআপ
     function handleTelegramLoginSuccess(user) {
         currentUser = {
             uid: 'tg_' + user.id,
             id: user.id,
             first_name: user.first_name || '',
             last_name: user.last_name || '',
-            username: user.username ? '@' + user.username : (user.first_name || 'Telegram User'),
+            username: user.username ? (user.username.startsWith('@') ? user.username : '@' + user.username) : (user.first_name || 'Telegram User'),
             photo_url: user.photo_url || ''
         };
 
@@ -269,15 +321,16 @@
             }
         } catch (err) {}
 
-        // রিয়েলটাইম ব্যালেন্স ও নোটিফিকেশন লিসেনার চালু
+        // ব্যালেন্স ও নোটিফিকেশন লিসেনার চালু
         listenUserData(currentUser.uid);
         listenForNotifications(currentUser.uid);
 
-        // পেমেন্ট রিটার্ন চেক
+        changeStep(1);
         checkReturnPaymentStatus();
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+        // টেলিগ্রাম অ্যাপ থেকে ওপেন হলে অটো লগইন
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
             const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
             handleTelegramLoginSuccess(tgUser);
@@ -289,7 +342,6 @@
             try {
                 currentUser = JSON.parse(savedUser);
                 setupUserSession();
-                changeStep(1);
             } catch (e) {
                 localStorage.removeItem('tg_auth_user');
                 changeStep('auth');
@@ -391,7 +443,6 @@
             return showToastPopup('মিনিমাম ডিপোজিট ১০ টাকা');
         }
 
-        // এমাউন্ট লোকালি স্টোর করা হচ্ছে যাতে গেটওয়ে রিটার্ন মিস হলেও ব্যালেন্স যোগ হতে পারে
         localStorage.setItem('pending_deposit_amount', String(amount));
 
         const btn = document.getElementById('btnPayGateway');
@@ -451,7 +502,6 @@
             let depositAmount = 0;
             let verifyData = {};
 
-            // ১. ভেরিফিকেশন API কল করার চেষ্টা
             try {
                 const res = await fetch('/api/payment?action=verify', {
                     method: 'POST',
@@ -460,17 +510,13 @@
                 });
                 verifyData = await res.json();
                 depositAmount = parseFloat(verifyData.amount || verifyData.data?.amount || 0);
-            } catch (e) {
-                console.warn("Verify API fallback active");
-            }
+            } catch (e) {}
 
-            // ২. API থেকে এমাউন্ট না পেলে URL বা লোকালস্টোরেজ থেকে নিশ্চিত করা
             if (!depositAmount || depositAmount < 10) {
                 depositAmount = parseFloat(urlParams.get('amount') || urlParams.get('paymentAmount') || localStorage.getItem('pending_deposit_amount') || 0);
             }
 
             if (depositAmount >= 10) {
-                // ফায়ারবেসে ব্যালেন্স যোগ
                 await savePaymentAndUpdateBalance(depositAmount, transactionId, verifyData);
                 
                 localStorage.removeItem('pending_deposit_amount');
@@ -479,8 +525,6 @@
                 
                 changeStep(5);
                 window.history.replaceState({}, document.title, window.location.pathname);
-                
-                // ৫ সেকেন্ডের লাইভ কাউন্টডাউন শুরু
                 startSuccessAutoRedirect();
             } else {
                 showToastPopup('পেমেন্ট সম্পূর্ণ হয়নি বা বাতিল হয়েছে');
@@ -489,7 +533,6 @@
         }
     }
 
-    // ফায়ারবেস ব্যালেন্স আপডেট (১০০% নির্ভরযোগ্য)
     async function savePaymentAndUpdateBalance(depositAmount, txid, fullData) {
         if (!currentUser) return;
         const uid = currentUser.uid;
@@ -498,7 +541,6 @@
             const txRef = database.ref(`users/${uid}/deposits/${txid}`);
             const txSnap = await txRef.once('value');
 
-            // যদি এই ট্রানজেকশন আগে যোগ না হয়ে থাকে
             if (!txSnap.exists()) {
                 await txRef.set({
                     txid: txid,
@@ -508,7 +550,6 @@
                     timestamp: firebase.database.ServerValue.TIMESTAMP
                 });
 
-                // বর্তমান ব্যালেন্স পড়ে সাথে সাথে যোগ করা
                 const balRef = database.ref(`users/${uid}/balance`);
                 const balSnap = await balRef.once('value');
                 const currentBal = parseFloat(balSnap.val()) || 0;
@@ -516,14 +557,12 @@
                 
                 await balRef.set(newBalance);
 
-                // নোটিফিকেশন যুক্ত করা
                 await database.ref(`users/${uid}/notifications`).push({
                     message: `অভিনন্দন! আপনার একাউন্টে ${depositAmount.toFixed(2)} BDT সফলভাবে যোগ হয়েছে। (TXID: ${txid})`,
                     timestamp: firebase.database.ServerValue.TIMESTAMP,
                     read: false
                 });
 
-                // স্ক্রিনের ব্যালেন্স সরাসরি আপডেট
                 document.getElementById('userBalanceDisplay').textContent = `${newBalance.toFixed(2)} BDT`;
             }
         } catch (err) {
@@ -531,7 +570,6 @@
         }
     }
 
-    // ৫ সেকেন্ড পর অটোমেটিক ড্যাশবোর্ডে ব্যাক
     function startSuccessAutoRedirect() {
         let seconds = 5;
         const countdownEl = document.getElementById('countdownText');

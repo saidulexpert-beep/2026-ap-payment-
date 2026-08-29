@@ -1,6 +1,6 @@
 // DeshiPay Gateway Credentials (ইনবিল্ট Native Fetch ব্যবহার করা হয়েছে)
 const API_KEY = 'gnXi7etgWNhFyFGZFrOMYyrmnF4A1eGU5SC2QRmUvILOlNc2Ef';
-const BASE_URL = 'https://paydeshipay.themedokan.com';
+const BASE_URL = 'https://paydeshipay.themedokan.com/api/payment';
 
 module.exports = async (req, res) => {
     // 1. CORS Headers সেটআপ (Telegram WebApp ও সব ডোমেইন থেকে কল করার জন্য)

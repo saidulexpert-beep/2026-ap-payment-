@@ -12,8 +12,8 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const API_KEY = 'eiDWTzspSV5TlyevpWXxt96CNfLDmpblmHbP88W3xgm3LCb1W7';
-  const BASE_URL = 'https://client-pg.daweblab.com/api/payment';
+  const API_KEY = 'GitwFKKVL0RMN4zR12V9inyYcaTaEgBg6riEHkhXR7Q1on1Wpl';
+  const BASE_URL = 'https://paydeshipay.themedokan.com/api/payment/create';
   
   const action = req.query.action;
 

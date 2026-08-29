@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const API_KEY = 'K2fcHX0LFHjCdVHzPAleKMBWYAdOsh9l4LdIyGp8CDmfqZZKzP';
+  const API_KEY = 'eiDWTzspSV5TlyevpWXxt96CNfLDmpblmHbP88W3xgm3LCb1W7';
   const BASE_URL = 'https://client-pg.daweblab.com/api/payment';
   
   const action = req.query.action;

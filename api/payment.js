@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  // CORS Headers
+  // CORS Setup
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -12,8 +12,8 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // আপনার দেওয়া নতুন API KEY
-  const API_KEY = 'gnXi7etgWNhFyFGZFrOMYyrmnF4A1eGU5SC2QRmUvILOlNc2Ef';
+  // আপনার API Key (কোনো স্পেস ছাড়া)
+  const API_KEY = 'GitwFKKVL0RMN4zR12V9inyYcaTaEgBg6riEHkhXR7Q1on1Wpl'.trim();
   const BASE_URL = 'https://paydeshipay.themedokan.com/api/payment';
   
   const action = req.query.action;
@@ -34,13 +34,15 @@ export default async function handler(req, res) {
       const successUrl = body.success_url || body.redirect_url;
       const cancelUrl = body.cancel_url || successUrl;
 
-      // গেটওয়ের অফিসিয়াল ফরম্যাট
+      // DeshiPay / Themedokan গেটওয়ের অরিজিনাল পেলোড
       const payload = {
         amount: String(amountVal),
+        cus_name: body.cus_name || "Customer",
+        cus_email: body.cus_email || "customer@mail.com",
+        cus_number: body.cus_phone || "01700000000",
         success_url: successUrl,
         cancel_url: cancelUrl,
-        webhook_url: body.webhook_url || successUrl,
-        metadata: body.metadata || { phone: body.cus_phone || "01700000000" }
+        metadata: body.metadata || { order_id: body.order_id || `ORD_${Date.now()}` }
       };
 
       const response = await fetch(`${BASE_URL}/create`, {
@@ -57,7 +59,7 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
 
     } else if (action === 'verify') {
-      const trxId = body.transaction_id || body.order_id || body.trx_id;
+      const trxId = body.transaction_id || body.trx_id || body.order_id;
 
       const response = await fetch(`${BASE_URL}/verify`, {
         method: 'POST',
@@ -76,7 +78,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid Action' });
     }
   } catch (error) {
-    console.error("Payment API Error:", error);
-    return res.status(500).json({ error: error.message || 'Payment Gateway Server Error' });
+    console.error("Payment Gateway Error:", error);
+    return res.status(500).json({ error: error.message || 'Server Connection Error' });
   }
 }

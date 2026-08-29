@@ -1,10 +1,11 @@
 export default async function handler(req, res) {
+  // CORS Headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, api-key, API-KEY, Authorization'
   );
 
   if (req.method === 'OPTIONS') {
@@ -16,20 +17,46 @@ export default async function handler(req, res) {
   
   const action = req.query.action;
 
+  // Safe body parsing
+  let body = req.body;
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch (e) {
+      body = {};
+    }
+  }
+  body = body || {};
+
   try {
     if (action === 'create') {
-      const body = req.body || {};
-      
-      // DaWebLab গেটওয়ের প্রয়োজনীয় সকল ফিল্ড সুরক্ষিতভাবে ফরম্যাট করা হয়েছে
+      const orderId = body.order_id || body.transactionId || `ORD_${Date.now()}`;
+      const amountVal = parseFloat(body.amount) || 10;
+      const successUrl = body.success_url || body.redirect_url;
+      const cancelUrl = body.cancel_url || successUrl;
+
+      // DaWebLab / ZinPay এর জন্য সকল প্রয়োজনীয় ফিল্ড
       const payload = {
-        amount: String(body.amount),
+        api_key: API_KEY,
+        apiKey: API_KEY,
+        order_id: orderId,
+        transaction_id: orderId,
+        trx_id: orderId,
+        amount: String(amountVal),
         currency: "BDT",
-        cus_name: body.metadata?.username || body.cus_name || "Telegram User",
-        cus_email: body.cus_email || "user@telegram.app",
-        cus_phone: body.cus_phone || "01700000000",
-        success_url: body.success_url,
-        cancel_url: body.cancel_url,
-        redirect_url: body.success_url,
+        full_name: body.cus_name || body.full_name || body.metadata?.username || "Telegram User",
+        customer_name: body.cus_name || body.full_name || body.metadata?.username || "Telegram User",
+        cus_name: body.cus_name || body.full_name || body.metadata?.username || "Telegram User",
+        email: body.cus_email || body.email || "user@telegram.app",
+        customer_email: body.cus_email || body.email || "user@telegram.app",
+        cus_email: body.cus_email || body.email || "user@telegram.app",
+        phone: body.cus_phone || body.phone || "01700000000",
+        customer_phone: body.cus_phone || body.phone || "01700000000",
+        cus_phone: body.cus_phone || body.phone || "01700000000",
+        redirect_url: successUrl,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        callback_url: successUrl,
         metadata: body.metadata || {}
       };
 
@@ -38,6 +65,8 @@ export default async function handler(req, res) {
         headers: {
           'API-KEY': API_KEY,
           'api-key': API_KEY,
+          'apiKey': API_KEY,
+          'Authorization': `Bearer ${API_KEY}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
@@ -48,25 +77,35 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
 
     } else if (action === 'verify') {
+      const verifyPayload = {
+        api_key: API_KEY,
+        apiKey: API_KEY,
+        transaction_id: body.transaction_id || body.trx_id || body.order_id,
+        order_id: body.transaction_id || body.trx_id || body.order_id,
+        ...body
+      };
+
       const response = await fetch(`${BASE_URL}/verify`, {
         method: 'POST',
         headers: {
           'API-KEY': API_KEY,
           'api-key': API_KEY,
+          'apiKey': API_KEY,
+          'Authorization': `Bearer ${API_KEY}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify(req.body)
+        body: JSON.stringify(verifyPayload)
       });
       
       const data = await response.json();
       return res.status(200).json(data);
 
     } else {
-      return res.status(400).json({ error: 'Invalid Action' });
+      return res.status(400).json({ error: 'Invalid Action. Use ?action=create or ?action=verify' });
     }
   } catch (error) {
     console.error("Payment API Error:", error);
-    return res.status(500).json({ error: error.message || 'Internal Server Error' });
+    return res.status(500).json({ error: error.message || 'Payment Gateway Connection Error' });
   }
 }

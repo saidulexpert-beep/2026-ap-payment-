@@ -1,43 +1,45 @@
-
 <!DOCTYPE html>
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Social Smm Shop - Payment & Auth</title>
+    <title>Social Smm Shop - Payment & Telegram Auth</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <style>
         :root {
             --theme-color: #e2136e; 
             --brand-purple: #7854f7;
             --brand-blue: #3b5bfd;
+            --telegram-color: #229ED9;
             --text-dark: #1e293b;
             --text-gray: #64748b;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 16px 10px; }
-        .payment-modal { width: 100%; max-width: 395px; background: #ffffff; border-radius: 24px; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.2); overflow: hidden; position: relative; min-height: 650px; display: flex; flex-direction: column; }
+        .payment-modal { width: 100%; max-width: 395px; background: #ffffff; border-radius: 24px; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.2); overflow: hidden; position: relative; min-height: 620px; display: flex; flex-direction: column; }
         .step-container { display: none; flex-direction: column; width: 100%; height: 100%; animation: fadeIn 0.25s ease-in-out; flex: 1; }
         .step-container.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         
-        .auth-container { padding: 30px 24px; display: flex; flex-direction: column; justify-content: center; flex: 1; }
-        .auth-title { font-size: 24px; font-weight: 800; color: var(--text-dark); text-align: center; margin-bottom: 6px; }
-        .auth-sub { font-size: 13.5px; color: var(--text-gray); text-align: center; margin-bottom: 24px; }
-        .auth-form-group { margin-bottom: 14px; text-align: left; }
-        .auth-form-group label { display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px; }
-        .auth-input { width: 100%; padding: 13px 16px; font-size: 14.5px; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: 0.2s; }
-        .auth-input:focus { border-color: var(--brand-purple); box-shadow: 0 0 0 3px rgba(120, 84, 247, 0.15); }
-        .auth-toggle-link { text-align: center; margin-top: 18px; font-size: 13.5px; color: var(--text-gray); }
-        .auth-toggle-link span { color: var(--brand-purple); font-weight: 700; cursor: pointer; text-decoration: underline; }
+        .auth-container { padding: 35px 24px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; flex: 1; }
+        .tg-icon-circle { width: 80px; height: 80px; background: #e0f2fe; color: var(--telegram-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 16px; box-shadow: 0 8px 20px rgba(34, 158, 217, 0.2); }
+        .auth-title { font-size: 24px; font-weight: 800; color: var(--text-dark); margin-bottom: 6px; }
+        .auth-sub { font-size: 13.5px; color: var(--text-gray); margin-bottom: 25px; line-height: 1.4; }
+        
+        .btn-tg-login { width: 100%; background: var(--telegram-color); color: #ffffff; border: none; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(34, 158, 217, 0.35); transition: 0.2s transform; text-decoration: none; }
+        .btn-tg-login:active { transform: scale(0.98); }
+        .tg-widget-wrap { margin-top: 15px; display: flex; justify-content: center; width: 100%; min-height: 45px; }
 
         .landing-header { width: 100%; background: #ffffff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
         .header-balance-box { display: flex; flex-direction: column; }
@@ -48,31 +50,31 @@
         .header-icon-btn .notif-dot { position: absolute; top: 8px; right: 9px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: none; } 
 
         .step-1-content { padding: 20px 24px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; }
-        .main-avatar-wrap { width: 90px; height: 90px; border-radius: 24px; background: #050b14; border: 2.5px solid #38bdf8; box-shadow: 0 10px 25px rgba(56, 189, 248, 0.35); overflow: hidden; margin-bottom: 14px; display: flex; align-items: center; justify-content: center; }
+        .main-avatar-wrap { width: 85px; height: 85px; border-radius: 24px; background: #050b14; border: 2.5px solid #38bdf8; box-shadow: 0 10px 25px rgba(56, 189, 248, 0.35); overflow: hidden; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; }
         .main-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
         .shop-heading { font-size: 22px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; }
-        .user-email-badge { font-size: 12px; color: var(--brand-purple); font-weight: 700; background: #f5f3ff; padding: 4px 10px; border-radius: 20px; margin-top: 4px; }
+        .user-tg-badge { font-size: 12px; color: var(--telegram-color); font-weight: 700; background: #e0f2fe; padding: 4px 12px; border-radius: 20px; margin-top: 4px; display: inline-flex; align-items: center; gap: 5px; }
         .line-sep { width: 100%; height: 1px; background: #f1f5f9; margin: 14px 0; }
-        .note-card { background-color: #fffdf0; border-left: 4.5px solid #f59e0b; border-radius: 6px 14px 14px 6px; padding: 12px 14px; text-align: left; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.06); }
+        .note-card { background-color: #fffdf0; border-left: 4.5px solid #f59e0b; border-radius: 6px 14px 14px 6px; padding: 12px 14px; text-align: left; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.06); width: 100%; }
         .note-card h5 { color: #92400e; font-size: 13.5px; font-weight: 700; margin-bottom: 4px; }
         .note-card p { font-size: 12px; color: #78350f; line-height: 1.4; }
         .input-box-wrap { width: 100%; text-align: left; margin-bottom: 16px; }
-        .input-box-wrap label { display: block; font-size: 13.5px; font-weight: 700; color: #334155; margin-bottom: 6px; }
+        .input-box-wrap label { display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px; }
         .amount-field { width: 100%; padding: 12px 16px; font-size: 16.5px; font-weight: 700; color: #1e293b; border: 2px solid #60a5fa; border-radius: 14px; outline: none; transition: all 0.2s ease; text-align: center; }
         .amount-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
-        .btn-continue-gradient { width: 100%; background: linear-gradient(135deg, var(--brand-purple) 0%, #4f46e5 100%); color: #ffffff; border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(120, 84, 247, 0.35); transition: 0.2s transform; margin-top: auto;}
+        .btn-continue-gradient { width: 100%; background: linear-gradient(135deg, var(--brand-purple) 0%, #4f46e5 100%); color: #ffffff; border: none; padding: 15px; border-radius: 14px; font-size: 15.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(120, 84, 247, 0.35); transition: 0.2s transform; margin-top: auto; }
 
         .success-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
         .success-icon { font-size: 65px; color: #10b981; margin-bottom: 12px; animation: scaleIn 0.4s ease-out; }
         .success-title { font-size: 22px; font-weight: 800; color: #1e293b; margin-bottom: 6px; }
-        .success-msg { font-size: 14.5px; color: #64748b; margin-bottom: 24px; line-height: 1.5; }
-        .txid-box { background: #f8fafc; padding: 16px 20px; border-radius: 12px; border: 1px dashed #cbd5e1; font-size: 15px; color: #334155; margin-bottom: 28px; width: 100%; text-align: left; }
+        .success-msg { font-size: 14px; color: #64748b; margin-bottom: 24px; line-height: 1.5; }
+        .txid-box { background: #f8fafc; padding: 16px 20px; border-radius: 12px; border: 1px dashed #cbd5e1; font-size: 14.5px; color: #334155; margin-bottom: 28px; width: 100%; text-align: left; }
         .txid-box div { margin-bottom: 8px; }
         .txid-box span { font-weight: 700; color: var(--text-dark); }
-        .txid-box .highlight-txid { color: var(--brand-purple); font-family: monospace; font-size: 16px; }
+        .txid-box .highlight-txid { color: var(--brand-purple); font-family: monospace; font-size: 15.5px; }
         @keyframes scaleIn { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        .toast-popup { position: absolute; top: 20px; left: 50%; transform: translateX(-50%) translateY(-30px); background: #1e293b; color: #ffffff; padding: 12px 20px; border-radius: 20px; font-size: 13.5px; font-weight: 600; opacity: 0; pointer-events: none; transition: 0.3s all; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); width: 85%; text-align: center; line-height: 1.4;}
+        .toast-popup { position: absolute; top: 20px; left: 50%; transform: translateX(-50%) translateY(-30px); background: #1e293b; color: #ffffff; padding: 12px 20px; border-radius: 20px; font-size: 13.5px; font-weight: 600; opacity: 0; pointer-events: none; transition: 0.3s all; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); width: 85%; text-align: center; line-height: 1.4; }
         .toast-popup.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         .notif-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; flex-direction: column; justify-content: flex-end; opacity: 0; transition: 0.3s opacity; }
@@ -83,9 +85,9 @@
         .notif-header h3 { font-size: 18px; font-weight: 700; color: #1e293b; }
         .notif-header button { background: none; border: none; font-size: 20px; color: #64748b; cursor: pointer; }
         .notif-list { padding: 16px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; flex: 1; }
-        .notif-item { padding: 14px; border-radius: 12px; background: #f8fafc; border-left: 4px solid var(--text-gray); font-size: 14px; color: #334155; line-height: 1.5; }
+        .notif-item { padding: 14px; border-radius: 12px; background: #f8fafc; border-left: 4px solid var(--text-gray); font-size: 13.5px; color: #334155; line-height: 1.5; }
         .notif-item.unread { font-weight: 700; background: #f0fdf4; border-left-color: #10b981; }
-        .notif-time { font-size: 11.5px; color: #94a3b8; margin-top: 6px; display: block; font-weight: 500;}
+        .notif-time { font-size: 11px; color: #94a3b8; margin-top: 6px; display: block; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -93,6 +95,7 @@
 <div class="payment-modal">
     <div id="toastNotification" class="toast-popup"></div>
 
+    <!-- Notification Modal -->
     <div id="notifModal" class="notif-overlay">
         <div class="notif-modal-content">
             <div class="notif-header">
@@ -103,32 +106,32 @@
         </div>
     </div>
 
-    <!-- AUTH -->
-    <div id="step-auth" class="step-container">
+    <!-- STEP: TELEGRAM AUTH (Default Active) -->
+    <div id="step-auth" class="step-container active">
         <div class="auth-container">
-            <h2 class="auth-title" id="authTitle">লগইন করুন</h2>
-            <p class="auth-sub" id="authSub">ডিপোজিট সম্পন্ন করতে একাউন্টে প্রবেশ করুন</p>
+            <div class="tg-icon-circle">
+                <i class="fa-brands fa-telegram"></i>
+            </div>
+            <h2 class="auth-title">টেলিগ্রাম লগইন</h2>
+            <p class="auth-sub">ডিপোজিট সম্পন্ন করতে আপনার টেলিগ্রাম একাউন্টের মাধ্যমে লগইন করুন।</p>
             
-            <div class="auth-form-group">
-                <label>Email Address</label>
-                <input type="email" id="authEmail" class="auth-input" placeholder="example@mail.com">
-            </div>
-            <div class="auth-form-group">
-                <label>Password</label>
-                <input type="password" id="authPassword" class="auth-input" placeholder="••••••••">
-            </div>
-
-            <button class="btn-continue-gradient" id="btnAuthSubmit" onclick="handleAuthAction()" style="margin-top: 10px;">
-                Login
-            </button>
-            <div class="auth-toggle-link">
-                <span id="authToggleText" onclick="toggleAuthMode()">নতুন একাউন্ট তৈরি করুন</span>
+            <!-- Telegram Login Widget Container -->
+            <div class="tg-widget-wrap" id="tgWidgetWrap">
+                <!-- 
+                  YOUR_BOT_USERNAME এর জায়গায় আপনার টেলিগ্রাম বটের ইউজারনেম দিন (@ ছাড়া)
+                -->
+                <script async src="https://telegram.org/js/telegram-widget.js?22" 
+                        data-telegram-login="SocialSmmShopBot" 
+                        data-size="large" 
+                        data-radius="14" 
+                        data-onauth="onTelegramAuth(user)" 
+                        data-request-access="write"></script>
             </div>
         </div>
     </div>
 
-    <!-- MAIN DASHBOARD -->
-    <div id="step-1" class="step-container active">
+    <!-- STEP: MAIN DASHBOARD -->
+    <div id="step-1" class="step-container">
         <div class="landing-header">
             <div class="header-balance-box">
                 <span class="b-title">Current Balance</span>
@@ -147,20 +150,22 @@
 
         <div class="step-1-content">
             <div class="main-avatar-wrap">
-                <img src="https://i.ibb.co/r2q5RcBg/x.jpg" alt="Logo" onerror="this.src='https://via.placeholder.com/110'">
+                <img id="userPhotoDisplay" src="https://i.ibb.co/r2q5RcBg/x.jpg" alt="Logo" onerror="this.src='https://via.placeholder.com/110'">
             </div>
             
             <h2 class="shop-heading">Social Smm Shop</h2>
-            <div class="user-email-badge" id="userEmailBadge">user@mail.com</div>
+            <div class="user-tg-badge" id="userTgBadge">
+                <i class="fa-brands fa-telegram"></i> <span id="tgUsernameText">@user</span>
+            </div>
             <div class="line-sep"></div>
             <div class="note-card">
                 <h5>Payment Note</h5>
-                <p>নিরাপদ পেমেন্ট সম্পন্ন করতে টাকার পরিমাণ লিখে Continue বাটনে ক্লিক করুন। বিকাশ, নগদ ও রকেটের মাধ্যমে ইনস্ট্যান্ট পেমেন্ট করা যাবে।</p>
+                <p>মিনিমাম ডিপোজিট <b>১০ টাকা</b>। বিকাশ, নগদ ও রকেটের মাধ্যমে ইনস্ট্যান্ট অটোমেটিক পেমেন্ট এড হবে।</p>
             </div>
 
             <div class="input-box-wrap">
-                <label for="amountInput">আপনি কত টাকা ডিপোজিট করতে চান লিখুন</label>
-                <input type="number" id="amountInput" class="amount-field" value="500" placeholder="500" min="10">
+                <label for="amountInput">ডিপোজিট এমাউন্ট (মিনিমাম ১০ ৳)</label>
+                <input type="number" id="amountInput" class="amount-field" value="10" placeholder="10" min="10">
             </div>
 
             <button id="btnPayGateway" class="btn-continue-gradient" onclick="initiatePayment()">
@@ -169,13 +174,13 @@
         </div>
     </div>
 
-    <!-- SUCCESS -->
+    <!-- STEP: SUCCESS -->
     <div id="step-5" class="step-container">
         <div class="success-wrapper">
             <i class="fa-solid fa-circle-check success-icon"></i>
-            <h3 style="color: #10b981; font-size: 18px; font-weight: 700; margin-bottom: 4px;">পেমেন্ট সফলভাবে রিসিভ হয়েছে!</h3>
+            <h3 style="color: #10b981; font-size: 18px; font-weight: 700; margin-bottom: 4px;">পেমেন্ট সফল হয়েছে!</h3>
             <h2 class="success-title">Payment Successful!</h2>
-            <p class="success-msg">Your transaction has been verified automatically and balance updated.</p>
+            <p class="success-msg">আপনার ডিপোজিট সফলভাবে ভেরিফাই হয়ে ব্যালেন্সে যুক্ত হয়েছে।</p>
             
             <div class="txid-box">
                 <div>TXID : <span class="highlight-txid" id="displayTxid"></span></div>
@@ -187,6 +192,7 @@
             </button>
         </div>
     </div>
+</div>
 
 <script>
     const firebaseConfig = {
@@ -202,53 +208,86 @@
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
-    const auth = firebase.auth();
     const database = firebase.database();
 
     let currentUser = null;
-    let isRegisterMode = false;
 
-    function toggleAuthMode() {
-        isRegisterMode = !isRegisterMode;
-        document.getElementById('authTitle').textContent = isRegisterMode ? "একাউন্ট খুলুন" : "লগইন করুন";
-        document.getElementById('authSub').textContent = isRegisterMode ? "আপনার ইমেইল ও পাসওয়ার্ড দিয়ে রেজিস্টার করুন" : "ডিপোজিট সম্পন্ন করতে একাউন্টে প্রবেশ করুন";
-        document.getElementById('btnAuthSubmit').textContent = isRegisterMode ? "Register" : "Login";
-        document.getElementById('authToggleText').textContent = isRegisterMode ? "আগে থেকেই একাউন্ট আছে? লগইন করুন" : "নতুন একাউন্ট তৈরি করুন";
-    }
-
-    function handleAuthAction() {
-        const email = document.getElementById('authEmail').value.trim();
-        const password = document.getElementById('authPassword').value.trim();
-
-        if(!email || !password) return showToastPopup('ইমেইল ও পাসওয়ার্ড প্রদান করুন');
-
-        const btn = document.getElementById('btnAuthSubmit');
-        const originalText = btn.textContent;
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
-        btn.disabled = true;
-
-        if (isRegisterMode) {
-            auth.createUserWithEmailAndPassword(email, password).then(userCredential => {
-                database.ref(`users/${userCredential.user.uid}`).set({ email: email, balance: 0, createdAt: firebase.database.ServerValue.TIMESTAMP });
-                showToastPopup('একাউন্ট তৈরি হয়েছে!');
-                btn.innerHTML = originalText; btn.disabled = false;
-            }).catch(err => { showToastPopup(err.message); btn.innerHTML = originalText; btn.disabled = false; });
-        } else {
-            auth.signInWithEmailAndPassword(email, password).catch(err => { showToastPopup('লগইন ব্যর্থ হয়েছে।'); btn.innerHTML = originalText; btn.disabled = false; });
+    // Telegram Login Callback (Widget থেকে কল হবে)
+    window.onTelegramAuth = function(user) {
+        if (!user || !user.id) {
+            showToastPopup('টেলিগ্রাম অথেনটিকেশন ব্যর্থ হয়েছে!');
+            return;
         }
+        handleTelegramLoginSuccess(user);
+    };
+
+    function handleTelegramLoginSuccess(user) {
+        currentUser = {
+            uid: 'tg_' + user.id,
+            id: user.id,
+            first_name: user.first_name || '',
+            last_name: user.last_name || '',
+            username: user.username ? '@' + user.username : (user.first_name || 'Telegram User'),
+            photo_url: user.photo_url || ''
+        };
+
+        localStorage.setItem('tg_auth_user', JSON.stringify(currentUser));
+        setupUserSession();
     }
 
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            currentUser = user;
-            document.getElementById('userEmailBadge').textContent = user.email;
-            listenUserData(user.uid);
-            listenForNotifications(user.uid); 
-            
-            changeStep(1); 
-            checkReturnPaymentStatus(); 
+    function setupUserSession() {
+        if (!currentUser) return;
+
+        // UI আপডেট
+        document.getElementById('tgUsernameText').textContent = currentUser.username;
+        if (currentUser.photo_url) {
+            document.getElementById('userPhotoDisplay').src = currentUser.photo_url;
+        }
+
+        // Firebase-এ ইউজার প্রোফাইল সেভ/আপডেট
+        const userRef = database.ref(`users/${currentUser.uid}`);
+        userRef.once('value', snapshot => {
+            if (!snapshot.exists()) {
+                userRef.set({
+                    telegram_id: currentUser.id,
+                    username: currentUser.username,
+                    balance: 0,
+                    createdAt: firebase.database.ServerValue.TIMESTAMP
+                });
+            } else {
+                userRef.update({
+                    username: currentUser.username,
+                    lastLogin: firebase.database.ServerValue.TIMESTAMP
+                });
+            }
+        });
+
+        listenUserData(currentUser.uid);
+        listenForNotifications(currentUser.uid);
+        changeStep(1);
+        checkReturnPaymentStatus();
+    }
+
+    // পেজ লোড হলে টেলিগ্রাম ওয়েবঅ্যাপ বা লোকাল সেশন চেক
+    window.addEventListener('DOMContentLoaded', () => {
+        // ১. টেলিগ্রাম মিনি অ্যাপ (Web App) থেকে ওপেন করলে অটো-লগইন
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+            const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+            handleTelegramLoginSuccess(tgUser);
+            return;
+        }
+
+        // ২. আগে লগইন করা থাকলে
+        const savedUser = localStorage.getItem('tg_auth_user');
+        if (savedUser) {
+            try {
+                currentUser = JSON.parse(savedUser);
+                setupUserSession();
+            } catch (e) {
+                localStorage.removeItem('tg_auth_user');
+                changeStep('auth');
+            }
         } else {
-            currentUser = null;
             changeStep('auth');
         }
     });
@@ -260,11 +299,17 @@
         });
     }
 
-    // Vercel Serverless API-এর মাধ্যমে পেমেন্ট তৈরি
+    // পেমেন্ট শুরু করার ফাংশন
     async function initiatePayment() {
-        if (!currentUser) return showToastPopup('প্রথমে লগইন করুন');
-        const amount = document.getElementById('amountInput').value.trim();
-        if (!amount || parseFloat(amount) <= 0) return showToastPopup('সঠিক এমাউন্ট লিখুন');
+        if (!currentUser) return showToastPopup('প্রথমে টেলিগ্রাম দিয়ে লগইন করুন');
+        
+        const amountInput = document.getElementById('amountInput').value.trim();
+        const amount = parseFloat(amountInput);
+
+        // মিনিমাম ১০ টাকা ভ্যালিডেশন
+        if (isNaN(amount) || amount < 10) {
+            return showToastPopup('মিনিমাম ডিপোজিট ১০ টাকা');
+        }
 
         const btn = document.getElementById('btnPayGateway');
         btn.disabled = true; 
@@ -278,16 +323,15 @@
             cancel_url: returnUrl + "?status=cancel",
             metadata: {
                 uid: currentUser.uid,
-                phone: currentUser.email
+                telegram_id: currentUser.id,
+                username: currentUser.username
             }
         };
 
         try {
             const res = await fetch('/api/payment?action=create', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
             
@@ -308,7 +352,7 @@
         }
     }
 
-    // Vercel Serverless API-এর মাধ্যমে পেমেন্ট ভেরিফিকেশন
+    // পেমেন্ট রিটার্ন চেক
     async function checkReturnPaymentStatus() {
         const urlParams = new URLSearchParams(window.location.search);
         const transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid');
@@ -320,9 +364,7 @@
             try {
                 const res = await fetch('/api/payment?action=verify', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ transaction_id: transactionId })
                 });
 
@@ -332,9 +374,9 @@
                 if (apiStatus === "SUCCESS" || apiStatus === "COMPLETED" || data.payment_status === "COMPLETED" || data.success === true) {
                     let depositAmount = parseFloat(data.amount || urlParams.get('paymentAmount') || 0);
 
-                    if(depositAmount > 0) {
+                    if (depositAmount >= 10 && transactionId) {
                         savePaymentAndUpdateBalance(depositAmount, transactionId, data);
-                        document.getElementById('displayTxid').textContent = transactionId || "N/A";
+                        document.getElementById('displayTxid').textContent = transactionId;
                         document.getElementById('displayAmount').textContent = depositAmount + " BDT";
                         changeStep(5);
                         window.history.replaceState({}, document.title, window.location.pathname);
@@ -367,7 +409,7 @@
                     });
 
                     database.ref(`users/${uid}/notifications`).push({
-                        message: `অভিনন্দন! আপনার একাউন্টে ${depositAmount} BDT সফলভাবে অ্যাড হয়েছে। (TXID: ${txid})`,
+                        message: `অভিনন্দন! আপনার একাউন্টে ${depositAmount} BDT ডিপোজিট সফল হয়েছে। (TXID: ${txid})`,
                         timestamp: firebase.database.ServerValue.TIMESTAMP,
                         read: false
                     });
@@ -435,9 +477,11 @@
     }
 
     function logoutUser() {
-        auth.signOut().then(() => showToastPopup('লগআউট করা হয়েছে'));
+        localStorage.removeItem('tg_auth_user');
+        currentUser = null;
+        changeStep('auth');
+        showToastPopup('লগআউট করা হয়েছে');
     }
 </script>
-</div>
 </body>    
 </html>

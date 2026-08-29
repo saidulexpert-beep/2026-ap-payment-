@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ALL BNB - Automated Shop & Payment</title>
+    <title>ALL BNB</title>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -98,15 +98,15 @@
         .btn-buy:active { transform: scale(0.97); }
 
         .btn-gateway-pay {
-            background: linear-gradient(135deg, #7854f7 0%, #4f46e5 100%);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
             color: white;
-            font-weight: 700;
-            border-radius: 14px;
-            transition: all 0.2s ease;
-            box-shadow: 0 6px 18px rgba(120, 84, 247, 0.35);
+            font-weight: 800;
+            border-radius: 16px;
+            transition: all 0.25s ease;
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
         }
-        .btn-gateway-pay:hover { opacity: 0.95; }
-        .btn-gateway-pay:active { transform: scale(0.97); }
+        .btn-gateway-pay:hover { opacity: 0.95; transform: translateY(-1px); }
+        .btn-gateway-pay:active { transform: scale(0.98); }
 
         .btn-order-orange {
             background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
@@ -168,8 +168,8 @@
             gap: 10px;
         }
         .fab-support-main {
-            width: 50px;
-            height: 50px;
+            width: 52px;
+            height: 52px;
             background: linear-gradient(135deg, #1b64da 0%, #0d47a1 100%);
             color: white;
             border-radius: 50%;
@@ -178,8 +178,23 @@
             justify-content: center;
             box-shadow: 0 8px 24px rgba(27, 100, 218, 0.45);
             cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             border: 2px solid rgba(255, 255, 255, 0.8);
             position: relative;
+        }
+        .fab-support-main::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid #38bdf8;
+            animation: pulse-ring 2.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+            pointer-events: none;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            100% { transform: scale(1.4); opacity: 0; }
         }
         .support-options-menu {
             display: flex;
@@ -208,58 +223,32 @@
             text-decoration: none;
         }
 
-        .deposit-method-card {
-            background: #ffffff;
-            border: 2px solid #e2e8f0;
-            border-radius: 16px;
-            transition: all 0.25s ease;
-            position: relative;
-            cursor: pointer;
-        }
-        .deposit-method-card:hover { border-color: #93c5fd; }
-        .deposit-method-card.selected-method {
-            border-color: #1b64da !important;
-            background: #f0f7ff !important;
-            box-shadow: 0 6px 18px rgba(27, 100, 218, 0.15);
-        }
-        .deposit-method-card.selected-method .selected-check { display: flex !important; }
-
+        /* QUICK AMOUNT PILL */
         .quick-amount-pill {
-            background: #f8fafc;
-            border: 1.5px solid #cbd5e1;
-            padding: 9px 10px;
-            border-radius: 12px;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            padding: 10px 6px;
+            border-radius: 14px;
             font-weight: 800;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             color: #334155;
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: all 0.2s ease;
             text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
-        .quick-amount-pill:hover { border-color: #7854f7; color: #7854f7; background: #f5f3ff; }
+        .quick-amount-pill:hover {
+            border-color: #3b82f6;
+            color: #1d4ed8;
+            background: #eff6ff;
+            transform: translateY(-1px);
+        }
         .quick-amount-pill.selected {
-            border-color: #7854f7;
-            background: #7854f7;
-            color: #ffffff;
-            box-shadow: 0 4px 12px rgba(120, 84, 247, 0.25);
-        }
-
-        .tab-btn {
-            padding: 8px 14px;
-            border-radius: 12px;
-            font-size: 12.5px;
-            font-weight: 700;
-            color: #64748b;
-            background: #f1f5f9;
-            transition: all 0.2s;
-            cursor: pointer;
-            border: 1px solid transparent;
-        }
-        .tab-btn.active {
-            background: #ffffff;
-            color: #1b64da;
-            border-color: #e2e8f0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-color: #2563eb !important;
+            background: #2563eb !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+            transform: translateY(-1px);
         }
 
         .main-page { display: none; }
@@ -282,10 +271,38 @@
             outline: none;
         }
 
+        /* ORIGINAL LOADER WITH BADGES & SHIMMER */
         #loader {
             background: radial-gradient(circle at center, #0f172a 0%, #030712 100%);
             overflow: hidden;
         }
+        .float-item {
+            position: absolute;
+            animation: floating 4s ease-in-out infinite alternate;
+            opacity: 0.35;
+        }
+        .float-1 { top: 12%; left: 15%; animation-delay: 0s; color: #38bdf8; }
+        .float-2 { top: 18%; right: 15%; animation-delay: 1.2s; color: #10b981; }
+        .float-3 { bottom: 22%; left: 18%; animation-delay: 2.1s; color: #fbbf24; }
+        .float-4 { bottom: 18%; right: 18%; animation-delay: 0.8s; color: #a855f7; }
+
+        @keyframes floating {
+            0% { transform: translateY(0px) rotate(0deg) scale(0.9); }
+            100% { transform: translateY(-22px) rotate(12deg) scale(1.1); }
+        }
+
+        .shimmer-text {
+            background: linear-gradient(90deg, #60a5fa 0%, #ffffff 50%, #60a5fa 100%);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            animation: textShimmer 2.5s linear infinite;
+        }
+        @keyframes textShimmer {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
         .loader-ring {
             width: 76px;
             height: 76px;
@@ -310,17 +327,33 @@
 </head>
 <body class="max-w-md mx-auto relative bg-[#f1f4f9] min-h-screen text-[#1e293b]">
 
-    <!-- INTRO LOADER -->
+    <!-- 1. ORIGINAL INTRO LOADER WITH EMAIL, VPN, PROXY BADGES -->
     <div id="loader" class="fixed inset-0 flex flex-col items-center justify-center z-[100] p-6 select-none text-white">
+        <div class="float-item float-1"><i data-lucide="mail" class="w-8 h-8"></i></div>
+        <div class="float-item float-2"><i data-lucide="shield-check" class="w-9 h-9"></i></div>
+        <div class="float-item float-3"><i data-lucide="banknote" class="w-9 h-9"></i></div>
+        <div class="float-item float-4"><i data-lucide="globe" class="w-8 h-8"></i></div>
+
         <div class="relative flex items-center justify-center mb-6">
             <div class="loader-ring"></div>
             <div class="absolute inset-0 flex items-center justify-center">
                 <i data-lucide="zap" class="w-7 h-7 text-sky-400 fill-sky-400 animate-pulse"></i>
             </div>
         </div>
-        <div class="text-center space-y-2 z-10">
-            <h1 class="font-black text-2xl tracking-wider text-white">ALL BNB</h1>
-            <p class="text-xs text-blue-200">Fast, Secure & Automated System</p>
+
+        <div class="text-center space-y-3 z-10">
+            <h1 class="font-black text-2xl tracking-wider shimmer-text">ALL SERVICE</h1>
+            
+            <!-- STYLISH SERVICE BADGES -->
+            <div class="flex items-center justify-center gap-1.5 pt-1">
+                <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[11px] font-extrabold border border-blue-500/40 tracking-wider">EMAIL</span>
+                <span class="text-gray-500">•</span>
+                <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-extrabold border border-emerald-500/40 tracking-wider">VPN</span>
+                <span class="text-gray-500">•</span>
+                <span class="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[11px] font-extrabold border border-purple-500/40 tracking-wider">PROXY</span>
+            </div>
+
+            <p class="text-[11px] text-gray-400 font-medium tracking-wide pt-1">Fast, Secure & Automated System</p>
         </div>
     </div>
 
@@ -338,7 +371,7 @@
                 </div>
                 <div class="flex flex-col">
                     <span class="text-base font-black tracking-tight text-white leading-tight">ALL BNB</span>
-                    <span class="text-[10px] text-blue-100 font-semibold tracking-wide">Automated SMM & Services</span>
+                    <span class="text-[10px] text-blue-100 font-semibold tracking-wide">Email • VPN • Proxy</span>
                 </div>
             </div>
 
@@ -349,10 +382,10 @@
                     <span id="header-coin-balance" class="font-bold text-xs text-white">৳0.00</span>
                 </div>
 
-                <!-- NOTIFICATION BELL -->
+                <!-- NOTIFICATION BELL ICON WITH DYNAMIC BADGE -->
                 <button id="header-notif-btn" onclick="toggleNotificationModal()" class="relative bg-white/20 p-2 rounded-xl text-white hover:bg-white/30 transition shadow-sm" title="নোটিফিকেশন">
                     <i data-lucide="bell" class="w-4 h-4"></i>
-                    <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full hidden animate-pulse">0</span>
+                    <span id="notif-badge" class="absolute -top-1.5 -right-1.5 bg-red-500 border border-white text-white text-[9.5px] font-black px-1.5 py-0.2 rounded-full hidden animate-pulse shadow-sm">0</span>
                 </button>
             </div>
         </header>
@@ -371,8 +404,8 @@
             </div>
 
             <button id="support-toggle-btn" onclick="toggleSupportWidget()" class="fab-support-main" title="Customer Support">
-                <span id="support-icon-open"><i data-lucide="headset" class="w-5 h-5"></i></span>
-                <span id="support-icon-close" class="hidden"><i data-lucide="x" class="w-5 h-5"></i></span>
+                <span id="support-icon-open"><i data-lucide="headset" class="w-6 h-6"></i></span>
+                <span id="support-icon-close" class="hidden"><i data-lucide="x" class="w-6 h-6"></i></span>
             </button>
         </div>
 
@@ -398,60 +431,56 @@
                 </div>
             </div>
 
-            <!-- INTEGRATED DEPOSIT PAGE (AUTOMATED GATEWAY + MANUAL FALLBACK) -->
+            <!-- ULTRA PROFESSIONAL 100% AUTOMATED DEPOSIT PAGE -->
             <div id="pay-page" class="p-4 space-y-4 sub-page">
                 
-                <!-- HERO BANNER -->
-                <div class="bg-gradient-to-br from-[#1b64da] via-[#104fb5] to-[#0b337c] p-5 rounded-3xl text-white shadow-lg relative overflow-hidden">
-                    <div class="absolute -right-6 -bottom-6 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+                <!-- TOP WALLET HERO CARD -->
+                <div class="bg-gradient-to-br from-[#1b64da] via-[#1551b3] to-[#0a3275] p-5 rounded-3xl text-white shadow-xl relative overflow-hidden">
+                    <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
                     <div class="relative z-10 flex items-center justify-between">
                         <div>
-                            <span class="bg-white/20 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">Instant & Automated</span>
-                            <h2 class="text-xl font-black mt-1">Add Balance (ডিপোজিট)</h2>
-                            <p class="text-xs text-blue-100 mt-0.5">বিকাশ, নগদ ও রকেটে ইনস্ট্যান্ট অটোমেটিক ব্যালেন্স অ্যাড</p>
+                            <span class="bg-emerald-400/20 text-emerald-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-emerald-400/30 flex items-center gap-1 w-max mb-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> 100% Automated Gateway
+                            </span>
+                            <h2 class="text-xl font-black mt-1">Instant Deposit</h2>
+                            <p class="text-xs text-blue-100 mt-0.5">বিকাশ, নগদ, রকেটে ১ সেকেন্ডে ব্যালেন্স অ্যাড</p>
                         </div>
-                        <div class="w-12 h-12 rounded-2xl bg-white/15 border border-white/30 flex items-center justify-center">
-                            <i data-lucide="banknote" class="w-6 h-6 text-white"></i>
+                        <div class="text-right">
+                            <span class="text-[10px] text-blue-200 uppercase font-bold block">Current Balance</span>
+                            <span id="deposit-page-balance" class="text-lg font-black text-white">৳0.00</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- DEPOSIT TYPE TOGGLE TABS -->
-                <div class="flex items-center justify-between bg-gray-200/70 p-1 rounded-2xl">
-                    <button id="tab-btn-auto" onclick="switchDepositMode('auto')" class="tab-btn active flex-1 flex items-center justify-center gap-1.5">
-                        <i data-lucide="zap" class="w-3.5 h-3.5 text-purple-600"></i>
-                        <span>অটোমেটিক গেটওয়ে (Fast)</span>
-                    </button>
-                    <button id="tab-btn-manual" onclick="switchDepositMode('manual')" class="tab-btn flex-1 flex items-center justify-center gap-1.5">
-                        <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
-                        <span>ম্যানুয়াল TrxID ডিপোজিট</span>
-                    </button>
-                </div>
-
-                <!-- 1. AUTOMATED PAYMENT GATEWAY VIEW (YOUR PROVIDED PAGE) -->
-                <div id="auto-gateway-deposit-view" class="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm space-y-4">
+                <!-- MAIN PAYMENT CONTAINER -->
+                <div class="bg-white p-5 rounded-3xl border border-gray-200/90 shadow-sm space-y-4">
                     
-                    <div class="bg-[#fffdf0] border-l-4 border-[#f59e0b] rounded-xl p-3 text-left space-y-1">
-                        <h5 class="text-[#92400e] text-xs font-bold flex items-center gap-1.5">
-                            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> পেমেন্ট সংক্রান্ত তথ্য:
-                        </h5>
-                        <p class="text-[#78350f] text-[11.5px] leading-relaxed">
-                            মিনিমাম ডিপোজিট <b>১০ টাকা</b>। বিকাশ, নগদ ও রকেটের মাধ্যমে পেমেন্ট সম্পন্ন করলে সাথে সাথে ব্যালেন্স যুক্ত হবে।
-                        </p>
+                    <!-- GATEWAY LOGOS BADGE BAR -->
+                    <div class="flex items-center justify-between bg-slate-50 p-2.5 px-3.5 rounded-2xl border border-slate-100">
+                        <span class="text-[11px] font-bold text-gray-500 uppercase">Supported:</span>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[10px] font-extrabold bg-[#e2136e]/10 text-[#e2136e] rounded-md border border-[#e2136e]/20">bKash</span>
+                            <span class="px-2 py-0.5 text-[10px] font-extrabold bg-[#f7941d]/10 text-[#ea580c] rounded-md border border-[#f7941d]/20">Nagad</span>
+                            <span class="px-2 py-0.5 text-[10px] font-extrabold bg-[#8b5cf6]/10 text-[#7c3aed] rounded-md border border-[#8b5cf6]/20">Rocket</span>
+                            <span class="px-2 py-0.5 text-[10px] font-extrabold bg-blue-50 text-blue-600 rounded-md border border-blue-200">Cards</span>
+                        </div>
                     </div>
 
                     <!-- AMOUNT INPUT -->
                     <div>
-                        <label for="autoDepositAmountInput" class="block text-xs font-bold text-gray-700 mb-1.5">টাকার পরিমাণ লিখুন (মিনিমাম ১০ ৳):</label>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label for="autoDepositAmountInput" class="text-xs font-black text-gray-700">টাকার পরিমাণ লিখুন:</label>
+                            <span class="text-[10.5px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">মিনিমাম ৳১০</span>
+                        </div>
                         <div class="relative">
-                            <input id="autoDepositAmountInput" type="number" value="10" min="10" placeholder="10" oninput="handleAutoAmountInput()" class="w-full p-3.5 pl-8 rounded-2xl input-field text-lg font-black text-gray-800 border-2 border-indigo-300 focus:border-indigo-600 text-center">
-                            <span class="absolute left-3.5 top-4 text-gray-400 font-bold text-base">৳</span>
+                            <input id="autoDepositAmountInput" type="number" value="10" min="10" placeholder="10" oninput="handleAutoAmountInput()" class="w-full p-3.5 pl-9 rounded-2xl input-field text-xl font-black text-gray-800 border-2 border-blue-200 focus:border-blue-600 text-center tracking-wide">
+                            <span class="absolute left-3.5 top-3.5 text-gray-400 font-black text-lg">৳</span>
                         </div>
                     </div>
 
                     <!-- QUICK SELECT CHIPS -->
                     <div>
-                        <span class="block text-[11px] font-bold text-gray-400 uppercase mb-2">Quick Select Amount</span>
+                        <span class="block text-[11px] font-bold text-gray-400 uppercase mb-2">টাকার পরিমাণ দ্রুত বেছে নিন</span>
                         <div class="grid grid-cols-3 gap-2">
                             <button type="button" onclick="setAutoQuickAmount(10)" class="quick-amount-pill selected">১০ ৳</button>
                             <button type="button" onclick="setAutoQuickAmount(50)" class="quick-amount-pill">৫০ ৳</button>
@@ -459,50 +488,20 @@
                             <button type="button" onclick="setAutoQuickAmount(200)" class="quick-amount-pill">২০০ ৳</button>
                             <button type="button" onclick="setAutoQuickAmount(500)" class="quick-amount-pill">৫০০ ৳</button>
                             <button type="button" onclick="setAutoQuickAmount(1000)" class="quick-amount-pill">১,০০০ ৳</button>
+                            <button type="button" onclick="setAutoQuickAmount(2000)" class="quick-amount-pill col-span-3">২,০০০ ৳</button>
                         </div>
                     </div>
 
-                    <!-- CONTINUE BUTTON -->
-                    <button id="btnPayGateway" onclick="initiateAutomatedPayment()" class="w-full py-4 rounded-2xl btn-gateway-pay font-extrabold text-sm flex items-center justify-center gap-2">
-                        <i data-lucide="lock" class="w-4 h-4 text-yellow-300"></i>
-                        <span>Continue to Payment</span>
+                    <!-- SUBMIT BUTTON -->
+                    <button id="btnPayGateway" onclick="initiateAutomatedPayment()" class="w-full py-4 rounded-2xl btn-gateway-pay text-sm flex items-center justify-center gap-2 cursor-pointer">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-300"></i>
+                        <span>Continue to Automated Payment</span>
                     </button>
-                </div>
 
-                <!-- 2. MANUAL TRXID SUBMISSION VIEW (FALLBACK) -->
-                <div id="manual-deposit-view" class="hidden space-y-4">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-black text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                                <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">1</span>
-                                মেথড সিলেক্ট ও নাম্বার কপি
-                            </span>
-                            <span id="selected-method-badge" class="text-[11px] bg-gray-100 text-gray-500 font-bold px-2 py-0.5 rounded-md">মেথড বেছে নিন</span>
-                        </div>
-                        
-                        <div id="dynamic-payment-cards-grid" class="grid grid-cols-2 gap-2.5"></div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm space-y-4">
-                        <div class="flex items-center gap-1.5 border-b pb-2.5">
-                            <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">2</span>
-                            <h3 class="font-bold text-gray-800 text-xs uppercase tracking-wider">ম্যানুয়াল ডিপোজিট সাবমিট</h3>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">টাকার পরিমাণ (BDT)</label>
-                            <input id="deposit-amount" type="number" placeholder="টাকার পরিমাণ লিখুন" class="w-full p-3 rounded-xl input-field text-sm font-bold text-gray-800">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Transaction ID (TrxID)</label>
-                            <input id="deposit-txid" type="text" placeholder="যেমন: 8N7A6D5E" class="w-full p-3 rounded-xl input-field text-sm uppercase font-mono font-semibold">
-                        </div>
-
-                        <button id="deposit-btn" class="w-full py-3.5 rounded-xl btn-buy font-bold text-sm shadow-md flex items-center justify-center gap-2">
-                            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-                            <span>Submit TrxID Deposit</span>
-                        </button>
+                    <!-- SECURITY FOOTER NOTE -->
+                    <div class="flex items-center justify-center gap-1.5 text-[10.5px] text-gray-400 font-medium pt-1">
+                        <i data-lucide="lock" class="w-3 h-3 text-gray-400"></i>
+                        <span>256-Bit SSL Encrypted Instant Payment Gateway</span>
                     </div>
                 </div>
 
@@ -692,6 +691,24 @@
 
     </div>
 
+    <!-- NOTIFICATION MODAL -->
+    <div id="notification-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[75] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-5 w-full max-w-sm space-y-4 relative shadow-2xl">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-base">নোটিফিকেশন ও মেসেজ</h3>
+                </div>
+                <button onclick="toggleNotificationModal()" class="p-1 text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="notification-list-container" class="space-y-2.5 max-h-[320px] overflow-y-auto"></div>
+        </div>
+    </div>
+
     <!-- GATEWAY PAYMENT SUCCESS MODAL -->
     <div id="gateway-success-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[85] p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 text-center shadow-2xl">
@@ -703,7 +720,7 @@
             <p class="text-xs text-gray-500">আপনার ডিপোজিট সফলভাবে ব্যালেন্সে যুক্ত করা হয়েছে।</p>
             
             <div class="bg-gray-50 p-3.5 rounded-2xl border border-gray-200 text-left space-y-1.5 text-xs">
-                <div>TXID: <span id="gateway-display-txid" class="font-mono font-bold text-purple-700"></span></div>
+                <div>TXID: <span id="gateway-display-txid" class="font-mono font-bold text-blue-700"></span></div>
                 <div>Amount: <span id="gateway-display-amount" class="font-bold text-gray-800"></span></div>
             </div>
 
@@ -713,25 +730,30 @@
         </div>
     </div>
 
-    <!-- NOTIFICATION MODAL -->
-    <div id="notification-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[75] p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl p-5 w-full max-w-sm space-y-4 relative shadow-2xl">
-            <div class="flex items-center justify-between border-b pb-3">
-                <div class="flex items-center gap-2">
-                    <div class="p-2 bg-blue-50 text-blue-600 rounded-xl">
-                        <i data-lucide="bell" class="w-5 h-5"></i>
-                    </div>
-                    <h3 class="font-bold text-gray-800 text-base">নোটিফিকেশন ও নোটিশ</h3>
-                </div>
-                <button onclick="toggleNotificationModal()" class="p-1 text-gray-400 hover:text-gray-600">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
+    <!-- REPLACE / REPORT REQUEST MODAL -->
+    <div id="replace-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[75] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 relative text-center">
+            <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto">
+                <i data-lucide="shield-alert" class="w-7 h-7"></i>
             </div>
-            <div id="notification-list-container" class="space-y-2.5 max-h-[300px] overflow-y-auto"></div>
+            <div>
+                <h3 class="text-lg font-bold text-gray-800">রিপ্লেসমেন্ট / রিপোর্ট</h3>
+                <p class="text-xs text-gray-500 mt-1">অ্যাকাউন্টে কোনো সমস্যা থাকলে বিস্তারিত লিখে জানান।</p>
+            </div>
+            <input type="hidden" id="replace-order-id">
+            <input type="hidden" id="replace-mail-type">
+            <input type="hidden" id="replace-mail-cost">
+            <div>
+                <textarea id="replace-reason-text" rows="3" placeholder="সমস্যার বিবরণ লিখুন (যেমন: Invalid Password)..." class="w-full p-3 rounded-xl input-field text-xs"></textarea>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('replace-modal').classList.add('hidden')" class="w-1/2 py-2.5 bg-gray-100 font-bold rounded-xl text-xs">বাতিল</button>
+                <button id="submit-replace-btn" class="w-1/2 py-2.5 bg-purple-600 text-white font-bold rounded-xl text-xs">সাবমিট করুন</button>
+            </div>
         </div>
     </div>
 
-    <!-- MANUAL ORDER MODAL -->
+    <!-- ORDER NOW (MANUAL ORDER) CONFIRMATION MODAL -->
     <div id="manual-order-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[70] p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 relative text-center">
             <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto">
@@ -739,12 +761,13 @@
             </div>
             <div>
                 <h3 class="text-lg font-bold text-gray-800" id="manual-modal-title">Order Now (ম্যানুয়াল অর্ডার)</h3>
-                <p class="text-xs text-gray-500 mt-1">ইনস্ট্যান্ট স্টক শেষ, আপনি প্রি-অর্ডার করতে পারেন।</p>
+                <p class="text-xs text-gray-500 mt-1">বর্তমানে ইনস্ট্যান্ট স্টক শেষ, কিন্তু আপনি প্রি-অর্ডার করতে পারবেন।</p>
             </div>
             <div class="bg-orange-50 p-3.5 rounded-2xl border border-orange-200 text-left text-xs text-orange-950 space-y-1.5">
                 <p>• মূল্য: <b id="manual-modal-price" class="text-blue-700">৳0.00</b></p>
                 <p>• ডেলিভারি সময়সীমা: <b id="manual-modal-duration" class="text-orange-700 font-bold">৩০ মিনিট</b></p>
-                <p>• নির্ধারিত সময়ের মধ্যে অ্যাকাউন্ট ডেলিভারি করা হবে। ব্যর্থ হলে ব্যালেন্স স্বয়ংক্রিয় রিফান্ড হবে।</p>
+                <p>• অ্যাডমিন নির্ধারিত সময়ের মধ্যে অ্যাকাউন্ট সরাসরি আপনার <b>টেলিগ্রাম ইনবক্সে</b> পাঠিয়ে দেবে।</p>
+                <p class="text-[11px] text-red-600 font-semibold">• টাইমের মধ্যে ডেলিভারি না পেলে ব্যালেন্স অটোমেটিক <b>রিফান্ড</b> করা হবে।</p>
             </div>
             <div class="flex gap-2 pt-1">
                 <button onclick="document.getElementById('manual-order-modal').classList.add('hidden')" class="w-1/2 py-2.5 bg-gray-100 font-bold rounded-xl text-xs">বাতিল</button>
@@ -810,10 +833,10 @@
         let userData = null;
         let appConfig = {};
         let selectedCategory = 'all';
-        let currentSelectedDepositMethod = '';
         let userPurchasesCache = [];
         let pendingOrderToPlace = null;
         let countdownTimerInterval = null;
+        let allUserNotifications = [];
 
         const defaultCategories = [
             { id: "all", name: "All Services", icon: "layout-grid" },
@@ -822,13 +845,6 @@
             { id: "Proxy", name: "Proxy", icon: "globe" },
             { id: "VPN", name: "VPN", icon: "shield-check" },
             { id: "Social", name: "Social", icon: "users" }
-        ];
-
-        const defaultPaymentMethods = [
-            { id: "bKash", name: "বিকাশ (Personal)", number: "01827750260", icon: "https://i.postimg.cc/tCwGVkdH/20250922-113514.png" },
-            { id: "Nagad", name: "নগদ (Personal)", number: "01864260513", icon: "https://i.postimg.cc/Jh9s6jWw/20250922-113350.png" },
-            { id: "Rocket", name: "রকেট (Personal)", number: "018277502604", icon: "https://i.postimg.cc/htsw10Tj/20250922-113924.png" },
-            { id: "Binance", name: "Binance Pay ID", number: "1105989483", icon: "https://i.postimg.cc/L6LFLfxY/20250922-113752.png" }
         ];
 
         const loader = document.getElementById('loader');
@@ -900,6 +916,7 @@
             }
 
             await fetchAppConfig();
+            await loadUserNotifications();
 
             const adminId = String(appConfig.adminTelegramId || DEFAULT_ADMIN_UID);
             if (tgChatId === adminId) {
@@ -921,46 +938,26 @@
                 if (appConfig.whatsappSupportUrl) document.getElementById('whatsapp-support-link').href = appConfig.whatsappSupportUrl;
 
                 renderDynamicCategories();
-                renderDepositMethods();
-                updateNotificationBadge();
             } catch (e) {
                 renderDynamicCategories();
-                renderDepositMethods();
             }
         }
 
-        // --- AUTOMATED GATEWAY PAYMENT SYSTEM (INTEGRATED FROM YOUR FILE) ---
-        window.switchDepositMode = function(mode) {
-            const autoBtn = document.getElementById('tab-btn-auto');
-            const manualBtn = document.getElementById('tab-btn-manual');
-            const autoView = document.getElementById('auto-gateway-deposit-view');
-            const manualView = document.getElementById('manual-deposit-view');
-
-            if (mode === 'auto') {
-                autoBtn.classList.add('active');
-                manualBtn.classList.remove('active');
-                autoView.classList.remove('hidden');
-                manualView.classList.add('hidden');
-            } else {
-                manualBtn.classList.add('active');
-                autoBtn.classList.remove('active');
-                manualView.classList.remove('hidden');
-                autoView.classList.add('hidden');
-            }
-        };
-
+        // --- AUTOMATED GATEWAY PAYMENT SYSTEM ---
         window.setAutoQuickAmount = function(val) {
             document.getElementById('autoDepositAmountInput').value = val;
-            document.querySelectorAll('#auto-gateway-deposit-view .quick-amount-pill').forEach(chip => {
-                if (parseInt(chip.textContent.replace(/[^0-9]/g, '')) === val) chip.classList.add('selected');
+            document.querySelectorAll('.quick-amount-pill').forEach(chip => {
+                const chipVal = parseInt(chip.textContent.replace(/[^0-9]/g, ''));
+                if (chipVal === val) chip.classList.add('selected');
                 else chip.classList.remove('selected');
             });
         };
 
         window.handleAutoAmountInput = function() {
             const val = parseInt(document.getElementById('autoDepositAmountInput').value);
-            document.querySelectorAll('#auto-gateway-deposit-view .quick-amount-pill').forEach(chip => {
-                if (parseInt(chip.textContent.replace(/[^0-9]/g, '')) === val) chip.classList.add('selected');
+            document.querySelectorAll('.quick-amount-pill').forEach(chip => {
+                const chipVal = parseInt(chip.textContent.replace(/[^0-9]/g, ''));
+                if (chipVal === val) chip.classList.add('selected');
                 else chip.classList.remove('selected');
             });
         };
@@ -1013,7 +1010,7 @@
                     btn.innerHTML = originalBtnHtml;
                 }
             } catch (err) {
-                showAlert('সার্ভার কানেকশন ব্যর্থ হয়েছে। ম্যানুয়াল ডিপোজিট চেষ্টা করুন।');
+                showAlert('পেমেন্ট সার্ভার কানেকশন ব্যর্থ হয়েছে। কিছুক্ষণ পর চেষ্টা করুন।');
                 btn.disabled = false; 
                 btn.innerHTML = originalBtnHtml;
             }
@@ -1070,12 +1067,12 @@
             try {
                 await runTransaction(db, async (transaction) => {
                     const depSnap = await transaction.get(depositRef);
-                    if (depSnap.exists()) return; // Already processed
+                    if (depSnap.exists()) return;
 
                     transaction.set(depositRef, {
                         userId: tgChatId,
                         userName: userData.name,
-                        method: 'InstantPay Gateway',
+                        method: 'Instant Gateway',
                         amount: depositAmount,
                         transactionId: txid,
                         status: "approved",
@@ -1088,15 +1085,130 @@
                     });
                 });
 
+                // User Notification Record in Firestore
+                await addDoc(collection(db, "users", tgChatId, "notifications"), {
+                    title: "ডিপোজিট সফল!",
+                    message: `আপনার অ্যাকাউন্টে ৳${depositAmount.toFixed(2)} সফলভাবে যোগ করা হয়েছে। (TXID: ${txid})`,
+                    time: serverTimestamp(),
+                    type: "deposit"
+                });
+
                 const userSnap = await getDoc(userRef);
                 userData = userSnap.data();
                 updateUI();
+                await loadUserNotifications();
 
                 // Send Telegram Notification
-                await sendTelegramMessage(tgChatId, `🎉 <b>ডিপোজিট সফল হয়েছে!</b>\n\nপরিমাণ: ৳${depositAmount.toFixed(2)}\nTrxID: <code>${txid}</code>\nআপনার ব্যালেন্স স্বয়ংক্রিয়ভাবে আপডেট করা হয়েছে।`);
+                await sendTelegramMessage(tgChatId, `🎉 <b>ডিপোজিট সফল হয়েছে!</b>\n\nপরিমাণ: ৳${depositAmount.toFixed(2)}\nTrxID: <code>${txid}</code>\nআপনার ব্যালেন্স স্বয়ংক্রিয়ভাবে আপডেট হয়েছে।`);
             } catch (err) {
                 console.error("Balance update error:", err);
             }
+        }
+
+        // --- NOTIFICATION SYSTEM WITH DYNAMIC 9+ BADGE & INSTANT CLEAR ON CLICK ---
+        async function loadUserNotifications() {
+            if (!userData) return;
+            const tgChatId = String(userData.tgChatId);
+
+            let notifications = [];
+
+            // 1. Fetch Admin Broadcast Notices
+            if (appConfig.notices && Array.isArray(appConfig.notices)) {
+                appConfig.notices.forEach((n, idx) => {
+                    notifications.push({
+                        id: `admin_notice_${idx}`,
+                        title: n.title || 'নোটিশ',
+                        message: n.message || '',
+                        timeStr: n.time || 'Admin',
+                        timestamp: Date.now() - (idx * 1000)
+                    });
+                });
+            }
+
+            // 2. Fetch User Specific Notifications (Deposits, Refunds, Messages)
+            try {
+                const notifRef = collection(db, "users", tgChatId, "notifications");
+                const q = query(notifRef, orderBy("time", "desc"), limit(20));
+                const snap = await getDocs(q);
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const dateObj = data.time?.toDate ? data.time.toDate() : new Date();
+                    notifications.push({
+                        id: docSnap.id,
+                        title: data.title || 'মেসেজ',
+                        message: data.message || '',
+                        timeStr: dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        timestamp: dateObj.getTime()
+                    });
+                });
+            } catch (e) {}
+
+            notifications.sort((a, b) => b.timestamp - a.timestamp);
+            allUserNotifications = notifications;
+
+            updateNotificationBadgeUI();
+        }
+
+        function updateNotificationBadgeUI() {
+            const tgChatId = String(userData?.tgChatId || '0');
+            const lastReadTime = parseInt(localStorage.getItem(`notif_last_read_${tgChatId}`) || '0');
+            
+            // Count unread notifications after last click
+            const unreadCount = allUserNotifications.filter(n => n.timestamp > lastReadTime).length;
+            const badge = document.getElementById('notif-badge');
+
+            if (unreadCount > 0) {
+                badge.classList.remove('hidden');
+                if (unreadCount > 9) {
+                    badge.textContent = "9+";
+                } else {
+                    badge.textContent = String(unreadCount);
+                }
+            } else {
+                badge.classList.add('hidden');
+                badge.textContent = "0";
+            }
+        }
+
+        window.toggleNotificationModal = function() {
+            const modal = document.getElementById('notification-modal');
+            const isOpening = modal.classList.contains('hidden');
+            modal.classList.toggle('hidden');
+
+            if (isOpening) {
+                // When clicked & opened, mark as read immediately
+                const tgChatId = String(userData?.tgChatId || '0');
+                localStorage.setItem(`notif_last_read_${tgChatId}`, String(Date.now()));
+                
+                // Hide badge instantly
+                const badge = document.getElementById('notif-badge');
+                badge.classList.add('hidden');
+                badge.textContent = "0";
+
+                renderNotifications();
+            }
+        };
+
+        function renderNotifications() {
+            const container = document.getElementById('notification-list-container');
+            if (allUserNotifications.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-xs text-gray-400 font-bold">কোনো নোটিফিকেশন নেই</div>`;
+                return;
+            }
+
+            container.innerHTML = allUserNotifications.map(n => `
+                <div class="bg-blue-50/70 p-3.5 rounded-2xl border border-blue-100 text-left space-y-1 shadow-2xs">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-xs text-blue-950 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                            ${n.title}
+                        </h4>
+                        <span class="text-[10px] text-gray-400 font-semibold">${n.timeStr}</span>
+                    </div>
+                    <p class="text-xs text-gray-600 leading-relaxed pl-3.5">${n.message}</p>
+                </div>
+            `).join('');
+            lucide.createIcons();
         }
 
         // --- TELEGRAM MESSAGE HELPER ---
@@ -1138,92 +1250,12 @@
             lucide.createIcons();
         }
 
-        function renderDepositMethods() {
-            const container = document.getElementById('dynamic-payment-cards-grid');
-            const methods = appConfig.paymentMethods && Array.isArray(appConfig.paymentMethods) && appConfig.paymentMethods.length > 0
-                            ? appConfig.paymentMethods
-                            : defaultPaymentMethods;
-
-            container.innerHTML = methods.map(pm => `
-                <div id="card-${pm.id.toLowerCase()}" onclick="selectAndCopyMethod('${pm.id}', '${pm.number}', this)" class="deposit-method-card p-3 flex flex-col items-center justify-between text-center">
-                    <div class="selected-check hidden absolute top-2 right-2 w-4 h-4 bg-blue-600 text-white rounded-full items-center justify-center shadow">
-                        <i data-lucide="check" class="w-2.5 h-2.5 stroke-[3]"></i>
-                    </div>
-                    <img src="${pm.icon || 'https://i.postimg.cc/mD1YdG5y/mail.png'}" alt="${pm.name}" class="w-9 h-9 rounded-xl mb-1 object-cover shadow-sm" loading="lazy">
-                    <div>
-                        <p class="font-black text-xs text-gray-800">${pm.name}</p>
-                        <p class="text-blue-600 font-mono text-[11px] font-bold mt-0.5">${pm.number}</p>
-                    </div>
-                    <button class="w-full mt-2 text-[10.5px] py-1 px-2 bg-blue-50 text-blue-700 font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-blue-100 transition">
-                        <i data-lucide="copy" class="w-3 h-3"></i><span>Copy Number</span>
-                    </button>
-                </div>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        window.selectAndCopyMethod = function(methodName, number, cardElement) {
-            currentSelectedDepositMethod = methodName;
-            document.querySelectorAll('.deposit-method-card').forEach(c => c.classList.remove('selected-method'));
-            if(cardElement) cardElement.classList.add('selected-method');
-
-            const badge = document.getElementById('selected-method-badge');
-            if(badge) {
-                badge.textContent = `সিলেক্টেড: ${methodName}`;
-                badge.className = 'text-[11px] bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-md';
-            }
-
-            navigator.clipboard.writeText(number);
-            const btnText = cardElement.querySelector('button span');
-            if (btnText) {
-                const originalText = btnText.textContent;
-                btnText.textContent = "Copied!";
-                setTimeout(() => { btnText.textContent = originalText; }, 1500);
-            }
-        };
-
-        window.toggleNotificationModal = function() {
-            const modal = document.getElementById('notification-modal');
-            modal.classList.toggle('hidden');
-            if (!modal.classList.contains('hidden')) {
-                renderNotifications();
-            }
-        };
-
-        function renderNotifications() {
-            const container = document.getElementById('notification-list-container');
-            const notices = appConfig.notices || [
-                { title: "স্বাগতম!", message: "আমাদের স্বয়ংক্রিয় সেবা ব্যবহার করায় ধন্যবাদ। যেকোনো প্রয়োজনে সাপোর্টে যোগাযোগ করুন।", time: "এখনই" },
-                { title: "ডিপোজিট সতর্কতা", message: "অটোমেটিক গেটওয়ে ব্যবহার করে ১ সেকেন্ডে ব্যালেন্স অ্যাড করতে পারবেন।", time: "আজ" }
-            ];
-
-            container.innerHTML = notices.map(n => `
-                <div class="bg-blue-50/60 p-3 rounded-2xl border border-blue-100 text-left space-y-1">
-                    <div class="flex justify-between items-center">
-                        <h4 class="font-bold text-xs text-blue-900">${n.title}</h4>
-                        <span class="text-[10px] text-gray-400 font-medium">${n.time || ''}</span>
-                    </div>
-                    <p class="text-xs text-gray-600 leading-relaxed">${n.message}</p>
-                </div>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        function updateNotificationBadge() {
-            const count = (appConfig.notices && appConfig.notices.length) || 1;
-            const badge = document.getElementById('notif-badge');
-            if (count > 0) {
-                badge.textContent = count;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
-
         function updateUI() {
             if (!userData) return;
             const balanceFormatted = (userData.balance || 0).toFixed(2);
             document.getElementById('header-coin-balance').textContent = `৳${balanceFormatted}`;
+            const depBalance = document.getElementById('deposit-page-balance');
+            if (depBalance) depBalance.textContent = `৳${balanceFormatted}`;
         }
 
         function showMainPage(pageId) {
@@ -1520,39 +1552,49 @@
             }
         }
 
-        async function handleDepositRequest() {
-            if (!currentSelectedDepositMethod) return showAlert("অনুগ্রহ করে মেথড সিলেক্ট করুন!");
-            const amount = parseFloat(document.getElementById('deposit-amount').value);
-            const transactionId = document.getElementById('deposit-txid').value.trim();
+        window.openReplaceModal = function(saleId, mailType, cost) {
+            document.getElementById('replace-order-id').value = saleId;
+            document.getElementById('replace-mail-type').value = mailType;
+            document.getElementById('replace-mail-cost').value = cost;
+            document.getElementById('replace-reason-text').value = '';
+            document.getElementById('replace-modal').classList.remove('hidden');
+        };
 
-            if (!amount || amount <= 0 || !transactionId) return showAlert("টাকার পরিমাণ ও Transaction ID পূরণ করুন।");
+        async function handleSubmitReplace() {
+            const saleId = document.getElementById('replace-order-id').value;
+            const mailType = document.getElementById('replace-mail-type').value;
+            const cost = parseFloat(document.getElementById('replace-mail-cost').value || 0);
+            const reason = document.getElementById('replace-reason-text').value.trim();
 
-            const btn = document.getElementById('deposit-btn');
+            if (!reason) return showAlert("দয়া করে সমস্যার কারণ লিখুন।");
+
+            const btn = document.getElementById('submit-replace-btn');
             btn.disabled = true;
-            btn.textContent = "Processing...";
+            btn.textContent = "Submitting...";
+
             try {
-                await addDoc(collection(db, "deposits"), {
+                await addDoc(collection(db, "replace_requests"), {
                     userId: String(userData.tgChatId),
-                    userName: userData.name,
-                    method: currentSelectedDepositMethod,
-                    amount,
-                    transactionId,
+                    userName: userData.name || 'User',
+                    saleId: saleId,
+                    mailType: mailType,
+                    cost: cost,
+                    reason: reason,
                     status: "pending",
                     requestedAt: serverTimestamp()
                 });
 
-                const adminAlert = `💰 <b>নতুন ডিপোজিট রিকোয়েস্ট!</b>\n\n👤 <b>ইউজার:</b> ${userData.name} (<code>${userData.tgChatId}</code>)\n💳 <b>মেথড:</b> ${currentSelectedDepositMethod}\n💵 <b>পরিমাণ:</b> ৳${amount}\n🆔 <b>TrxID:</b> <code>${transactionId}</code>`;
+                const adminAlert = `⚠️ <b>নতুন রিপ্লেসমেন্ট / রিপোর্ট রিকোয়েস্ট!</b>\n\n👤 <b>ইউজার:</b> ${userData.name} (<code>${userData.tgChatId}</code>)\n📦 <b>সার্ভিস:</b> ${mailType} (ID: #${saleId})\n📝 <b>কারণ:</b> ${reason}`;
                 await notifyAdminViaTelegram(adminAlert);
 
-                showAlert("আপনার ডিপোজিট অনুরোধ জমা হয়েছে।");
-                document.getElementById('deposit-amount').value = '';
-                document.getElementById('deposit-txid').value = '';
+                document.getElementById('replace-modal').classList.add('hidden');
+                showAlert("রিপ্লেসমেন্ট অনুরোধ অ্যাডমিনের কাছে পাঠানো হয়েছে।");
                 navigateTo('history-page');
             } catch(e) {
-                showAlert("ডিপোজিট সাবমিট করতে সমস্যা হয়েছে।");
+                showAlert("অনুরোধ পাঠাতে ব্যর্থ হয়েছে।");
             } finally {
                 btn.disabled = false;
-                btn.textContent = "Submit TrxID Deposit";
+                btn.textContent = "সাবমিট করুন";
             }
         }
 
@@ -1703,6 +1745,9 @@
                         </div>
                         <div class="flex gap-2 pt-1 text-xs">
                             <button onclick="copyToClipboard('${fullCopy}', this)" class="btn-buy py-2 px-3 rounded-xl font-bold flex-1 text-center">Copy Full</button>
+                            <button onclick="openReplaceModal('${p.saleId || p.id}', '${p.mailType}', ${p.cost || 0})" class="bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 py-2 px-3 rounded-xl font-bold flex items-center justify-center gap-1">
+                                <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Report
+                            </button>
                         </div>
                     </div>`;
                 }).join('');
@@ -2040,10 +2085,10 @@
         };
 
         function setupEventListeners() {
-            document.getElementById('deposit-btn').addEventListener('click', handleDepositRequest);
             document.getElementById('download-orders-btn').addEventListener('click', exportOrdersToExcel);
             document.getElementById('copy-orders-btn').addEventListener('click', copyLast4HoursOrders);
             document.getElementById('confirm-manual-order-btn').addEventListener('click', handleConfirmManualOrder);
+            document.getElementById('submit-replace-btn').addEventListener('click', handleSubmitReplace);
             document.getElementById('submit-send-btn').addEventListener('click', handleSendBalance);
             document.getElementById('features-receive-btn').addEventListener('click', () => {
                 copyToClipboard(userData.tgChatId, null, `আপনার রিসিভ আইডি:\n${userData.tgChatId}`);

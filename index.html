@@ -348,7 +348,7 @@
 <body class="max-w-md mx-auto relative bg-[#f1f4f9] min-h-screen text-[#1e293b]">
 
     <!-- 1. INTRO LOADER -->
-    <div id="loader" class="fixed inset-0 flex flex-col items-center justify-center z-[100] p-6 select-none text-white">
+    <div id="loader" class="fixed inset-0 flex flex-col items-center justify-center z-[100] p-6 select-none text-white transition-opacity duration-300">
         <div class="float-item float-1"><i data-lucide="mail" class="w-8 h-8"></i></div>
         <div class="float-item float-2"><i data-lucide="shield-check" class="w-9 h-9"></i></div>
         <div class="float-item float-3"><i data-lucide="banknote" class="w-9 h-9"></i></div>
@@ -885,35 +885,46 @@
             { id: "Social", name: "Social", icon: "users" }
         ];
 
-        const loader = document.getElementById('loader');
+        function hideAppLoader() {
+            const loaderEl = document.getElementById('loader');
+            if (loaderEl) {
+                loaderEl.style.opacity = '0';
+                setTimeout(() => {
+                    loaderEl.style.display = 'none';
+                }, 350);
+            }
+        }
+
         const getLoadingHTML = () => `<div class="flex justify-center p-8"><div class="premium-loader-spinner"></div></div>`;
 
         window.onload = async () => {
             try {
-                window.Telegram.WebApp.ready();
-                window.Telegram.WebApp.expand();
-                currentUserTg = window.Telegram.WebApp.initDataUnsafe.user;
-                if (!currentUserTg) {
+                try {
+                    window.Telegram.WebApp.ready();
+                    window.Telegram.WebApp.expand();
+                    currentUserTg = window.Telegram.WebApp.initDataUnsafe.user;
+                    if (!currentUserTg) {
+                        currentUserTg = { id: "6954647230", first_name: "User", username: "account" };
+                    }
+                } catch (e) {
                     currentUserTg = { id: "6954647230", first_name: "User", username: "account" };
                 }
-            } catch (e) {
-                currentUserTg = { id: "6954647230", first_name: "User", username: "account" };
+
+                lucide.createIcons();
+                setupEventListeners();
+                
+                await initUserSession();
+                
+                // Safe payment verification & cancellation check
+                await checkReturnPaymentStatus();
+
+                checkAndRefundExpiredOrders();
+                startCountdownTimerRoutine();
+            } catch (err) {
+                console.error("Initialization Error:", err);
+            } finally {
+                hideAppLoader();
             }
-            lucide.createIcons();
-            setupEventListeners();
-            await initUserSession();
-            
-            // Check return status if redirected back from automated payment gateway
-            await checkReturnPaymentStatus();
-
-            checkAndRefundExpiredOrders();
-            startCountdownTimerRoutine();
-
-            setTimeout(() => {
-                loader.style.transition = 'opacity 0.4s ease';
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 400);
-            }, 800);
         };
 
         async function initUserSession() {
@@ -1064,11 +1075,11 @@
             if (!banner) return;
 
             if (isError) {
-                banner.className = 'p-3.5 rounded-2xl border flex items-start justify-between gap-2.5 transition-all bg-amber-50 border-amber-200 text-amber-900';
+                banner.className = 'p-3.5 rounded-2xl border flex items-start justify-between gap-2.5 transition-all bg-amber-50 border-amber-200 text-amber-900 mb-2';
                 iconEl.setAttribute('data-lucide', 'alert-circle');
                 iconEl.className = 'w-4 h-4 mt-0.5 shrink-0 text-amber-600';
             } else {
-                banner.className = 'p-3.5 rounded-2xl border flex items-start justify-between gap-2.5 transition-all bg-emerald-50 border-emerald-200 text-emerald-900';
+                banner.className = 'p-3.5 rounded-2xl border flex items-start justify-between gap-2.5 transition-all bg-emerald-50 border-emerald-200 text-emerald-900 mb-2';
                 iconEl.setAttribute('data-lucide', 'check-circle');
                 iconEl.className = 'w-4 h-4 mt-0.5 shrink-0 text-emerald-600';
             }
@@ -1084,67 +1095,76 @@
             if (banner) banner.classList.add('hidden');
         };
 
-        // --- GATEWAY RETURN VERIFICATION & CANCEL PROTECTION (NO POP-UP ON CANCEL) ---
+        // --- GATEWAY RETURN VERIFICATION & CANCEL PROTECTION ---
         async function checkReturnPaymentStatus() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlStatus = (urlParams.get('status') || '').toLowerCase();
-            let transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid') || urlParams.get('trx_id') || urlParams.get('payment_id');
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlStatus = (urlParams.get('status') || '').toLowerCase();
+                let transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid') || urlParams.get('trx_id') || urlParams.get('payment_id');
 
-            // 1. If User Cancelled/Failed: Show ordinary inline message in Deposit page
-            if (urlStatus === 'cancel' || urlStatus === 'cancelled' || urlStatus === 'failed') {
-                localStorage.removeItem('pending_deposit_amount');
-                window.history.replaceState({}, document.title, window.location.pathname);
-                navigateTo('pay-page');
-                showDepositStatusBanner('পেমেন্ট বাতিল করা হয়েছে', 'আপনার পেমেন্টটি সম্পন্ন হয়নি এবং কোনো ব্যালেন্স যোগ করা হয়নি।', true);
-                return;
-            }
+                if (!urlStatus && !transactionId) return;
 
-            // 2. Only proceed if status is success OR a valid transactionId is provided
-            if (urlStatus === 'success' || transactionId) {
-                if (!transactionId) {
-                    transactionId = "TXN_" + Date.now();
-                }
-
-                let depositAmount = 0;
-                let verifyData = {};
-                let isVerified = false;
-
-                try {
-                    const res = await fetch('/api/payment?action=verify', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ transaction_id: transactionId })
-                    });
-                    verifyData = await res.json();
-                    
-                    if (res.ok && (verifyData.status === 'success' || verifyData.status === 'COMPLETED' || verifyData.status === 'approved' || verifyData.data?.status === 'COMPLETED')) {
-                        isVerified = true;
-                        depositAmount = parseFloat(verifyData.amount || verifyData.data?.amount || 0);
-                    }
-                } catch (e) {
-                    console.error("Verification error:", e);
-                }
-
-                // Strictly allow fallback only if status is strictly 'success'
-                if (!depositAmount && urlStatus === 'success') {
-                    depositAmount = parseFloat(urlParams.get('amount') || urlParams.get('paymentAmount') || localStorage.getItem('pending_deposit_amount') || 0);
-                    if (depositAmount >= 10) isVerified = true;
-                }
-
-                if (isVerified && depositAmount >= 10 && userData) {
-                    await saveGatewayPaymentAndUpdateBalance(depositAmount, transactionId, verifyData);
+                // 1. User Cancelled / Failed: Show ordinary inline message in Deposit page
+                if (urlStatus === 'cancel' || urlStatus === 'cancelled' || urlStatus === 'failed') {
                     localStorage.removeItem('pending_deposit_amount');
-
-                    document.getElementById('gateway-display-txid').textContent = transactionId;
-                    document.getElementById('gateway-display-amount').textContent = `৳${depositAmount.toFixed(2)}`;
-                    document.getElementById('gateway-success-modal').classList.remove('hidden');
-                } else if (!isVerified && urlStatus === 'success') {
+                    window.history.replaceState({}, document.title, window.location.pathname);
                     navigateTo('pay-page');
-                    showDepositStatusBanner('যাচাইকরণ ব্যর্থ', 'পেমেন্ট যাচাইকরণ সম্পন্ন করা সম্ভব হয়নি। অনুগ্রহ করে সাপোর্টে যোগাযোগ করুন।', true);
+                    setTimeout(() => {
+                        showDepositStatusBanner('পেমেন্ট বাতিল করা হয়েছে', 'আপনার পেমেন্টটি সম্পন্ন হয়নি এবং কোনো ব্যালেন্স যোগ করা হয়নি।', true);
+                    }, 50);
+                    return;
                 }
 
-                localStorage.removeItem('pending_deposit_amount');
-                window.history.replaceState({}, document.title, window.location.pathname);
+                // 2. Success / Verification Flow
+                if (urlStatus === 'success' || transactionId) {
+                    if (!transactionId) {
+                        transactionId = "TXN_" + Date.now();
+                    }
+
+                    let depositAmount = 0;
+                    let verifyData = {};
+                    let isVerified = false;
+
+                    try {
+                        const res = await fetch('/api/payment?action=verify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ transaction_id: transactionId })
+                        });
+                        verifyData = await res.json();
+                        
+                        if (res.ok && (verifyData.status === 'success' || verifyData.status === 'COMPLETED' || verifyData.status === 'approved' || verifyData.data?.status === 'COMPLETED')) {
+                            isVerified = true;
+                            depositAmount = parseFloat(verifyData.amount || verifyData.data?.amount || 0);
+                        }
+                    } catch (e) {
+                        console.error("Verification error:", e);
+                    }
+
+                    if (!depositAmount && urlStatus === 'success') {
+                        depositAmount = parseFloat(urlParams.get('amount') || urlParams.get('paymentAmount') || localStorage.getItem('pending_deposit_amount') || 0);
+                        if (depositAmount >= 10) isVerified = true;
+                    }
+
+                    if (isVerified && depositAmount >= 10 && userData) {
+                        await saveGatewayPaymentAndUpdateBalance(depositAmount, transactionId, verifyData);
+                        localStorage.removeItem('pending_deposit_amount');
+
+                        document.getElementById('gateway-display-txid').textContent = transactionId;
+                        document.getElementById('gateway-display-amount').textContent = `৳${depositAmount.toFixed(2)}`;
+                        document.getElementById('gateway-success-modal').classList.remove('hidden');
+                    } else if (!isVerified && urlStatus === 'success') {
+                        navigateTo('pay-page');
+                        setTimeout(() => {
+                            showDepositStatusBanner('যাচাইকরণ ব্যর্থ', 'পেমেন্ট যাচাইকরণ সম্পন্ন করা সম্ভব হয়নি। অনুগ্রহ করে সাপোর্টে যোগাযোগ করুন।', true);
+                        }, 50);
+                    }
+
+                    localStorage.removeItem('pending_deposit_amount');
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            } catch (err) {
+                console.error("Payment status processing error:", err);
             }
         }
 
@@ -1174,7 +1194,6 @@
                     });
                 });
 
-                // Notification Record
                 await addDoc(collection(db, "users", tgChatId, "notifications"), {
                     title: "ডিপোজিট সফল!",
                     message: `আপনার অ্যাকাউন্টে ৳${depositAmount.toFixed(2)} সফলভাবে যোগ করা হয়েছে। (TXID: ${txid})`,
@@ -1439,7 +1458,7 @@
             }
         }
 
-        // --- PRODUCT RENDERING WITH QUANTITY SELECTION ---
+        // --- PRODUCT RENDERING (100% BLANK/HIDDEN STOCK WHEN hideStock: true) ---
         async function renderProductsBySelection() {
             const container = document.getElementById('product-list-container');
             container.innerHTML = getLoadingHTML();
@@ -1473,6 +1492,8 @@
                 const detailsId = `card-details-${idx}`;
                 
                 const hasApi = !!(item.apiUrl && item.apiUrl.trim() !== '');
+                
+                // COMPLETELY HIDE STOCK: If true, nothing is rendered
                 const isStockHidden = !!item.hideStock;
 
                 const isManualAllowed = item.allowManual === true;
@@ -1511,7 +1532,7 @@
                         ${item.details ? item.details.replace(/\n/g, '<br>') : 'এই প্রোডাক্টের জন্য কোনো অতিরিক্ত বিবরণ দেওয়া হয়নি।'}
                     </div>
 
-                    <!-- QUANTITY SELECTION BAR (For in-stock items) -->
+                    <!-- QUANTITY SELECTION BAR -->
                     ${!outOfStock ? `
                         <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
                             <div class="flex items-center gap-2">
@@ -1531,10 +1552,12 @@
 
                     <div class="flex items-center justify-between pt-2 border-t border-gray-100 text-xs">
                         <div class="flex items-center gap-2">
-                            <!-- Stock display logic -->
-                            <span class="font-semibold ${outOfStock ? 'text-orange-500' : 'text-emerald-600'}">
-                                ${isStockHidden ? (outOfStock ? 'Stock: <b>Restocking</b>' : 'Stock: <b>Available</b>') : `Stock: <b>${stock}</b>`}
-                            </span>
+                            <!-- Stock display logic: 100% hidden and blank if isStockHidden is true -->
+                            ${isStockHidden ? '' : `
+                                <span class="font-semibold ${outOfStock ? 'text-orange-500' : 'text-emerald-600'}">
+                                    Stock: <b>${stock}</b>
+                                </span>
+                            `}
 
                             <!-- API Button -->
                             ${hasApi ? `
@@ -1589,7 +1612,6 @@
             }
 
             try {
-                // Fetch available items according to quantity
                 const itemQuery = query(collection(db, stockKey), where("isSold", "==", false), limit(quantity));
                 const itemQuerySnapshot = await getDocs(itemQuery);
 
@@ -1639,9 +1661,8 @@
                     transaction.set(counterRef, { currentId: saleId }, { merge: true });
                 });
 
-                // Display items in Success Modal
                 const itemsContainer = document.getElementById('purchase-success-items-container');
-                itemsContainer.innerHTML = itemsToPurchase.map((docSnap, i) => {
+                itemsContainer.innerHTML = itemsToPurchase.map((docSnap) => {
                     const data = docSnap.data();
                     const email = data.email || data.ip || data.data || 'N/A';
                     const pass = data.password || 'N/A';

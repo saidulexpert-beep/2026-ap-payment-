@@ -178,6 +178,7 @@
             
             <div class="txid-box">
                 <div>TXID : <span class="highlight-txid" id="displayTxid"></span></div>
+                <div>Method : <span id="displayMethod" style="font-weight:700; text-transform:uppercase; color:#2563eb;"></span></div>
                 <div>Amount : <span id="displayAmount"></span></div>
             </div>
             
@@ -259,7 +260,7 @@
         });
     }
 
-    // Vercel Serverless API-এর মাধ্যমে পেমেন্ট তৈরি
+    // --- ১. গেটওয়েতে পেমেন্ট তৈরির রিকোয়েস্ট ---
     async function initiatePayment() {
         if (!currentUser) return showToastPopup('প্রথমে লগইন করুন');
         const amount = document.getElementById('amountInput').value.trim();
@@ -269,12 +270,18 @@
         btn.disabled = true; 
         btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
 
-        const returnUrl = window.location.href.split('?')[0];
+        const returnUrl = window.location.origin + window.location.pathname;
+        const orderId = "ORD_" + Date.now();
 
         const payload = {
             amount: String(amount),
-            success_url: returnUrl + "?status=success",
+            order_id: orderId,
+            cus_name: currentUser.displayName || currentUser.email.split('@')[0] || "User",
+            cus_email: currentUser.email,
+            cus_phone: "01700000000",
+            success_url: returnUrl + "?status=success&amount=" + amount + "&transaction_id=" + orderId,
             cancel_url: returnUrl + "?status=cancel",
+            redirect_url: returnUrl + "?status=success&amount=" + amount + "&transaction_id=" + orderId,
             metadata: {
                 uid: currentUser.uid,
                 phone: currentUser.email
@@ -291,12 +298,12 @@
             });
             
             const data = await res.json();
-            let payUrl = data.payment_url || data.url || (data.data && data.data.payment_url) || (data.data && data.data.url);
+            let payUrl = data.payment_url || data.url || (data.data && (data.data.payment_url || data.data.url)) || data.redirect_url;
 
             if (payUrl) {
                 window.location.href = payUrl;
             } else {
-                showToastPopup(data.message || 'পেমেন্ট গেটওয়েতে সমস্যা হচ্ছে!');
+                showToastPopup(data.message || data.error || 'পেমেন্ট গেটওয়েতে সমস্যা হচ্ছে!');
                 btn.disabled = false; 
                 btn.innerHTML = '<i class="fa-solid fa-lock" style="color: #facc15;"></i> Continue to Payment';
             }
@@ -307,11 +314,17 @@
         }
     }
 
-    // Vercel Serverless API-এর মাধ্যমে পেমেন্ট ভেরিফিকেশন
+    // --- ২. পেমেন্ট যাচাই এবং সফল হলে ব্যালেন্স অ্যাড ---
     async function checkReturnPaymentStatus() {
         const urlParams = new URLSearchParams(window.location.search);
-        const transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid');
-        const urlStatus = urlParams.get('status');
+        const urlStatus = (urlParams.get('status') || '').toLowerCase();
+        const transactionId = urlParams.get('transaction_id') || urlParams.get('transactionId') || urlParams.get('order_id') || urlParams.get('txid');
+
+        if (urlStatus === 'cancel' || urlStatus === 'failed') {
+            showToastPopup('পেমেন্ট বাতিল করা হয়েছে।');
+            window.history.replaceState({}, document.title, window.location.pathname);
+            return;
+        }
 
         if (transactionId || urlStatus === 'success') {
             showToastPopup('পেমেন্ট ভেরিফাই করা হচ্ছে...');
@@ -328,13 +341,17 @@
                 const data = await res.json();
                 const apiStatus = data.status ? String(data.status).toUpperCase() : "";
 
-                if (apiStatus === "SUCCESS" || apiStatus === "COMPLETED" || data.payment_status === "COMPLETED" || data.success === true) {
-                    let depositAmount = parseFloat(data.amount || urlParams.get('paymentAmount') || 0);
+                // আপনার গেটওয়ের "COMPLETED" স্ট্যাটাস অনুযায়ী চেক
+                if (apiStatus === "COMPLETED" || apiStatus === "SUCCESS" || data.payment_status === "COMPLETED" || urlStatus === 'success') {
+                    let depositAmount = parseFloat(data.amount || urlParams.get('amount') || 0);
+                    let finalTxid = data.transaction_id || transactionId || "TXN_" + Date.now();
+                    let paymentMethod = data.payment_method || "Online";
 
                     if(depositAmount > 0) {
-                        savePaymentAndUpdateBalance(depositAmount, transactionId, data);
-                        document.getElementById('displayTxid').textContent = transactionId || "N/A";
-                        document.getElementById('displayAmount').textContent = depositAmount + " BDT";
+                        savePaymentAndUpdateBalance(depositAmount, finalTxid, paymentMethod, data);
+                        document.getElementById('displayTxid').textContent = finalTxid;
+                        document.getElementById('displayMethod').textContent = paymentMethod;
+                        document.getElementById('displayAmount').textContent = depositAmount.toFixed(2) + " BDT";
                         changeStep(5);
                         window.history.replaceState({}, document.title, window.location.pathname);
                     }
@@ -347,7 +364,7 @@
         }
     }
 
-    function savePaymentAndUpdateBalance(depositAmount, txid, fullData) {
+    function savePaymentAndUpdateBalance(depositAmount, txid, method, fullData) {
         if (!currentUser) return;
         const uid = currentUser.uid;
 
@@ -357,7 +374,8 @@
                 txRef.set({
                     txid: txid,
                     amount: depositAmount,
-                    gateway: 'DaWebLab',
+                    method: method,
+                    gateway: 'PayDeshiPay',
                     details: fullData,
                     timestamp: firebase.database.ServerValue.TIMESTAMP
                 }).then(() => {
@@ -366,7 +384,7 @@
                     });
 
                     database.ref(`users/${uid}/notifications`).push({
-                        message: `অভিনন্দন! আপনার একাউন্টে ${depositAmount} BDT সফলভাবে অ্যাড হয়েছে। (TXID: ${txid})`,
+                        message: `অভিনন্দন! আপনার একাউন্টে ${depositAmount} BDT সফলভাবে যোগ হয়েছে। (${method} - TXID: ${txid})`,
                         timestamp: firebase.database.ServerValue.TIMESTAMP,
                         read: false
                     });

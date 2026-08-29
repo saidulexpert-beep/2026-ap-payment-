@@ -223,7 +223,6 @@
             text-decoration: none;
         }
 
-        /* QUICK AMOUNT PILL */
         .quick-amount-pill {
             background: #ffffff;
             border: 1.5px solid #e2e8f0;
@@ -431,6 +430,15 @@
 
             <!-- AUTOMATED DEPOSIT PAGE -->
             <div id="pay-page" class="p-4 space-y-4 sub-page">
+                
+                <!-- INLINE CANCEL / ERROR BANNER (NON-POPUP) -->
+                <div id="deposit-status-banner" class="hidden p-3.5 rounded-2xl text-xs font-semibold flex items-center justify-between transition-all duration-300">
+                    <div class="flex items-center gap-2" id="deposit-status-banner-content"></div>
+                    <button onclick="document.getElementById('deposit-status-banner').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
                 <div class="bg-gradient-to-br from-[#1b64da] via-[#1551b3] to-[#0a3275] p-5 rounded-3xl text-white shadow-xl relative overflow-hidden">
                     <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
                     <div class="relative z-10 flex items-center justify-between">
@@ -503,8 +511,12 @@
                         <p class="text-xs text-gray-500">আপনার ক্রয়কৃত সকল আইটেমের তালিকা</p>
                     </div>
                     <div class="flex gap-2">
-                        <button id="copy-orders-btn" class="bg-blue-50 text-blue-600 p-2 rounded-lg text-xs font-bold flex items-center gap-1 border border-blue-200 hover:bg-blue-100 transition"><i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy 4h</button>
-                        <button id="download-orders-btn" class="bg-emerald-50 text-emerald-600 p-2 rounded-lg text-xs font-bold flex items-center gap-1 border border-emerald-200 hover:bg-emerald-100 transition"><i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Excel</button>
+                        <button onclick="copyAllOrdersExcelFormat()" class="bg-blue-50 text-blue-600 p-2 rounded-xl text-xs font-bold flex items-center gap-1 border border-blue-200 hover:bg-blue-100 transition">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i> ALL COPY
+                        </button>
+                        <button onclick="sendAllOrdersToBot()" class="bg-emerald-50 text-emerald-600 p-2 rounded-xl text-xs font-bold flex items-center gap-1 border border-emerald-200 hover:bg-emerald-100 transition">
+                            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> ALL XLSX
+                        </button>
                     </div>
                 </div>
                 <div id="orders-purchase-history" class="space-y-3 min-h-[200px]"></div>
@@ -574,7 +586,7 @@
                 </div>
             </div>
 
-            <!-- SEND BALANCE SUB-PAGE -->
+            <!-- SEND BALANCE SUB-PAGE (2% FEE) -->
             <div id="send-page" class="p-4 space-y-5 sub-page">
                 <div class="flex items-center gap-3 mb-2">
                     <button onclick="navigateTo('features-page')" class="p-2 rounded-xl bg-white border border-gray-200">
@@ -583,7 +595,7 @@
                     <h2 class="text-lg font-bold">Send Balance</h2>
                 </div>
                 <div class="bg-white p-5 rounded-2xl border border-gray-200 space-y-4">
-                    <p class="text-xs text-red-600 bg-red-50 p-2.5 rounded-xl font-medium">প্রতিটি ট্রান্সফারে ৫% সার্ভিস চার্জ প্রযোজ্য। সর্বনিম্ন ৳২০ পাঠাতে পারবেন।</p>
+                    <p class="text-xs text-blue-700 bg-blue-50 p-2.5 rounded-xl font-semibold border border-blue-100">প্রতিটি ট্রান্সফারে ২% সার্ভিস চার্জ প্রযোজ্য। সর্বনিম্ন ৳২০ পাঠাতে পারবেন।</p>
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">প্রাপকের Telegram ID</label>
                         <input id="send-recipient-id" type="text" placeholder="Recipient's Telegram ID" class="w-full p-2.5 rounded-xl input-field text-sm">
@@ -679,22 +691,23 @@
 
     </div>
 
-    <!-- NOTIFICATION MODAL -->
-    <div id="notification-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[75] p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl p-5 w-full max-w-sm space-y-4 relative shadow-2xl">
-            <div class="flex items-center justify-between border-b pb-3">
-                <div class="flex items-center gap-2">
-                    <div class="p-2 bg-blue-50 text-blue-600 rounded-xl">
-                        <i data-lucide="bell" class="w-5 h-5"></i>
-                    </div>
-                    <h3 class="font-bold text-gray-800 text-base">নোটিফিকেশন ও মেসেজ</h3>
+    <!-- FULL SCREEN NOTIFICATION MODAL -->
+    <div id="notification-modal" class="hidden fixed inset-0 bg-[#f1f4f9] z-[75] flex flex-col p-4 overflow-hidden">
+        <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-gray-200 shadow-sm mb-4">
+            <div class="flex items-center gap-2.5">
+                <div class="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                    <i data-lucide="bell" class="w-5 h-5"></i>
                 </div>
-                <button onclick="toggleNotificationModal()" class="p-1 text-gray-400 hover:text-gray-600">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
+                <div>
+                    <h3 class="font-bold text-gray-800 text-base leading-tight">নোটিফিকেশন ও মেসেজ</h3>
+                    <p class="text-[11px] text-gray-400">সকল সিস্টেম আপডেট এবং নোটিশ</p>
+                </div>
             </div>
-            <div id="notification-list-container" class="space-y-2.5 max-h-[320px] overflow-y-auto"></div>
+            <button onclick="toggleNotificationModal()" class="p-2 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
         </div>
+        <div id="notification-list-container" class="space-y-3 flex-grow overflow-y-auto pb-10"></div>
     </div>
 
     <!-- GATEWAY PAYMENT SUCCESS MODAL -->
@@ -741,7 +754,7 @@
         </div>
     </div>
 
-    <!-- ORDER NOW (MANUAL ORDER) CONFIRMATION MODAL -->
+    <!-- ORDER NOW (MANUAL ORDER) CONFIRMATION MODAL WITH QUANTITY -->
     <div id="manual-order-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[70] p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 relative text-center">
             <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto">
@@ -751,10 +764,21 @@
                 <h3 class="text-lg font-bold text-gray-800" id="manual-modal-title">Order Now (ম্যানুয়াল অর্ডার)</h3>
                 <p class="text-xs text-gray-500 mt-1">বর্তমানে ইনস্ট্যান্ট স্টক শেষ, কিন্তু আপনি প্রি-অর্ডার করতে পারবেন।</p>
             </div>
+
+            <!-- Manual Order Quantity Selector -->
+            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 flex items-center justify-between text-xs">
+                <span class="font-bold text-gray-700">অর্ডার পরিমাণ (Quantity):</span>
+                <div class="flex items-center bg-white border border-gray-300 rounded-xl p-0.5">
+                    <button onclick="adjustManualOrderModalQty(-1)" class="w-7 h-7 flex items-center justify-center font-black text-gray-600 hover:bg-gray-100 rounded-lg">-</button>
+                    <input id="manual-modal-qty-input" type="number" value="1" min="1" oninput="handleManualModalQtyChange(this)" class="w-10 text-center bg-transparent text-xs font-black text-gray-800 outline-none">
+                    <button onclick="adjustManualOrderModalQty(1)" class="w-7 h-7 flex items-center justify-center font-black text-gray-600 hover:bg-gray-100 rounded-lg">+</button>
+                </div>
+            </div>
+
             <div class="bg-orange-50 p-3.5 rounded-2xl border border-orange-200 text-left text-xs text-orange-950 space-y-1.5">
-                <p>• মূল্য: <b id="manual-modal-price" class="text-blue-700">৳0.00</b></p>
+                <p>• মোট মূল্য: <b id="manual-modal-price" class="text-blue-700">৳0.00</b></p>
                 <p>• ডেলিভারি সময়সীমা: <b id="manual-modal-duration" class="text-orange-700 font-bold">৩০ মিনিট</b></p>
-                <p>• অ্যাডমিন নির্ধারিত সময়ের মধ্যে অ্যাকাউন্ট সরাসরি আপনার <b>টেলিগ্রাম ইনবক্সে</b> পাঠিয়ে দেবে।</p>
+                <p>• অ্যাডমিন নির্ধারিত সময়ের মধ্যে সরাসরি আপনার <b>টেলিগ্রাম ইনবক্সে</b> পাঠিয়ে দেবে।</p>
                 <p class="text-[11px] text-red-600 font-semibold">• টাইমের মধ্যে ডেলিভারি না পেলে ব্যালেন্স অটোমেটিক <b>রিফান্ড</b> করা হবে।</p>
             </div>
             <div class="flex gap-2 pt-1">
@@ -764,29 +788,39 @@
         </div>
     </div>
 
-    <!-- PURCHASE SUCCESS MODAL -->
+    <!-- PURCHASE SUCCESS MODAL WITH MULTI ITEM LIST & ALL COPY / ALL XLSX -->
     <div id="purchase-success-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[70] p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 relative text-center">
+        <div class="bg-white rounded-3xl p-5 w-full max-w-sm space-y-4 relative text-center max-h-[90vh] flex flex-col">
             <button onclick="document.getElementById('purchase-success-modal').classList.add('hidden')" class="absolute top-4 right-4 p-1 rounded-full bg-gray-100">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
-            <div class="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
-                <i data-lucide="check" class="w-8 h-8 stroke-[3]"></i>
-            </div>
-            <h3 class="text-xl font-bold text-gray-800">অর্ডার সফল হয়েছে!</h3>
             
-            <div class="space-y-2 text-left pt-2">
-                <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border">
-                    <span class="font-mono text-xs text-gray-800 truncate" id="purchase-success-email"></span>
-                    <button onclick="copyToClipboard(document.getElementById('purchase-success-email').textContent, this)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><i data-lucide="copy" class="w-4 h-4"></i></button>
-                </div>
-                <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border">
-                    <span class="font-mono text-xs text-gray-800" id="purchase-success-password"></span>
-                    <button onclick="copyToClipboard(document.getElementById('purchase-success-password').textContent, this)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><i data-lucide="copy" class="w-4 h-4"></i></button>
-                </div>
+            <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto flex-shrink-0">
+                <i data-lucide="check" class="w-6 h-6 stroke-[3]"></i>
+            </div>
+            <div class="flex-shrink-0">
+                <h3 class="text-lg font-bold text-gray-800">অর্ডার সফল হয়েছে!</h3>
+                <p class="text-xs text-gray-500 mt-0.5" id="purchase-success-subtitle">আপনার ক্রয়কৃত আইটেমসমূহ:</p>
+            </div>
+            
+            <!-- Items Container -->
+            <div id="purchase-success-items-list" class="space-y-2 text-left overflow-y-auto max-h-[190px] pr-1"></div>
+
+            <!-- Action Buttons (ALL COPY & ALL XLSX) -->
+            <div class="grid grid-cols-2 gap-2 pt-1 flex-shrink-0 text-xs font-bold">
+                <button onclick="copyCurrentPurchaseExcelFormat()" class="py-2.5 px-3 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 rounded-xl flex items-center justify-center gap-1.5 transition">
+                    <i data-lucide="copy" class="w-4 h-4"></i>
+                    <span>ALL COPY</span>
+                </button>
+                <button onclick="sendCurrentPurchaseToBot()" class="py-2.5 px-3 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 rounded-xl flex items-center justify-center gap-1.5 transition">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                    <span>ALL XLSX</span>
+                </button>
             </div>
 
-            <button onclick="document.getElementById('purchase-success-modal').classList.add('hidden'); navigateTo('orders-page');" class="w-full py-3 rounded-xl btn-buy font-bold text-sm mt-3">View Orders</button>
+            <button onclick="document.getElementById('purchase-success-modal').classList.add('hidden'); navigateTo('orders-page');" class="w-full py-3 rounded-xl btn-buy font-bold text-xs flex-shrink-0">
+                View All Orders
+            </button>
         </div>
     </div>
 
@@ -825,6 +859,7 @@
         let pendingOrderToPlace = null;
         let countdownTimerInterval = null;
         let allUserNotifications = [];
+        let lastPurchasedItemsBatch = [];
 
         const defaultCategories = [
             { id: "all", name: "All Services", icon: "layout-grid" },
@@ -1004,17 +1039,28 @@
             }
         };
 
-        // --- GATEWAY RETURN VERIFICATION & CANCEL PROTECTION ---
+        // --- GATEWAY RETURN VERIFICATION & CANCEL (NO POPUP BANNER) ---
+        function showDepositBanner(message, type = 'cancel') {
+            const banner = document.getElementById('deposit-status-banner');
+            const content = document.getElementById('deposit-status-banner-content');
+            if (!banner || !content) return;
+            banner.className = 'p-3.5 rounded-2xl text-xs font-semibold flex items-center justify-between mb-3 bg-red-50 text-red-700 border border-red-200';
+            content.innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4 text-red-500"></i> <span>${message}</span>`;
+            banner.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
         async function checkReturnPaymentStatus() {
             const urlParams = new URLSearchParams(window.location.search);
             const urlStatus = (urlParams.get('status') || '').toLowerCase();
             let transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid') || urlParams.get('trx_id') || urlParams.get('payment_id');
 
-            // 1. If User Cancelled/Failed: CLEAR & NEVER ADD BALANCE
+            // 1. If User Cancelled: Show Clean Inline Banner without Popup
             if (urlStatus === 'cancel' || urlStatus === 'cancelled' || urlStatus === 'failed') {
                 localStorage.removeItem('pending_deposit_amount');
                 window.history.replaceState({}, document.title, window.location.pathname);
-                showAlert('পেমেন্ট বাতিল করা হয়েছে। কোনো ব্যালেন্স যোগ করা হয়নি।');
+                showDepositBanner('পেমেন্ট বাতিল করা হয়েছে। কোনো ব্যালেন্স যোগ করা হয়নি।', 'cancel');
+                navigateTo('pay-page');
                 return;
             }
 
@@ -1044,7 +1090,6 @@
                     console.error("Verification error:", e);
                 }
 
-                // Strictly allow fallback only if status is strictly 'success'
                 if (!depositAmount && urlStatus === 'success') {
                     depositAmount = parseFloat(urlParams.get('amount') || urlParams.get('paymentAmount') || localStorage.getItem('pending_deposit_amount') || 0);
                     if (depositAmount >= 10) isVerified = true;
@@ -1058,7 +1103,7 @@
                     document.getElementById('gateway-display-amount').textContent = `৳${depositAmount.toFixed(2)}`;
                     document.getElementById('gateway-success-modal').classList.remove('hidden');
                 } else if (!isVerified && urlStatus === 'success') {
-                    showAlert('পেমেন্ট যাচাইকরণ সম্পন্ন হয়নি বা ব্যর্থ হয়েছে।');
+                    showDepositBanner('পেমেন্ট যাচাইকরণ সম্পন্ন হয়নি বা ব্যর্থ হয়েছে।', 'error');
                 }
 
                 localStorage.removeItem('pending_deposit_amount');
@@ -1092,7 +1137,6 @@
                     });
                 });
 
-                // Notification Record
                 await addDoc(collection(db, "users", tgChatId, "notifications"), {
                     title: "ডিপোজিট সফল!",
                     message: `আপনার অ্যাকাউন্টে ৳${depositAmount.toFixed(2)} সফলভাবে যোগ করা হয়েছে। (TXID: ${txid})`,
@@ -1111,7 +1155,7 @@
             }
         }
 
-        // --- NOTIFICATIONS ---
+        // --- FULL SCREEN NOTIFICATIONS ---
         async function loadUserNotifications() {
             if (!userData) return;
             const tgChatId = String(userData.tgChatId);
@@ -1184,20 +1228,20 @@
         function renderNotifications() {
             const container = document.getElementById('notification-list-container');
             if (allUserNotifications.length === 0) {
-                container.innerHTML = `<div class="p-6 text-center text-xs text-gray-400 font-bold">কোনো নোটিফিকেশন নেই</div>`;
+                container.innerHTML = `<div class="p-8 text-center text-xs text-gray-400 font-bold bg-white rounded-2xl border">কোনো নোটিফিকেশন নেই</div>`;
                 return;
             }
 
             container.innerHTML = allUserNotifications.map(n => `
-                <div class="bg-blue-50/70 p-3.5 rounded-2xl border border-blue-100 text-left space-y-1 shadow-2xs">
+                <div class="bg-white p-4 rounded-2xl border border-gray-200 text-left space-y-1.5 shadow-sm">
                     <div class="flex justify-between items-center">
-                        <h4 class="font-bold text-xs text-blue-950 flex items-center gap-1.5">
+                        <h4 class="font-bold text-xs text-blue-950 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-blue-600"></span>
                             ${n.title}
                         </h4>
                         <span class="text-[10px] text-gray-400 font-semibold">${n.timeStr}</span>
                     </div>
-                    <p class="text-xs text-gray-600 leading-relaxed pl-3.5">${n.message}</p>
+                    <p class="text-xs text-gray-600 leading-relaxed pl-4">${n.message}</p>
                 </div>
             `).join('');
             lucide.createIcons();
@@ -1309,7 +1353,50 @@
             }
         };
 
-        // --- PRODUCT RENDERING WITH HIDE STOCK, API BUTTON & CUSTOM MANUAL ORDER ---
+        // --- QUANTITY CONTROLLER LOGIC (RESPECTS STOCK & BALANCE) ---
+        window.adjustProductQty = function(inputId, delta, minVal, maxStock, unitPrice) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            let current = parseInt(input.value) || 1;
+            let target = current + delta;
+            if (target < minVal) target = minVal;
+
+            const isManual = input.dataset.isManual === 'true';
+            const userBal = userData?.balance || 0;
+            const maxAffordable = unitPrice > 0 ? Math.floor(userBal / unitPrice) : 1;
+
+            if (!isManual && target > maxStock) {
+                target = maxStock;
+            }
+            if (maxAffordable > 0 && target > maxAffordable) {
+                target = maxAffordable;
+            }
+
+            input.value = target;
+        };
+
+        window.validateAndSanitizeQty = function(inputEl) {
+            let val = parseInt(inputEl.value) || 1;
+            const price = parseFloat(inputEl.dataset.price) || 0;
+            const stock = parseInt(inputEl.dataset.stock) || 0;
+            const isManual = inputEl.dataset.isManual === 'true';
+            const userBal = userData?.balance || 0;
+
+            if (val < 1) val = 1;
+
+            if (!isManual) {
+                if (val > stock) val = Math.max(1, stock);
+            }
+
+            const maxCanAfford = price > 0 ? Math.floor(userBal / price) : 1;
+            if (maxCanAfford > 0 && val > maxCanAfford) {
+                val = maxCanAfford;
+            }
+
+            inputEl.value = val;
+        };
+
+        // --- PRODUCT RENDERING (CLEAN HIDE STOCK + QUANTITY SELECTION) ---
         async function renderProductsBySelection() {
             const container = document.getElementById('product-list-container');
             container.innerHTML = getLoadingHTML();
@@ -1341,16 +1428,15 @@
                 const currentPrice = parseFloat(item.priceBdt || 0).toFixed(2);
                 const detailsId = `card-details-${idx}`;
                 
-                // 1. Check API URL & State
                 const hasApi = !!(item.apiUrl && item.apiUrl.trim() !== '');
-
-                // 2. Check Hide Stock Setting from Firebase
                 const isStockHidden = !!item.hideStock;
-
-                // 3. Check Manual Order Allowed & specific configurations per product
                 const isManualAllowed = item.allowManual === true;
                 const manualDuration = item.manualDurationMinutes || appConfig.manualOrderTimeoutMinutes || 30;
                 const manualPrice = item.manualPrice !== undefined ? item.manualPrice : item.priceBdt;
+
+                const userBal = userData?.balance || 0;
+                const maxByBalance = currentPrice > 0 ? Math.floor(userBal / currentPrice) : 1;
+                const maxQty = outOfStock ? (maxByBalance > 0 ? maxByBalance : 1) : Math.min(stock, maxByBalance > 0 ? maxByBalance : 1);
 
                 return `
                 <div class="product-card p-4 space-y-3">
@@ -1382,101 +1468,137 @@
 
                     <div class="flex items-center justify-between pt-2 border-t border-gray-100 text-xs">
                         <div class="flex items-center gap-2">
-                            <!-- Stock display logic (hides count if hideStock: true) -->
-                            <span class="font-semibold ${outOfStock ? 'text-orange-500' : 'text-emerald-600'}">
-                                ${isStockHidden ? (outOfStock ? 'Stock: <b>Restocking</b>' : 'Stock: <b>Available</b>') : `Stock: <b>${stock}</b>`}
-                            </span>
+                            <!-- Stock display logic (Completely clean & empty if hideStock is true) -->
+                            ${isStockHidden ? '<span></span>' : `
+                                <span class="font-semibold ${outOfStock ? 'text-orange-500' : 'text-emerald-600'}">
+                                    Stock: <b>${stock}</b>
+                                </span>
+                            `}
 
-                            <!-- API Button (Active Green if URL exists, Disabled Gray if not) -->
                             ${hasApi ? `
                                 <a href="${item.apiUrl}" target="_blank" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm flex items-center gap-1 transition">
                                     <i data-lucide="code" class="w-3 h-3"></i> API
                                 </a>
-                            ` : `
-                                <span class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-gray-100 text-gray-400 cursor-not-allowed flex items-center gap-1 border border-gray-200 select-none">
-                                    <i data-lucide="code" class="w-3 h-3 text-gray-400"></i> API
-                                </span>
-                            `}
+                            ` : ''}
                         </div>
 
-                        ${!outOfStock ? `
-                            <button id="buy-btn-${idx}" 
-                                    class="btn-buy px-5 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5" 
-                                    onclick="buyItem('${item.type}', ${item.priceBdt}, '${item.stockKey}', '${item.category || 'service'}', 'buy-btn-${idx}')">
-                                <span>Buy Now</span>
-                            </button>
-                        ` : isManualAllowed ? `
-                            <button class="btn-order-orange px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1"
-                                    onclick="openManualOrderModal('${item.type}', ${manualPrice}, '${item.stockKey}', '${item.category || 'service'}', ${manualDuration})">
-                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                                <span>Order Now</span>
-                            </button>
-                        ` : `
-                            <button disabled class="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-400 cursor-not-allowed">
-                                Out of Stock
-                            </button>
-                        `}
+                        <!-- Quantity Selector + Action Button -->
+                        <div class="flex items-center gap-1.5">
+                            <div class="flex items-center bg-gray-100 border border-gray-200 rounded-xl p-0.5">
+                                <button onclick="adjustProductQty('qty-input-${idx}', -1, 1, ${outOfStock ? 9999 : stock}, ${item.priceBdt})" class="w-6 h-6 flex items-center justify-center font-black text-gray-600 hover:bg-white rounded-lg transition">-</button>
+                                <input id="qty-input-${idx}" type="number" value="1" min="1" max="${maxQty}" 
+                                    data-price="${item.priceBdt}" 
+                                    data-stock="${stock}"
+                                    data-is-manual="${outOfStock}"
+                                    onchange="validateAndSanitizeQty(this)"
+                                    class="w-8 text-center bg-transparent text-xs font-black text-gray-800 outline-none">
+                                <button onclick="adjustProductQty('qty-input-${idx}', 1, 1, ${outOfStock ? 9999 : stock}, ${item.priceBdt})" class="w-6 h-6 flex items-center justify-center font-black text-gray-600 hover:bg-white rounded-lg transition">+</button>
+                            </div>
+
+                            ${!outOfStock ? `
+                                <button id="buy-btn-${idx}" 
+                                        class="btn-buy px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1" 
+                                        onclick="buyItemMulti('${item.type}', ${item.priceBdt}, '${item.stockKey}', '${item.category || 'service'}', 'qty-input-${idx}', 'buy-btn-${idx}')">
+                                    <span>Buy Now</span>
+                                </button>
+                            ` : isManualAllowed ? `
+                                <button class="btn-order-orange px-3.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1"
+                                        onclick="openManualOrderModalMulti('${item.type}', ${manualPrice}, '${item.stockKey}', '${item.category || 'service'}', ${manualDuration}, 'qty-input-${idx}')">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                    <span>Order Now</span>
+                                </button>
+                            ` : `
+                                <button disabled class="px-3 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-400 cursor-not-allowed">
+                                    Out of Stock
+                                </button>
+                            `}
+                        </div>
                     </div>
                 </div>`;
             }).join('');
             lucide.createIcons();
         }
 
-        window.buyItem = async function(mailType, costParam, stockKey, pageType, btnId) {
-            const cost = parseFloat(costParam);
-            if (!confirm(`আপনি কি ৳${cost.toFixed(2)} দিয়ে ${mailType} কিনতে চান?`)) return;
+        // --- MULTI-ITEM INSTANT PURCHASE ---
+        window.buyItemMulti = async function(mailType, unitPrice, stockKey, pageType, qtyInputId, btnId) {
+            const input = document.getElementById(qtyInputId);
+            const qty = parseInt(input?.value) || 1;
+            const totalCost = parseFloat(unitPrice) * qty;
+
+            if (userData.balance < totalCost) {
+                return showAlert(`আপনার পর্যাপ্ত ব্যালেন্স নেই! মোট প্রয়োজন ৳${totalCost.toFixed(2)}, আপনার ব্যালেন্স ৳${(userData.balance || 0).toFixed(2)}`);
+            }
+
+            if (!confirm(`আপনি কি ${qty} টি ${mailType} মোট ৳${totalCost.toFixed(2)} দিয়ে কিনতে চান?`)) return;
 
             const btn = document.getElementById(btnId);
             let originalBtnHtml = '';
             if (btn) {
                 originalBtnHtml = btn.innerHTML;
                 btn.disabled = true;
-                btn.innerHTML = `<span class="animate-spin inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full mr-1"></span> <span>অপেক্ষা করুন...</span>`;
+                btn.innerHTML = `<span class="animate-spin inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full mr-1"></span> <span>ক্রয় হচ্ছে...</span>`;
             }
 
             try {
-                const itemQuery = query(collection(db, stockKey), where("isSold", "==", false), limit(1));
+                const itemQuery = query(collection(db, stockKey), where("isSold", "==", false), limit(qty));
                 const itemQuerySnapshot = await getDocs(itemQuery);
 
-                if (itemQuerySnapshot.empty) {
-                    throw new Error("দুঃখিত, স্টক শেষ! আপনি 'Order Now' দিয়ে প্রি-অর্ডার করতে পারেন।");
+                if (itemQuerySnapshot.docs.length < qty) {
+                    throw new Error(`দুঃখিত, পর্যাপ্ত স্টক নেই! বর্তমানে মাত্র ${itemQuerySnapshot.docs.length} টি স্টক রয়েছে।`);
                 }
 
-                const itemDocToPurchase = itemQuerySnapshot.docs[0];
-                const itemData = itemDocToPurchase.data();
+                const purchasedItems = [];
 
                 await runTransaction(db, async (transaction) => {
                     const buyerRef = doc(db, "users", String(userData.tgChatId));
                     const counterRef = doc(db, "counters", "item_purchase");
                     const buyerSnap = await transaction.get(buyerRef);
                     
-                    if (!buyerSnap.exists() || buyerSnap.data().balance < cost) {
+                    if (!buyerSnap.exists() || buyerSnap.data().balance < totalCost) {
                         throw new Error("আপনার পর্যাপ্ত ব্যালেন্স নেই। ডিপোজিট করুন।");
                     }
 
                     const counterSnap = await transaction.get(counterRef);
-                    const saleId = counterSnap.exists() ? counterSnap.data().currentId : 1000;
+                    let saleId = counterSnap.exists() ? counterSnap.data().currentId : 1000;
 
-                    transaction.update(buyerRef, { balance: buyerSnap.data().balance - cost });
-                    transaction.update(itemDocToPurchase.ref, { isSold: true, soldTo: String(userData.tgChatId), soldAt: serverTimestamp() });
-                    
-                    const purchaseLogRef = doc(collection(db, "purchases"));
-                    transaction.set(purchaseLogRef, {
-                        saleId: saleId,
-                        userId: String(userData.tgChatId),
-                        mailType: mailType,
-                        category: pageType,
-                        cost: cost,
-                        purchasedAt: serverTimestamp(),
-                        mail: itemData.email || itemData.ip || itemData.data || 'N/A',
-                        password: itemData.password || null
+                    transaction.update(buyerRef, { balance: buyerSnap.data().balance - totalCost });
+
+                    itemQuerySnapshot.docs.forEach((itemDoc) => {
+                        const itemData = itemDoc.data();
+                        transaction.update(itemDoc.ref, { 
+                            isSold: true, 
+                            soldTo: String(userData.tgChatId), 
+                            soldAt: serverTimestamp() 
+                        });
+
+                        const purchaseLogRef = doc(collection(db, "purchases"));
+                        transaction.set(purchaseLogRef, {
+                            saleId: saleId,
+                            userId: String(userData.tgChatId),
+                            mailType: mailType,
+                            category: pageType,
+                            cost: parseFloat(unitPrice),
+                            purchasedAt: serverTimestamp(),
+                            mail: itemData.email || itemData.ip || itemData.data || 'N/A',
+                            password: itemData.password || null
+                        });
+
+                        purchasedItems.push({
+                            saleId: saleId,
+                            mail: itemData.email || itemData.ip || itemData.data || 'N/A',
+                            password: itemData.password || null,
+                            mailType: mailType,
+                            cost: parseFloat(unitPrice)
+                        });
+
+                        saleId++;
                     });
-                    transaction.set(counterRef, { currentId: saleId + 1 }, { merge: true });
+
+                    transaction.set(counterRef, { currentId: saleId }, { merge: true });
                 });
 
-                document.getElementById('purchase-success-email').textContent = itemData.email || itemData.ip || itemData.data;
-                document.getElementById('purchase-success-password').textContent = itemData.password || 'N/A';
-                document.getElementById('purchase-success-modal').classList.remove('hidden');
+                lastPurchasedItemsBatch = purchasedItems;
+                showPurchaseSuccessModal(purchasedItems);
 
                 const userSnap = await getDoc(doc(db, "users", String(userData.tgChatId)));
                 userData = userSnap.data();
@@ -1494,19 +1616,108 @@
             }
         };
 
-        window.openManualOrderModal = function(mailType, price, stockKey, category, customDuration) {
+        function showPurchaseSuccessModal(items) {
+            const list = document.getElementById('purchase-success-items-list');
+            document.getElementById('purchase-success-subtitle').textContent = `মোট ক্রয়: ${items.length} টি আইটেম`;
+            
+            list.innerHTML = items.map((item, idx) => `
+                <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200 font-mono text-xs space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="truncate text-gray-800 font-semibold">${idx + 1}. ${item.mail}</span>
+                        <button onclick="copyToClipboard('${item.mail}', this)" class="p-1 text-blue-600 hover:bg-blue-50 rounded"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                    ${item.password ? `
+                    <div class="flex items-center justify-between border-t border-gray-200/60 pt-1 text-gray-600">
+                        <span>${item.password}</span>
+                        <button onclick="copyToClipboard('${item.password}', this)" class="p-1 text-blue-600 hover:bg-blue-50 rounded"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
+                    </div>` : ''}
+                </div>
+            `).join('');
+
+            document.getElementById('purchase-success-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        // --- ALL COPY (TAB / EXCEL FORMATTED) ---
+        window.copyCurrentPurchaseExcelFormat = function() {
+            if (!lastPurchasedItemsBatch || lastPurchasedItemsBatch.length === 0) return showAlert("কোনো আইটেম নেই");
+            const text = lastPurchasedItemsBatch.map(item => `${item.mail}\t${item.password || ''}`).join('\n');
+            copyToClipboard(text, null, `মোট ${lastPurchasedItemsBatch.length} টি আইটেম এক্সেল ফরমেটে কপি হয়েছে!`);
+        };
+
+        // --- ALL XLSX (SEND DETAILS TO TELEGRAM BOT + DOWNLOAD) ---
+        window.sendCurrentPurchaseToBot = async function() {
+            if (!lastPurchasedItemsBatch || lastPurchasedItemsBatch.length === 0) return showAlert("কোনো আইটেম নেই");
+            const tgChatId = String(userData.tgChatId);
+            
+            let botText = `📦 <b>আপনার সফল অর্ডারের তালিকা (${lastPurchasedItemsBatch.length} টি আইটেম):</b>\n\n`;
+            lastPurchasedItemsBatch.forEach((item, idx) => {
+                botText += `${idx+1}. <code>${item.mail}</code>${item.password ? ' | <code>' + item.password + '</code>' : ''}\n`;
+            });
+            botText += `\n✅ সম্পূর্ণ তথ্য এক্সেলে এক্সপোর্ট করতে নিচের ফাইলটি ব্যবহার করুন।`;
+
+            await sendTelegramMessage(tgChatId, botText);
+            exportItemsToExcelCustom(lastPurchasedItemsBatch, `Purchase_${tgChatId}_${Date.now()}`);
+            showAlert("অর্ডারের বিবরণ আপনার টেলিগ্রাম বটে পাঠানো হয়েছে এবং এক্সেল ফাইল ডাউনলোড করা হয়েছে!");
+        };
+
+        // --- MANUAL PRE-ORDER WITH QUANTITY ---
+        window.openManualOrderModalMulti = function(mailType, price, stockKey, category, customDuration, qtyInputId) {
+            const initialQty = parseInt(document.getElementById(qtyInputId)?.value) || 1;
             const timeoutMinutes = customDuration || appConfig.manualOrderTimeoutMinutes || 30;
-            pendingOrderToPlace = { mailType, price: parseFloat(price), stockKey, category, timeoutMinutes };
+            pendingOrderToPlace = { mailType, unitPrice: parseFloat(price), stockKey, category, timeoutMinutes, qty: initialQty };
 
             document.getElementById('manual-modal-title').textContent = `${mailType} (Order Now)`;
-            document.getElementById('manual-modal-price').textContent = `৳${parseFloat(price).toFixed(2)}`;
             document.getElementById('manual-modal-duration').textContent = `${timeoutMinutes} মিনিট`;
+            document.getElementById('manual-modal-qty-input').value = initialQty;
+            updateManualModalPriceDisplay();
+
             document.getElementById('manual-order-modal').classList.remove('hidden');
+        };
+
+        function updateManualModalPriceDisplay() {
+            if (!pendingOrderToPlace) return;
+            const totalPrice = pendingOrderToPlace.unitPrice * pendingOrderToPlace.qty;
+            document.getElementById('manual-modal-price').textContent = `৳${totalPrice.toFixed(2)} (${pendingOrderToPlace.qty} টি)`;
+        }
+
+        window.adjustManualOrderModalQty = function(delta) {
+            if (!pendingOrderToPlace) return;
+            let current = pendingOrderToPlace.qty;
+            let target = current + delta;
+            if (target < 1) target = 1;
+
+            const userBal = userData?.balance || 0;
+            const maxCanAfford = Math.floor(userBal / pendingOrderToPlace.unitPrice);
+            if (maxCanAfford > 0 && target > maxCanAfford) {
+                target = maxCanAfford;
+            }
+
+            pendingOrderToPlace.qty = target;
+            document.getElementById('manual-modal-qty-input').value = target;
+            updateManualModalPriceDisplay();
+        };
+
+        window.handleManualModalQtyChange = function(inputEl) {
+            if (!pendingOrderToPlace) return;
+            let val = parseInt(inputEl.value) || 1;
+            if (val < 1) val = 1;
+
+            const userBal = userData?.balance || 0;
+            const maxCanAfford = Math.floor(userBal / pendingOrderToPlace.unitPrice);
+            if (maxCanAfford > 0 && val > maxCanAfford) {
+                val = maxCanAfford;
+            }
+
+            inputEl.value = val;
+            pendingOrderToPlace.qty = val;
+            updateManualModalPriceDisplay();
         };
 
         async function handleConfirmManualOrder() {
             if (!pendingOrderToPlace) return;
-            const { mailType, price, stockKey, category, timeoutMinutes } = pendingOrderToPlace;
+            const { mailType, unitPrice, stockKey, category, timeoutMinutes, qty } = pendingOrderToPlace;
+            const totalPrice = unitPrice * qty;
 
             const btn = document.getElementById('confirm-manual-order-btn');
             btn.disabled = true;
@@ -1517,11 +1728,11 @@
                     const buyerRef = doc(db, "users", String(userData.tgChatId));
                     const buyerSnap = await transaction.get(buyerRef);
                     
-                    if (!buyerSnap.exists() || buyerSnap.data().balance < price) {
+                    if (!buyerSnap.exists() || buyerSnap.data().balance < totalPrice) {
                         throw new Error("আপনার পর্যাপ্ত ব্যালেন্স নেই। অনুগ্রহ করে ডিপোজিট করুন।");
                     }
 
-                    transaction.update(buyerRef, { balance: buyerSnap.data().balance - price });
+                    transaction.update(buyerRef, { balance: buyerSnap.data().balance - totalPrice });
 
                     const expiryDate = new Date(Date.now() + timeoutMinutes * 60 * 1000);
                     const manualOrderRef = doc(collection(db, "manual_orders"));
@@ -1531,7 +1742,9 @@
                         userName: userData.name || 'User',
                         mailType: mailType,
                         category: category,
-                        cost: price,
+                        unitPrice: unitPrice,
+                        quantity: qty,
+                        cost: totalPrice,
                         status: "pending",
                         createdAt: serverTimestamp(),
                         expiresAt: Timestamp.fromDate(expiryDate),
@@ -1539,11 +1752,11 @@
                     });
                 });
 
-                const adminAlert = `⚡ <b>নতুন ম্যানুয়াল অর্ডার এসেছে!</b>\n\n👤 <b>ইউজার:</b> ${userData.name} (<code>${userData.tgChatId}</code>)\n📦 <b>সার্ভিস:</b> ${mailType}\n💰 <b>মূল্য:</b> ৳${price}\n⏳ <b>সময়সীমা:</b> ${timeoutMinutes} মিনিট`;
+                const adminAlert = `⚡ <b>নতুন ম্যানুয়াল অর্ডার এসেছে!</b>\n\n👤 <b>ইউজার:</b> ${userData.name} (<code>${userData.tgChatId}</code>)\n📦 <b>সার্ভিস:</b> ${mailType}\n🔢 <b>পরিমাণ:</b> ${qty} টি\n💰 <b>মোট মূল্য:</b> ৳${totalPrice}\n⏳ <b>সময়সীমা:</b> ${timeoutMinutes} মিনিট`;
                 await notifyAdminViaTelegram(adminAlert);
 
                 document.getElementById('manual-order-modal').classList.add('hidden');
-                showAlert(`আপনার ${mailType} অর্ডারটি গ্রহণ করা হয়েছে!`);
+                showAlert(`আপনার ${qty} টি ${mailType} অর্ডার গ্রহণ করা হয়েছে!`);
                 
                 const userSnap = await getDoc(doc(db, "users", String(userData.tgChatId)));
                 userData = userSnap.data();
@@ -1558,52 +1771,7 @@
             }
         }
 
-        window.openReplaceModal = function(saleId, mailType, cost) {
-            document.getElementById('replace-order-id').value = saleId;
-            document.getElementById('replace-mail-type').value = mailType;
-            document.getElementById('replace-mail-cost').value = cost;
-            document.getElementById('replace-reason-text').value = '';
-            document.getElementById('replace-modal').classList.remove('hidden');
-        };
-
-        async function handleSubmitReplace() {
-            const saleId = document.getElementById('replace-order-id').value;
-            const mailType = document.getElementById('replace-mail-type').value;
-            const cost = parseFloat(document.getElementById('replace-mail-cost').value || 0);
-            const reason = document.getElementById('replace-reason-text').value.trim();
-
-            if (!reason) return showAlert("দয়া করে সমস্যার কারণ লিখুন।");
-
-            const btn = document.getElementById('submit-replace-btn');
-            btn.disabled = true;
-            btn.textContent = "Submitting...";
-
-            try {
-                await addDoc(collection(db, "replace_requests"), {
-                    userId: String(userData.tgChatId),
-                    userName: userData.name || 'User',
-                    saleId: saleId,
-                    mailType: mailType,
-                    cost: cost,
-                    reason: reason,
-                    status: "pending",
-                    requestedAt: serverTimestamp()
-                });
-
-                const adminAlert = `⚠️ <b>নতুন রিপ্লেসমেন্ট / রিপোর্ট রিকোয়েস্ট!</b>\n\n👤 <b>ইউজার:</b> ${userData.name} (<code>${userData.tgChatId}</code>)\n📦 <b>সার্ভিস:</b> ${mailType} (ID: #${saleId})\n📝 <b>কারণ:</b> ${reason}`;
-                await notifyAdminViaTelegram(adminAlert);
-
-                document.getElementById('replace-modal').classList.add('hidden');
-                showAlert("রিপ্লেসমেন্ট অনুরোধ অ্যাডমিনের কাছে পাঠানো হয়েছে।");
-                navigateTo('history-page');
-            } catch(e) {
-                showAlert("অনুরোধ পাঠাতে ব্যর্থ হয়েছে।");
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "সাবমিট করুন";
-            }
-        }
-
+        // --- SEND BALANCE (2% FEE) ---
         async function handleSendBalance() {
             const recipientId = document.getElementById('send-recipient-id').value.trim();
             const amount = parseFloat(document.getElementById('send-amount').value);
@@ -1615,8 +1783,8 @@
                 return showAlert("নিজের অ্যাকাউন্টে ব্যালেন্স পাঠানো যাবে না।");
             }
 
-            const totalCost = amount * 1.05;
-            if (!confirm(`৫% চার্জসহ মোট ৳${totalCost.toFixed(2)} কাটা হবে। আপনি কি নিশ্চিত?`)) return;
+            const totalCost = amount * 1.02; // 2% charge
+            if (!confirm(`২% চার্জসহ মোট ৳${totalCost.toFixed(2)} কাটা হবে। আপনি কি নিশ্চিত?`)) return;
 
             const btn = document.getElementById('submit-send-btn');
             btn.disabled = true;
@@ -1667,6 +1835,42 @@
                 btn.disabled = false;
                 btn.textContent = "Submit Send";
             }
+        }
+
+        // --- ALL ORDERS COPY & BOT EXPORT IN ORDERS PAGE ---
+        window.copyAllOrdersExcelFormat = function() {
+            if (!userPurchasesCache || userPurchasesCache.length === 0) return showAlert("কোনো অর্ডার নেই।");
+            const text = userPurchasesCache.map(p => `${p.mail}\t${p.password || ''}`).join('\n');
+            copyToClipboard(text, null, `আপনার সকল (${userPurchasesCache.length} টি) অর্ডার এক্সেল ফরমেটে কপি হয়েছে!`);
+        };
+
+        window.sendAllOrdersToBot = async function() {
+            if (!userPurchasesCache || userPurchasesCache.length === 0) return showAlert("কোনো অর্ডার নেই।");
+            const tgChatId = String(userData.tgChatId);
+
+            let botText = `📦 <b>আপনার সকল অর্ডারের তালিকা (${userPurchasesCache.length} টি):</b>\n\n`;
+            userPurchasesCache.slice(0, 30).forEach((item, idx) => {
+                botText += `${idx+1}. <code>${item.mail}</code>${item.password ? ' | <code>' + item.password + '</code>' : ''}\n`;
+            });
+            if(userPurchasesCache.length > 30) botText += `\n...এবং আরও ${userPurchasesCache.length - 30} টি আইটেম।`;
+
+            await sendTelegramMessage(tgChatId, botText);
+            exportItemsToExcelCustom(userPurchasesCache, `Orders_${tgChatId}`);
+            showAlert("সকল অর্ডার আপনার টেলিগ্রাম বটে পাঠানো হয়েছে এবং এক্সেল ফাইল ডাউনলোড করা হয়েছে!");
+        };
+
+        function exportItemsToExcelCustom(items, filename) {
+            const dataToExport = items.map(p => ({
+                "Sale ID": p.saleId || '',
+                "Service": p.mailType || '',
+                "Credentials / Email": p.mail || '',
+                "Password": p.password || '',
+                "Cost (BDT)": p.cost || 0
+            }));
+            const ws = XLSX.utils.json_to_sheet(dataToExport);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Items");
+            XLSX.writeFile(wb, `${filename}.xlsx`);
         }
 
         function startCountdownTimerRoutine() {
@@ -1782,7 +1986,7 @@
                     return `
                     <div class="bg-white p-3.5 rounded-xl border border-gray-200 flex justify-between items-center text-xs shadow-sm">
                         <div>
-                            <p class="font-bold text-gray-800">${p.mailType} (৳${p.cost})</p>
+                            <p class="font-bold text-gray-800">${p.mailType} ${p.quantity ? `(${p.quantity} টি)` : ''} - ৳${p.cost}</p>
                             ${isPending ? `
                                 <div class="flex items-center gap-1 mt-0.5 text-[11px] text-gray-500">
                                     <span>Time Remaining:</span>
@@ -1876,31 +2080,6 @@
             }
         }
 
-        function exportOrdersToExcel() {
-            if (!userPurchasesCache || userPurchasesCache.length === 0) return showAlert("ডাউনলোড করার মতো কোনো অর্ডার নেই।");
-            const dataToExport = userPurchasesCache.map(p => ({
-                "Sale ID": p.saleId || '',
-                "Service": p.mailType || '',
-                "Credentials / Email": p.mail || '',
-                "Password": p.password || '',
-                "Cost (BDT)": p.cost || 0,
-                "Date": p.purchasedAt?.toDate ? p.purchasedAt.toDate().toLocaleString('en-GB') : ''
-            }));
-            const ws = XLSX.utils.json_to_sheet(dataToExport);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Orders");
-            XLSX.writeFile(wb, `Orders_${userData.tgChatId}.xlsx`);
-        }
-
-        function copyLast4HoursOrders() {
-            if (!userPurchasesCache || userPurchasesCache.length === 0) return showAlert("কোনো অর্ডার নেই।");
-            const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
-            const recent = userPurchasesCache.filter(p => p.purchasedAt?.toDate && p.purchasedAt.toDate() >= fourHoursAgo);
-            if (recent.length === 0) return showAlert("বিগত ৪ ঘণ্টার মধ্যে কোনো অর্ডার পাওয়া যায়নি।");
-            const textList = recent.map(p => `${p.mail}${p.password ? '|' + p.password : ''}`).join('\n');
-            copyToClipboard(textList, null, `গত ৪ ঘণ্টার মোট ${recent.length} টি আইটেম কপি করা হয়েছে!`);
-        }
-
         async function loadAdminManualOrders() {
             const list = document.getElementById('admin-manual-orders-list');
             const countBadge = document.getElementById('admin-manual-order-count');
@@ -1927,7 +2106,7 @@
                     return `
                     <div class="bg-orange-50/70 p-3.5 rounded-2xl border border-orange-200 space-y-2 text-xs">
                         <div class="flex justify-between items-center font-bold">
-                            <span class="text-gray-800">${po.mailType} - ৳${po.cost}</span>
+                            <span class="text-gray-800">${po.mailType} ${po.quantity ? `(${po.quantity} টি)` : ''} - ৳${po.cost}</span>
                             <span class="live-order-countdown bg-orange-200/80 px-2 py-0.5 rounded-md" data-order-id="${poId}" data-expiry-time="${expiryMillis}">Calculating...</span>
                         </div>
                         <p class="text-gray-600 text-[11px]">User: <b>${po.userName}</b> (TG ID: <code>${po.userId}</code>)</p>
@@ -2062,6 +2241,52 @@
             } catch(e) {}
         }
 
+        window.openReplaceModal = function(saleId, mailType, cost) {
+            document.getElementById('replace-order-id').value = saleId;
+            document.getElementById('replace-mail-type').value = mailType;
+            document.getElementById('replace-mail-cost').value = cost;
+            document.getElementById('replace-reason-text').value = '';
+            document.getElementById('replace-modal').classList.remove('hidden');
+        };
+
+        async function handleSubmitReplace() {
+            const saleId = document.getElementById('replace-order-id').value;
+            const mailType = document.getElementById('replace-mail-type').value;
+            const cost = parseFloat(document.getElementById('replace-mail-cost').value || 0);
+            const reason = document.getElementById('replace-reason-text').value.trim();
+
+            if (!reason) return showAlert("দয়া করে সমস্যার কারণ লিখুন।");
+
+            const btn = document.getElementById('submit-replace-btn');
+            btn.disabled = true;
+            btn.textContent = "Submitting...";
+
+            try {
+                await addDoc(collection(db, "replace_requests"), {
+                    userId: String(userData.tgChatId),
+                    userName: userData.name || 'User',
+                    saleId: saleId,
+                    mailType: mailType,
+                    cost: cost,
+                    reason: reason,
+                    status: "pending",
+                    requestedAt: serverTimestamp()
+                });
+
+                const adminAlert = `⚠️ <b>নতুন রিপ্লেসমেন্ট / রিপোর্ট রিকোয়েস্ট!</b>\n\n👤 <b>ইউজার:</b> ${userData.name} (<code>${userData.tgChatId}</code>)\n📦 <b>সার্ভিস:</b> ${mailType} (ID: #${saleId})\n📝 <b>কারণ:</b> ${reason}`;
+                await notifyAdminViaTelegram(adminAlert);
+
+                document.getElementById('replace-modal').classList.add('hidden');
+                showAlert("রিপ্লেসমেন্ট অনুরোধ অ্যাডমিনের কাছে পাঠানো হয়েছে।");
+                navigateTo('history-page');
+            } catch(e) {
+                showAlert("অনুরোধ পাঠাতে ব্যর্থ হয়েছে।");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "সাবমিট করুন";
+            }
+        }
+
         window.toggleSupportWidget = function() {
             const menu = document.getElementById('support-options-menu');
             const openIcon = document.getElementById('support-icon-open');
@@ -2091,8 +2316,6 @@
         };
 
         function setupEventListeners() {
-            document.getElementById('download-orders-btn').addEventListener('click', exportOrdersToExcel);
-            document.getElementById('copy-orders-btn').addEventListener('click', copyLast4HoursOrders);
             document.getElementById('confirm-manual-order-btn').addEventListener('click', handleConfirmManualOrder);
             document.getElementById('submit-replace-btn').addEventListener('click', handleSubmitReplace);
             document.getElementById('submit-send-btn').addEventListener('click', handleSendBalance);

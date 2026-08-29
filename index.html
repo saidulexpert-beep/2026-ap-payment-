@@ -80,6 +80,7 @@
             border: 1px solid #e2e8f0;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
             transition: all 0.25s ease;
+            position: relative;
         }
         .product-card:hover {
             box-shadow: 0 8px 22px rgba(27, 100, 218, 0.08);
@@ -93,6 +94,7 @@
             border-radius: 12px;
             transition: all 0.2s ease;
             box-shadow: 0 4px 12px rgba(27, 100, 218, 0.25);
+            cursor: pointer;
         }
         .btn-buy:hover { background: #1551b3; }
         .btn-buy:active { transform: scale(0.97); }
@@ -112,9 +114,10 @@
             background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
             color: white;
             font-weight: 700;
-            border-radius: 10px;
+            border-radius: 12px;
             transition: all 0.2s ease;
             box-shadow: 0 3px 10px rgba(234, 88, 12, 0.25);
+            cursor: pointer;
         }
         .btn-order-orange:hover { background: #c2410c; }
         .btn-order-orange:active { transform: scale(0.97); }
@@ -407,7 +410,7 @@
         </div>
 
         <!-- MAIN CONTENT AREA -->
-        <main class="flex-grow pb-24">
+        <main class="flex-grow pb-28">
 
             <!-- HOME PAGE -->
             <div id="home-page" class="p-4 space-y-4 sub-page">
@@ -431,7 +434,7 @@
             <!-- AUTOMATED DEPOSIT PAGE -->
             <div id="pay-page" class="p-4 space-y-4 sub-page">
                 
-                <!-- INLINE CANCEL / ERROR BANNER (NON-POPUP) -->
+                <!-- INLINE CANCEL BANNER -->
                 <div id="deposit-status-banner" class="hidden p-3.5 rounded-2xl text-xs font-semibold flex items-center justify-between transition-all duration-300">
                     <div class="flex items-center gap-2" id="deposit-status-banner-content"></div>
                     <button onclick="document.getElementById('deposit-status-banner').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
@@ -710,7 +713,76 @@
         <div id="notification-list-container" class="space-y-3 flex-grow overflow-y-auto pb-10"></div>
     </div>
 
-    <!-- GATEWAY PAYMENT SUCCESS MODAL -->
+    <!-- 1. INSTANT BUY NOW MODAL (WITH QUANTITY CONTROLLER) -->
+    <div id="buy-now-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[70] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 relative text-center shadow-2xl">
+            <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto">
+                <i data-lucide="zap" class="w-7 h-7"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-gray-800" id="buy-modal-title">Service Name (Buy Now)</h3>
+                <p class="text-xs text-gray-500 mt-1">ইনস্ট্যান্ট স্টক থেকে সরাসরি ক্রয় করতে পরিমাণ নির্বাচন করুন।</p>
+            </div>
+
+            <!-- Quantity Selector -->
+            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 flex items-center justify-between text-xs">
+                <span class="font-bold text-gray-700">ক্রয় পরিমাণ (Quantity):</span>
+                <div class="flex items-center bg-white border border-gray-300 rounded-xl p-0.5 shadow-sm">
+                    <button onclick="adjustBuyModalQty(-1)" class="w-8 h-8 flex items-center justify-center font-black text-gray-700 hover:bg-gray-100 rounded-lg text-sm transition">-</button>
+                    <input id="buy-modal-qty-input" type="number" value="1" min="1" oninput="handleBuyModalQtyInput(this)" class="w-12 text-center bg-transparent text-sm font-black text-gray-800 outline-none">
+                    <button onclick="adjustBuyModalQty(1)" class="w-8 h-8 flex items-center justify-center font-black text-gray-700 hover:bg-gray-100 rounded-lg text-sm transition">+</button>
+                </div>
+            </div>
+
+            <div class="bg-blue-50/80 p-3.5 rounded-2xl border border-blue-200 text-left text-xs text-blue-950 space-y-1.5">
+                <p>• মোট মূল্য: <b id="buy-modal-price" class="text-blue-700 font-bold">৳0.00</b></p>
+                <p>• উপলব্ধ স্টক: <b id="buy-modal-stock-display" class="text-emerald-700 font-bold">0 টি</b></p>
+                <p>• ডেলিভারি: <b class="text-emerald-600 font-bold">ইনস্ট্যান্ট (Instant Delivery)</b></p>
+                <p class="text-[11px] text-gray-500">• কনফার্ম করার সাথে সাথে একাউন্ট ডাটা স্ক্রিনে প্রদর্শিত হবে।</p>
+            </div>
+
+            <div class="flex gap-2 pt-1">
+                <button onclick="document.getElementById('buy-now-modal').classList.add('hidden')" class="w-1/2 py-2.5 bg-gray-100 font-bold rounded-xl text-xs">বাতিল</button>
+                <button id="confirm-buy-modal-btn" onclick="executeBuyNowConfirmed()" class="w-1/2 py-2.5 btn-buy font-bold rounded-xl text-xs">Confirm Buy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. ORDER NOW (MANUAL PRE-ORDER) CONFIRMATION MODAL -->
+    <div id="manual-order-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[70] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 relative text-center shadow-2xl">
+            <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto">
+                <i data-lucide="clock" class="w-7 h-7"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-gray-800" id="manual-modal-title">Service Name (Order Now)</h3>
+                <p class="text-xs text-gray-500 mt-1">বর্তমানে ইনস্ট্যান্ট স্টক শেষ, কিন্তু আপনি প্রি-অর্ডার করতে পারবেন।</p>
+            </div>
+
+            <!-- Manual Order Quantity Selector -->
+            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 flex items-center justify-between text-xs">
+                <span class="font-bold text-gray-700">অর্ডার পরিমাণ (Quantity):</span>
+                <div class="flex items-center bg-white border border-gray-300 rounded-xl p-0.5 shadow-sm">
+                    <button onclick="adjustManualOrderModalQty(-1)" class="w-8 h-8 flex items-center justify-center font-black text-gray-700 hover:bg-gray-100 rounded-lg text-sm transition">-</button>
+                    <input id="manual-modal-qty-input" type="number" value="1" min="1" oninput="handleManualModalQtyChange(this)" class="w-12 text-center bg-transparent text-sm font-black text-gray-800 outline-none">
+                    <button onclick="adjustManualOrderModalQty(1)" class="w-8 h-8 flex items-center justify-center font-black text-gray-700 hover:bg-gray-100 rounded-lg text-sm transition">+</button>
+                </div>
+            </div>
+
+            <div class="bg-orange-50 p-3.5 rounded-2xl border border-orange-200 text-left text-xs text-orange-950 space-y-1.5">
+                <p>• মোট মূল্য: <b id="manual-modal-price" class="text-blue-700 font-bold">৳0.00</b></p>
+                <p>• ডেলিভারি সময়সীমা: <b id="manual-modal-duration" class="text-orange-700 font-bold">৩০ মিনিট</b></p>
+                <p>• অ্যাডমিন নির্ধারিত সময়ের মধ্যে সরাসরি আপনার <b>টেলিগ্রাম ইনবক্সে</b> পাঠিয়ে দেবে।</p>
+                <p class="text-[11px] text-red-600 font-semibold">• টাইমের মধ্যে ডেলিভারি না পেলে ব্যালেন্স অটোমেটিক <b>রিফান্ড</b> করা হবে।</p>
+            </div>
+            <div class="flex gap-2 pt-1">
+                <button onclick="document.getElementById('manual-order-modal').classList.add('hidden')" class="w-1/2 py-2.5 bg-gray-100 font-bold rounded-xl text-xs">বাতিল</button>
+                <button id="confirm-manual-order-btn" onclick="handleConfirmManualOrder()" class="w-1/2 py-2.5 btn-order-orange font-bold rounded-xl text-xs">Confirm Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. GATEWAY PAYMENT SUCCESS MODAL -->
     <div id="gateway-success-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[85] p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 text-center shadow-2xl">
             <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
@@ -731,7 +803,7 @@
         </div>
     </div>
 
-    <!-- REPLACE / REPORT REQUEST MODAL -->
+    <!-- 4. REPLACE / REPORT REQUEST MODAL -->
     <div id="replace-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[75] p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 relative text-center">
             <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto">
@@ -754,43 +826,9 @@
         </div>
     </div>
 
-    <!-- ORDER NOW (MANUAL ORDER) CONFIRMATION MODAL WITH QUANTITY -->
-    <div id="manual-order-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[70] p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 relative text-center">
-            <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto">
-                <i data-lucide="clock" class="w-7 h-7"></i>
-            </div>
-            <div>
-                <h3 class="text-lg font-bold text-gray-800" id="manual-modal-title">Order Now (ম্যানুয়াল অর্ডার)</h3>
-                <p class="text-xs text-gray-500 mt-1">বর্তমানে ইনস্ট্যান্ট স্টক শেষ, কিন্তু আপনি প্রি-অর্ডার করতে পারবেন।</p>
-            </div>
-
-            <!-- Manual Order Quantity Selector -->
-            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 flex items-center justify-between text-xs">
-                <span class="font-bold text-gray-700">অর্ডার পরিমাণ (Quantity):</span>
-                <div class="flex items-center bg-white border border-gray-300 rounded-xl p-0.5">
-                    <button onclick="adjustManualOrderModalQty(-1)" class="w-7 h-7 flex items-center justify-center font-black text-gray-600 hover:bg-gray-100 rounded-lg">-</button>
-                    <input id="manual-modal-qty-input" type="number" value="1" min="1" oninput="handleManualModalQtyChange(this)" class="w-10 text-center bg-transparent text-xs font-black text-gray-800 outline-none">
-                    <button onclick="adjustManualOrderModalQty(1)" class="w-7 h-7 flex items-center justify-center font-black text-gray-600 hover:bg-gray-100 rounded-lg">+</button>
-                </div>
-            </div>
-
-            <div class="bg-orange-50 p-3.5 rounded-2xl border border-orange-200 text-left text-xs text-orange-950 space-y-1.5">
-                <p>• মোট মূল্য: <b id="manual-modal-price" class="text-blue-700">৳0.00</b></p>
-                <p>• ডেলিভারি সময়সীমা: <b id="manual-modal-duration" class="text-orange-700 font-bold">৩০ মিনিট</b></p>
-                <p>• অ্যাডমিন নির্ধারিত সময়ের মধ্যে সরাসরি আপনার <b>টেলিগ্রাম ইনবক্সে</b> পাঠিয়ে দেবে।</p>
-                <p class="text-[11px] text-red-600 font-semibold">• টাইমের মধ্যে ডেলিভারি না পেলে ব্যালেন্স অটোমেটিক <b>রিফান্ড</b> করা হবে।</p>
-            </div>
-            <div class="flex gap-2 pt-1">
-                <button onclick="document.getElementById('manual-order-modal').classList.add('hidden')" class="w-1/2 py-2.5 bg-gray-100 font-bold rounded-xl text-xs">বাতিল</button>
-                <button id="confirm-manual-order-btn" class="w-1/2 py-2.5 btn-order-orange font-bold rounded-xl text-xs">Confirm Order</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- PURCHASE SUCCESS MODAL WITH MULTI ITEM LIST & ALL COPY / ALL XLSX -->
+    <!-- 5. PURCHASE SUCCESS MODAL -->
     <div id="purchase-success-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[70] p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl p-5 w-full max-w-sm space-y-4 relative text-center max-h-[90vh] flex flex-col">
+        <div class="bg-white rounded-3xl p-5 w-full max-w-sm space-y-4 relative text-center max-h-[90vh] flex flex-col shadow-2xl">
             <button onclick="document.getElementById('purchase-success-modal').classList.add('hidden')" class="absolute top-4 right-4 p-1 rounded-full bg-gray-100">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
@@ -856,7 +894,9 @@
         let appConfig = {};
         let selectedCategory = 'all';
         let userPurchasesCache = [];
-        let pendingOrderToPlace = null;
+        let displayedProductsCache = [];
+        let activeBuyModalData = null;
+        let activeManualModalData = null;
         let countdownTimerInterval = null;
         let allUserNotifications = [];
         let lastPurchasedItemsBatch = [];
@@ -888,9 +928,7 @@
             setupEventListeners();
             await initUserSession();
             
-            // Check return status if redirected back from automated payment gateway
             await checkReturnPaymentStatus();
-
             checkAndRefundExpiredOrders();
             startCountdownTimerRoutine();
 
@@ -1006,6 +1044,9 @@
 
             const payload = {
                 amount: String(amount),
+                cus_name: userData.name || userData.username || "User",
+                cus_email: "user_" + userData.tgChatId + "@mail.com",
+                cus_phone: "01700000000",
                 success_url: returnUrl + "?status=success&amount=" + amount,
                 cancel_url: returnUrl + "?status=cancel",
                 metadata: {
@@ -1023,12 +1064,12 @@
                 });
                 
                 const data = await res.json();
-                let payUrl = data.payment_url || data.url || (data.data && data.data.payment_url) || (data.data && data.data.url);
+                let payUrl = data.payment_url || data.url || (data.data && (data.data.payment_url || data.data.url)) || data.redirect_url;
 
                 if (payUrl) {
                     window.location.href = payUrl;
                 } else {
-                    showAlert(data.message || 'পেমেন্ট গেটওয়েতে সমস্যা হচ্ছে!');
+                    showAlert(data.message || data.error || 'পেমেন্ট গেটওয়েতে সমস্যা হচ্ছে!');
                     btn.disabled = false; 
                     btn.innerHTML = originalBtnHtml;
                 }
@@ -1039,7 +1080,6 @@
             }
         };
 
-        // --- GATEWAY RETURN VERIFICATION & CANCEL (NO POPUP BANNER) ---
         function showDepositBanner(message, type = 'cancel') {
             const banner = document.getElementById('deposit-status-banner');
             const content = document.getElementById('deposit-status-banner-content');
@@ -1055,7 +1095,6 @@
             const urlStatus = (urlParams.get('status') || '').toLowerCase();
             let transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid') || urlParams.get('trx_id') || urlParams.get('payment_id');
 
-            // 1. If User Cancelled: Show Clean Inline Banner without Popup
             if (urlStatus === 'cancel' || urlStatus === 'cancelled' || urlStatus === 'failed') {
                 localStorage.removeItem('pending_deposit_amount');
                 window.history.replaceState({}, document.title, window.location.pathname);
@@ -1064,7 +1103,6 @@
                 return;
             }
 
-            // 2. Only proceed if status is success OR a valid transactionId is provided
             if (urlStatus === 'success' || transactionId) {
                 if (!transactionId) {
                     transactionId = "TXN_" + Date.now();
@@ -1353,50 +1391,7 @@
             }
         };
 
-        // --- QUANTITY CONTROLLER LOGIC (RESPECTS STOCK & BALANCE) ---
-        window.adjustProductQty = function(inputId, delta, minVal, maxStock, unitPrice) {
-            const input = document.getElementById(inputId);
-            if (!input) return;
-            let current = parseInt(input.value) || 1;
-            let target = current + delta;
-            if (target < minVal) target = minVal;
-
-            const isManual = input.dataset.isManual === 'true';
-            const userBal = userData?.balance || 0;
-            const maxAffordable = unitPrice > 0 ? Math.floor(userBal / unitPrice) : 1;
-
-            if (!isManual && target > maxStock) {
-                target = maxStock;
-            }
-            if (maxAffordable > 0 && target > maxAffordable) {
-                target = maxAffordable;
-            }
-
-            input.value = target;
-        };
-
-        window.validateAndSanitizeQty = function(inputEl) {
-            let val = parseInt(inputEl.value) || 1;
-            const price = parseFloat(inputEl.dataset.price) || 0;
-            const stock = parseInt(inputEl.dataset.stock) || 0;
-            const isManual = inputEl.dataset.isManual === 'true';
-            const userBal = userData?.balance || 0;
-
-            if (val < 1) val = 1;
-
-            if (!isManual) {
-                if (val > stock) val = Math.max(1, stock);
-            }
-
-            const maxCanAfford = price > 0 ? Math.floor(userBal / price) : 1;
-            if (maxCanAfford > 0 && val > maxCanAfford) {
-                val = maxCanAfford;
-            }
-
-            inputEl.value = val;
-        };
-
-        // --- PRODUCT RENDERING (CLEAN HIDE STOCK + QUANTITY SELECTION) ---
+        // --- PRODUCT RENDERING (CLEAN CARDS WITHOUT STEPPERS) ---
         async function renderProductsBySelection() {
             const container = document.getElementById('product-list-container');
             container.innerHTML = getLoadingHTML();
@@ -1421,8 +1416,13 @@
             const stockPromises = filtered.map(item => getStockCount(item.stockKey));
             const stockCounts = await Promise.all(stockPromises);
 
-            container.innerHTML = filtered.map((item, idx) => {
-                const stock = stockCounts[idx] || 0;
+            displayedProductsCache = filtered.map((item, idx) => ({
+                ...item,
+                stock: stockCounts[idx] || 0
+            }));
+
+            container.innerHTML = displayedProductsCache.map((item, idx) => {
+                const stock = item.stock;
                 const outOfStock = stock <= 0;
                 const originalPrice = (parseFloat(item.priceBdt || 0) * 1.15).toFixed(2);
                 const currentPrice = parseFloat(item.priceBdt || 0).toFixed(2);
@@ -1431,12 +1431,6 @@
                 const hasApi = !!(item.apiUrl && item.apiUrl.trim() !== '');
                 const isStockHidden = !!item.hideStock;
                 const isManualAllowed = item.allowManual === true;
-                const manualDuration = item.manualDurationMinutes || appConfig.manualOrderTimeoutMinutes || 30;
-                const manualPrice = item.manualPrice !== undefined ? item.manualPrice : item.priceBdt;
-
-                const userBal = userData?.balance || 0;
-                const maxByBalance = currentPrice > 0 ? Math.floor(userBal / currentPrice) : 1;
-                const maxQty = outOfStock ? (maxByBalance > 0 ? maxByBalance : 1) : Math.min(stock, maxByBalance > 0 ? maxByBalance : 1);
 
                 return `
                 <div class="product-card p-4 space-y-3">
@@ -1482,33 +1476,20 @@
                             ` : ''}
                         </div>
 
-                        <!-- Quantity Selector + Action Button -->
-                        <div class="flex items-center gap-1.5">
-                            <div class="flex items-center bg-gray-100 border border-gray-200 rounded-xl p-0.5">
-                                <button onclick="adjustProductQty('qty-input-${idx}', -1, 1, ${outOfStock ? 9999 : stock}, ${item.priceBdt})" class="w-6 h-6 flex items-center justify-center font-black text-gray-600 hover:bg-white rounded-lg transition">-</button>
-                                <input id="qty-input-${idx}" type="number" value="1" min="1" max="${maxQty}" 
-                                    data-price="${item.priceBdt}" 
-                                    data-stock="${stock}"
-                                    data-is-manual="${outOfStock}"
-                                    onchange="validateAndSanitizeQty(this)"
-                                    class="w-8 text-center bg-transparent text-xs font-black text-gray-800 outline-none">
-                                <button onclick="adjustProductQty('qty-input-${idx}', 1, 1, ${outOfStock ? 9999 : stock}, ${item.priceBdt})" class="w-6 h-6 flex items-center justify-center font-black text-gray-600 hover:bg-white rounded-lg transition">+</button>
-                            </div>
-
+                        <!-- Clean Buttons (Click to open respective modal with quantity) -->
+                        <div>
                             ${!outOfStock ? `
-                                <button id="buy-btn-${idx}" 
-                                        class="btn-buy px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1" 
-                                        onclick="buyItemMulti('${item.type}', ${item.priceBdt}, '${item.stockKey}', '${item.category || 'service'}', 'qty-input-${idx}', 'buy-btn-${idx}')">
+                                <button class="btn-buy px-5 py-2 text-xs flex items-center gap-1" onclick="openBuyModal(${idx})">
+                                    <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
                                     <span>Buy Now</span>
                                 </button>
                             ` : isManualAllowed ? `
-                                <button class="btn-order-orange px-3.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1"
-                                        onclick="openManualOrderModalMulti('${item.type}', ${manualPrice}, '${item.stockKey}', '${item.category || 'service'}', ${manualDuration}, 'qty-input-${idx}')">
+                                <button class="btn-order-orange px-4 py-2 text-xs flex items-center gap-1" onclick="openManualModal(${idx})">
                                     <i data-lucide="clock" class="w-3.5 h-3.5"></i>
                                     <span>Order Now</span>
                                 </button>
                             ` : `
-                                <button disabled class="px-3 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-400 cursor-not-allowed">
+                                <button disabled class="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-400 cursor-not-allowed">
                                     Out of Stock
                                 </button>
                             `}
@@ -1519,32 +1500,95 @@
             lucide.createIcons();
         }
 
-        // --- MULTI-ITEM INSTANT PURCHASE ---
-        window.buyItemMulti = async function(mailType, unitPrice, stockKey, pageType, qtyInputId, btnId) {
-            const input = document.getElementById(qtyInputId);
-            const qty = parseInt(input?.value) || 1;
-            const totalCost = parseFloat(unitPrice) * qty;
+        // --- 1. INSTANT BUY MODAL LOGIC (EXACT SAME UX AS SCREENSHOT) ---
+        window.openBuyModal = function(index) {
+            const item = displayedProductsCache[index];
+            if (!item) return;
+
+            const unitPrice = parseFloat(item.priceBdt || 0);
+            const userBal = userData?.balance || 0;
+            const maxCanAfford = unitPrice > 0 ? Math.floor(userBal / unitPrice) : 1;
+            const maxAllowed = Math.min(item.stock, maxCanAfford > 0 ? maxCanAfford : 1);
+
+            activeBuyModalData = {
+                product: item,
+                unitPrice: unitPrice,
+                stock: item.stock,
+                maxAllowed: maxAllowed,
+                qty: 1
+            };
+
+            document.getElementById('buy-modal-title').textContent = `${item.type} (Buy Now)`;
+            document.getElementById('buy-modal-stock-display').textContent = `${item.stock} টি`;
+            document.getElementById('buy-modal-qty-input').value = 1;
+            updateBuyModalPriceDisplay();
+
+            document.getElementById('buy-now-modal').classList.remove('hidden');
+            lucide.createIcons();
+        };
+
+        function updateBuyModalPriceDisplay() {
+            if (!activeBuyModalData) return;
+            const total = activeBuyModalData.unitPrice * activeBuyModalData.qty;
+            document.getElementById('buy-modal-price').textContent = `৳${total.toFixed(2)} (${activeBuyModalData.qty} টি)`;
+        }
+
+        window.adjustBuyModalQty = function(delta) {
+            if (!activeBuyModalData) return;
+            let current = activeBuyModalData.qty;
+            let target = current + delta;
+            if (target < 1) target = 1;
+
+            const userBal = userData?.balance || 0;
+            const maxCanAfford = activeBuyModalData.unitPrice > 0 ? Math.floor(userBal / activeBuyModalData.unitPrice) : 1;
+            const effectiveMax = Math.min(activeBuyModalData.stock, maxCanAfford > 0 ? maxCanAfford : 1);
+
+            if (target > effectiveMax) {
+                target = effectiveMax;
+            }
+
+            activeBuyModalData.qty = target;
+            document.getElementById('buy-modal-qty-input').value = target;
+            updateBuyModalPriceDisplay();
+        };
+
+        window.handleBuyModalQtyInput = function(inputEl) {
+            if (!activeBuyModalData) return;
+            let val = parseInt(inputEl.value) || 1;
+            if (val < 1) val = 1;
+
+            const userBal = userData?.balance || 0;
+            const maxCanAfford = activeBuyModalData.unitPrice > 0 ? Math.floor(userBal / activeBuyModalData.unitPrice) : 1;
+            const effectiveMax = Math.min(activeBuyModalData.stock, maxCanAfford > 0 ? maxCanAfford : 1);
+
+            if (val > effectiveMax) {
+                val = effectiveMax;
+            }
+
+            inputEl.value = val;
+            activeBuyModalData.qty = val;
+            updateBuyModalPriceDisplay();
+        };
+
+        window.executeBuyNowConfirmed = async function() {
+            if (!activeBuyModalData) return;
+            const { product, unitPrice, qty } = activeBuyModalData;
+            const totalCost = unitPrice * qty;
 
             if (userData.balance < totalCost) {
-                return showAlert(`আপনার পর্যাপ্ত ব্যালেন্স নেই! মোট প্রয়োজন ৳${totalCost.toFixed(2)}, আপনার ব্যালেন্স ৳${(userData.balance || 0).toFixed(2)}`);
+                return showAlert(`আপনার পর্যাপ্ত ব্যালেন্স নেই! প্রয়োজন ৳${totalCost.toFixed(2)}, বর্তমান ব্যালেন্স ৳${(userData.balance || 0).toFixed(2)}`);
             }
 
-            if (!confirm(`আপনি কি ${qty} টি ${mailType} মোট ৳${totalCost.toFixed(2)} দিয়ে কিনতে চান?`)) return;
-
-            const btn = document.getElementById(btnId);
-            let originalBtnHtml = '';
-            if (btn) {
-                originalBtnHtml = btn.innerHTML;
-                btn.disabled = true;
-                btn.innerHTML = `<span class="animate-spin inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full mr-1"></span> <span>ক্রয় হচ্ছে...</span>`;
-            }
+            const btn = document.getElementById('confirm-buy-modal-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full mr-1"></span> Processing...`;
 
             try {
-                const itemQuery = query(collection(db, stockKey), where("isSold", "==", false), limit(qty));
+                const itemQuery = query(collection(db, product.stockKey), where("isSold", "==", false), limit(qty));
                 const itemQuerySnapshot = await getDocs(itemQuery);
 
                 if (itemQuerySnapshot.docs.length < qty) {
-                    throw new Error(`দুঃখিত, পর্যাপ্ত স্টক নেই! বর্তমানে মাত্র ${itemQuerySnapshot.docs.length} টি স্টক রয়েছে।`);
+                    throw new Error(`দুঃখিত, পর্যাপ্ত স্টক নেই! বর্তমানে মাত্র ${itemQuerySnapshot.docs.length} টি রয়েছে।`);
                 }
 
                 const purchasedItems = [];
@@ -1575,8 +1619,8 @@
                         transaction.set(purchaseLogRef, {
                             saleId: saleId,
                             userId: String(userData.tgChatId),
-                            mailType: mailType,
-                            category: pageType,
+                            mailType: product.type,
+                            category: product.category || 'service',
                             cost: parseFloat(unitPrice),
                             purchasedAt: serverTimestamp(),
                             mail: itemData.email || itemData.ip || itemData.data || 'N/A',
@@ -1587,7 +1631,7 @@
                             saleId: saleId,
                             mail: itemData.email || itemData.ip || itemData.data || 'N/A',
                             password: itemData.password || null,
-                            mailType: mailType,
+                            mailType: product.type,
                             cost: parseFloat(unitPrice)
                         });
 
@@ -1597,6 +1641,7 @@
                     transaction.set(counterRef, { currentId: saleId }, { merge: true });
                 });
 
+                document.getElementById('buy-now-modal').classList.add('hidden');
                 lastPurchasedItemsBatch = purchasedItems;
                 showPurchaseSuccessModal(purchasedItems);
 
@@ -1608,11 +1653,128 @@
             } catch (e) {
                 showAlert(e.message || "ক্রয় সম্পন্ন করা সম্ভব হয়নি।");
             } finally {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = originalBtnHtml;
-                    lucide.createIcons();
-                }
+                btn.disabled = false;
+                btn.textContent = "Confirm Buy";
+            }
+        };
+
+        // --- 2. ORDER NOW (MANUAL PRE-ORDER) MODAL LOGIC ---
+        window.openManualModal = function(index) {
+            const item = displayedProductsCache[index];
+            if (!item) return;
+
+            const unitPrice = item.manualPrice !== undefined ? parseFloat(item.manualPrice) : parseFloat(item.priceBdt || 0);
+            const timeoutMinutes = item.manualDurationMinutes || appConfig.manualOrderTimeoutMinutes || 30;
+
+            activeManualModalData = {
+                product: item,
+                unitPrice: unitPrice,
+                timeoutMinutes: timeoutMinutes,
+                qty: 1
+            };
+
+            document.getElementById('manual-modal-title').textContent = `${item.type} (Order Now)`;
+            document.getElementById('manual-modal-duration').textContent = `${timeoutMinutes} মিনিট`;
+            document.getElementById('manual-modal-qty-input').value = 1;
+            updateManualModalPriceDisplay();
+
+            document.getElementById('manual-order-modal').classList.remove('hidden');
+            lucide.createIcons();
+        };
+
+        function updateManualModalPriceDisplay() {
+            if (!activeManualModalData) return;
+            const total = activeManualModalData.unitPrice * activeManualModalData.qty;
+            document.getElementById('manual-modal-price').textContent = `৳${total.toFixed(2)} (${activeManualModalData.qty} টি)`;
+        }
+
+        window.adjustManualOrderModalQty = function(delta) {
+            if (!activeManualModalData) return;
+            let current = activeManualModalData.qty;
+            let target = current + delta;
+            if (target < 1) target = 1;
+
+            const userBal = userData?.balance || 0;
+            const maxCanAfford = activeManualModalData.unitPrice > 0 ? Math.floor(userBal / activeManualModalData.unitPrice) : 1;
+            if (maxCanAfford > 0 && target > maxCanAfford) {
+                target = maxCanAfford;
+            }
+
+            activeManualModalData.qty = target;
+            document.getElementById('manual-modal-qty-input').value = target;
+            updateManualModalPriceDisplay();
+        };
+
+        window.handleManualModalQtyChange = function(inputEl) {
+            if (!activeManualModalData) return;
+            let val = parseInt(inputEl.value) || 1;
+            if (val < 1) val = 1;
+
+            const userBal = userData?.balance || 0;
+            const maxCanAfford = activeManualModalData.unitPrice > 0 ? Math.floor(userBal / activeManualModalData.unitPrice) : 1;
+            if (maxCanAfford > 0 && val > maxCanAfford) {
+                val = maxCanAfford;
+            }
+
+            inputEl.value = val;
+            activeManualModalData.qty = val;
+            updateManualModalPriceDisplay();
+        };
+
+        window.handleConfirmManualOrder = async function() {
+            if (!activeManualModalData) return;
+            const { product, unitPrice, timeoutMinutes, qty } = activeManualModalData;
+            const totalPrice = unitPrice * qty;
+
+            const btn = document.getElementById('confirm-manual-order-btn');
+            btn.disabled = true;
+            btn.textContent = "Processing...";
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const buyerRef = doc(db, "users", String(userData.tgChatId));
+                    const buyerSnap = await transaction.get(buyerRef);
+                    
+                    if (!buyerSnap.exists() || buyerSnap.data().balance < totalPrice) {
+                        throw new Error("আপনার পর্যাপ্ত ব্যালেন্স নেই। অনুগ্রহ করে ডিপোজিট করুন।");
+                    }
+
+                    transaction.update(buyerRef, { balance: buyerSnap.data().balance - totalPrice });
+
+                    const expiryDate = new Date(Date.now() + timeoutMinutes * 60 * 1000);
+                    const manualOrderRef = doc(collection(db, "manual_orders"));
+                    
+                    transaction.set(manualOrderRef, {
+                        userId: String(userData.tgChatId),
+                        userName: userData.name || 'User',
+                        mailType: product.type,
+                        category: product.category || 'service',
+                        unitPrice: unitPrice,
+                        quantity: qty,
+                        cost: totalPrice,
+                        status: "pending",
+                        createdAt: serverTimestamp(),
+                        expiresAt: Timestamp.fromDate(expiryDate),
+                        durationMinutes: timeoutMinutes
+                    });
+                });
+
+                const adminAlert = `⚡ <b>নতুন ম্যানুয়াল অর্ডার এসেছে!</b>\n\n👤 <b>ইউজার:</b> ${userData.name} (<code>${userData.tgChatId}</code>)\n📦 <b>সার্ভিস:</b> ${product.type}\n🔢 <b>পরিমাণ:</b> ${qty} টি\n💰 <b>মোট মূল্য:</b> ৳${totalPrice}\n⏳ <b>সময়সীমা:</b> ${timeoutMinutes} মিনিট`;
+                await notifyAdminViaTelegram(adminAlert);
+
+                document.getElementById('manual-order-modal').classList.add('hidden');
+                showAlert(`আপনার ${qty} টি ${product.type} অর্ডার গ্রহণ করা হয়েছে!`);
+                
+                const userSnap = await getDoc(doc(db, "users", String(userData.tgChatId)));
+                userData = userSnap.data();
+                updateUI();
+                navigateTo('history-page');
+
+            } catch(e) {
+                showAlert(e.message || "অর্ডার সাবমিট করতে সমস্যা হয়েছে।");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Confirm Order";
             }
         };
 
@@ -1660,116 +1822,6 @@
             exportItemsToExcelCustom(lastPurchasedItemsBatch, `Purchase_${tgChatId}_${Date.now()}`);
             showAlert("অর্ডারের বিবরণ আপনার টেলিগ্রাম বটে পাঠানো হয়েছে এবং এক্সেল ফাইল ডাউনলোড করা হয়েছে!");
         };
-
-        // --- MANUAL PRE-ORDER WITH QUANTITY ---
-        window.openManualOrderModalMulti = function(mailType, price, stockKey, category, customDuration, qtyInputId) {
-            const initialQty = parseInt(document.getElementById(qtyInputId)?.value) || 1;
-            const timeoutMinutes = customDuration || appConfig.manualOrderTimeoutMinutes || 30;
-            pendingOrderToPlace = { mailType, unitPrice: parseFloat(price), stockKey, category, timeoutMinutes, qty: initialQty };
-
-            document.getElementById('manual-modal-title').textContent = `${mailType} (Order Now)`;
-            document.getElementById('manual-modal-duration').textContent = `${timeoutMinutes} মিনিট`;
-            document.getElementById('manual-modal-qty-input').value = initialQty;
-            updateManualModalPriceDisplay();
-
-            document.getElementById('manual-order-modal').classList.remove('hidden');
-        };
-
-        function updateManualModalPriceDisplay() {
-            if (!pendingOrderToPlace) return;
-            const totalPrice = pendingOrderToPlace.unitPrice * pendingOrderToPlace.qty;
-            document.getElementById('manual-modal-price').textContent = `৳${totalPrice.toFixed(2)} (${pendingOrderToPlace.qty} টি)`;
-        }
-
-        window.adjustManualOrderModalQty = function(delta) {
-            if (!pendingOrderToPlace) return;
-            let current = pendingOrderToPlace.qty;
-            let target = current + delta;
-            if (target < 1) target = 1;
-
-            const userBal = userData?.balance || 0;
-            const maxCanAfford = Math.floor(userBal / pendingOrderToPlace.unitPrice);
-            if (maxCanAfford > 0 && target > maxCanAfford) {
-                target = maxCanAfford;
-            }
-
-            pendingOrderToPlace.qty = target;
-            document.getElementById('manual-modal-qty-input').value = target;
-            updateManualModalPriceDisplay();
-        };
-
-        window.handleManualModalQtyChange = function(inputEl) {
-            if (!pendingOrderToPlace) return;
-            let val = parseInt(inputEl.value) || 1;
-            if (val < 1) val = 1;
-
-            const userBal = userData?.balance || 0;
-            const maxCanAfford = Math.floor(userBal / pendingOrderToPlace.unitPrice);
-            if (maxCanAfford > 0 && val > maxCanAfford) {
-                val = maxCanAfford;
-            }
-
-            inputEl.value = val;
-            pendingOrderToPlace.qty = val;
-            updateManualModalPriceDisplay();
-        };
-
-        async function handleConfirmManualOrder() {
-            if (!pendingOrderToPlace) return;
-            const { mailType, unitPrice, stockKey, category, timeoutMinutes, qty } = pendingOrderToPlace;
-            const totalPrice = unitPrice * qty;
-
-            const btn = document.getElementById('confirm-manual-order-btn');
-            btn.disabled = true;
-            btn.textContent = "Processing...";
-
-            try {
-                await runTransaction(db, async (transaction) => {
-                    const buyerRef = doc(db, "users", String(userData.tgChatId));
-                    const buyerSnap = await transaction.get(buyerRef);
-                    
-                    if (!buyerSnap.exists() || buyerSnap.data().balance < totalPrice) {
-                        throw new Error("আপনার পর্যাপ্ত ব্যালেন্স নেই। অনুগ্রহ করে ডিপোজিট করুন।");
-                    }
-
-                    transaction.update(buyerRef, { balance: buyerSnap.data().balance - totalPrice });
-
-                    const expiryDate = new Date(Date.now() + timeoutMinutes * 60 * 1000);
-                    const manualOrderRef = doc(collection(db, "manual_orders"));
-                    
-                    transaction.set(manualOrderRef, {
-                        userId: String(userData.tgChatId),
-                        userName: userData.name || 'User',
-                        mailType: mailType,
-                        category: category,
-                        unitPrice: unitPrice,
-                        quantity: qty,
-                        cost: totalPrice,
-                        status: "pending",
-                        createdAt: serverTimestamp(),
-                        expiresAt: Timestamp.fromDate(expiryDate),
-                        durationMinutes: timeoutMinutes
-                    });
-                });
-
-                const adminAlert = `⚡ <b>নতুন ম্যানুয়াল অর্ডার এসেছে!</b>\n\n👤 <b>ইউজার:</b> ${userData.name} (<code>${userData.tgChatId}</code>)\n📦 <b>সার্ভিস:</b> ${mailType}\n🔢 <b>পরিমাণ:</b> ${qty} টি\n💰 <b>মোট মূল্য:</b> ৳${totalPrice}\n⏳ <b>সময়সীমা:</b> ${timeoutMinutes} মিনিট`;
-                await notifyAdminViaTelegram(adminAlert);
-
-                document.getElementById('manual-order-modal').classList.add('hidden');
-                showAlert(`আপনার ${qty} টি ${mailType} অর্ডার গ্রহণ করা হয়েছে!`);
-                
-                const userSnap = await getDoc(doc(db, "users", String(userData.tgChatId)));
-                userData = userSnap.data();
-                updateUI();
-                navigateTo('history-page');
-
-            } catch(e) {
-                showAlert(e.message || "অর্ডার সাবমিট করতে সমস্যা হয়েছে।");
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "Confirm Order";
-            }
-        }
 
         // --- SEND BALANCE (2% FEE) ---
         async function handleSendBalance() {
@@ -2316,7 +2368,6 @@
         };
 
         function setupEventListeners() {
-            document.getElementById('confirm-manual-order-btn').addEventListener('click', handleConfirmManualOrder);
             document.getElementById('submit-replace-btn').addEventListener('click', handleSubmitReplace);
             document.getElementById('submit-send-btn').addEventListener('click', handleSendBalance);
             document.getElementById('features-receive-btn').addEventListener('click', () => {

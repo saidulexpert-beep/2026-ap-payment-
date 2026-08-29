@@ -1,84 +1,110 @@
-export default async function handler(req, res) {
-  // CORS Setup
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, api-key, API-KEY, Authorization'
-  );
+const axios = require('axios');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+// PayDeshi API Credentials
+const API_KEY = 'gnXi7etgWNhFyFGZFrOMYyrmnF4A1eGU5SC2QRmUvILOlNc2Ef';
+const BASE_URL = 'https://paydeshipay.themedokan.com/api/payment';
 
-  // আপনার API Key (কোনো স্পেস ছাড়া)
-  const API_KEY = 'GitwFKKVL0RMN4zR12V9inyYcaTaEgBg6riEHkhXR7Q1on1Wpl'.trim();
-  const BASE_URL = 'https://paydeshipay.themedokan.com/api/payment';
-  
-  const action = req.query.action;
+module.exports = async (req, res) => {
+    // CORS Headers
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader(
+        'Access-Control-Allow-Headers',
+        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    );
 
-  let body = req.body;
-  if (typeof body === 'string') {
+    // Handle preflight OPTIONS request
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Only POST method is allowed' });
+    }
+
+    const action = req.query.action || req.body?.action;
+
     try {
-      body = JSON.parse(body);
-    } catch (e) {
-      body = {};
+        // ১. পেমেন্ট লিংক তৈরি করার রিকোয়েস্ট (CREATE PAYMENT)
+        if (action === 'create') {
+            const { 
+                amount, 
+                success_url, 
+                cancel_url, 
+                webhook_url, 
+                metadata, 
+                order_id, 
+                cus_name, 
+                cus_email, 
+                cus_phone 
+            } = req.body;
+
+            if (!amount) {
+                return res.status(400).json({ error: 'টাকার পরিমাণ (Amount) দিতে হবে' });
+            }
+
+            // PayDeshi এর রিকোয়েস্ট পেলোড ফরম্যাট
+            const createPayload = {
+                amount: String(amount),
+                success_url: success_url || '',
+                cancel_url: cancel_url || '',
+                webhook_url: webhook_url || success_url || '',
+                metadata: {
+                    order_id: order_id || '',
+                    customer_name: cus_name || '',
+                    customer_email: cus_email || '',
+                    phone: cus_phone || '01700000000',
+                    ...(metadata || {})
+                }
+            };
+
+            const response = await axios.post(`${BASE_URL}/create`, createPayload, {
+                headers: {
+                    'API-KEY': API_KEY,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            // গেটওয়ে থেকে আসা রেসপন্স রিটার্ন
+            return res.status(200).json(response.data);
+        }
+
+        // ২. পেমেন্ট ভেরিফাই করার রিকোয়েস্ট (VERIFY PAYMENT)
+        else if (action === 'verify') {
+            const { transaction_id, order_id, payment_id } = req.body;
+            const searchId = transaction_id || order_id || payment_id;
+
+            if (!searchId) {
+                return res.status(400).json({ error: 'Transaction ID পাওয়া যায়নি' });
+            }
+
+            const verifyPayload = {
+                transaction_id: searchId,
+                payment_id: searchId,
+                order_id: searchId
+            };
+
+            const response = await axios.post(`${BASE_URL}/verify`, verifyPayload, {
+                headers: {
+                    'API-KEY': API_KEY,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            return res.status(200).json(response.data);
+        }
+
+        else {
+            return res.status(400).json({ error: 'Invalid action. Use action=create or action=verify' });
+        }
+
+    } catch (error) {
+        console.error('Payment Gateway API Error:', error.response?.data || error.message);
+        
+        return res.status(error.response?.status || 500).json({
+            error: error.response?.data?.message || error.response?.data?.error || error.message || 'পেমেন্ট প্রসেসিংয়ে সমস্যা হয়েছে',
+            details: error.response?.data || null
+        });
     }
-  }
-  body = body || {};
-
-  try {
-    if (action === 'create') {
-      const amountVal = parseFloat(body.amount) || 10;
-      const successUrl = body.success_url || body.redirect_url;
-      const cancelUrl = body.cancel_url || successUrl;
-
-      // DeshiPay / Themedokan গেটওয়ের অরিজিনাল পেলোড
-      const payload = {
-        amount: String(amountVal),
-        cus_name: body.cus_name || "Customer",
-        cus_email: body.cus_email || "customer@mail.com",
-        cus_number: body.cus_phone || "01700000000",
-        success_url: successUrl,
-        cancel_url: cancelUrl,
-        metadata: body.metadata || { order_id: body.order_id || `ORD_${Date.now()}` }
-      };
-
-      const response = await fetch(`${BASE_URL}/create`, {
-        method: 'POST',
-        headers: {
-          'API-KEY': API_KEY,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      
-      const data = await response.json();
-      return res.status(200).json(data);
-
-    } else if (action === 'verify') {
-      const trxId = body.transaction_id || body.trx_id || body.order_id;
-
-      const response = await fetch(`${BASE_URL}/verify`, {
-        method: 'POST',
-        headers: {
-          'API-KEY': API_KEY,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ transaction_id: trxId })
-      });
-      
-      const data = await response.json();
-      return res.status(200).json(data);
-
-    } else {
-      return res.status(400).json({ error: 'Invalid Action' });
-    }
-  } catch (error) {
-    console.error("Payment Gateway Error:", error);
-    return res.status(500).json({ error: error.message || 'Server Connection Error' });
-  }
-}
+};

@@ -271,7 +271,6 @@
             outline: none;
         }
 
-        /* ORIGINAL LOADER WITH BADGES & SHIMMER */
         #loader {
             background: radial-gradient(circle at center, #0f172a 0%, #030712 100%);
             overflow: hidden;
@@ -327,7 +326,7 @@
 </head>
 <body class="max-w-md mx-auto relative bg-[#f1f4f9] min-h-screen text-[#1e293b]">
 
-    <!-- 1. ORIGINAL INTRO LOADER WITH EMAIL, VPN, PROXY BADGES -->
+    <!-- 1. INTRO LOADER -->
     <div id="loader" class="fixed inset-0 flex flex-col items-center justify-center z-[100] p-6 select-none text-white">
         <div class="float-item float-1"><i data-lucide="mail" class="w-8 h-8"></i></div>
         <div class="float-item float-2"><i data-lucide="shield-check" class="w-9 h-9"></i></div>
@@ -344,7 +343,6 @@
         <div class="text-center space-y-3 z-10">
             <h1 class="font-black text-2xl tracking-wider shimmer-text">ALL SERVICE</h1>
             
-            <!-- STYLISH SERVICE BADGES -->
             <div class="flex items-center justify-center gap-1.5 pt-1">
                 <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[11px] font-extrabold border border-blue-500/40 tracking-wider">EMAIL</span>
                 <span class="text-gray-500">•</span>
@@ -382,7 +380,7 @@
                     <span id="header-coin-balance" class="font-bold text-xs text-white">৳0.00</span>
                 </div>
 
-                <!-- NOTIFICATION BELL ICON WITH DYNAMIC BADGE -->
+                <!-- NOTIFICATION BELL ICON -->
                 <button id="header-notif-btn" onclick="toggleNotificationModal()" class="relative bg-white/20 p-2 rounded-xl text-white hover:bg-white/30 transition shadow-sm" title="নোটিফিকেশন">
                     <i data-lucide="bell" class="w-4 h-4"></i>
                     <span id="notif-badge" class="absolute -top-1.5 -right-1.5 bg-red-500 border border-white text-white text-[9.5px] font-black px-1.5 py-0.2 rounded-full hidden animate-pulse shadow-sm">0</span>
@@ -431,10 +429,8 @@
                 </div>
             </div>
 
-            <!-- ULTRA PROFESSIONAL 100% AUTOMATED DEPOSIT PAGE -->
+            <!-- AUTOMATED DEPOSIT PAGE -->
             <div id="pay-page" class="p-4 space-y-4 sub-page">
-                
-                <!-- TOP WALLET HERO CARD -->
                 <div class="bg-gradient-to-br from-[#1b64da] via-[#1551b3] to-[#0a3275] p-5 rounded-3xl text-white shadow-xl relative overflow-hidden">
                     <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
                     <div class="relative z-10 flex items-center justify-between">
@@ -452,10 +448,7 @@
                     </div>
                 </div>
 
-                <!-- MAIN PAYMENT CONTAINER -->
                 <div class="bg-white p-5 rounded-3xl border border-gray-200/90 shadow-sm space-y-4">
-                    
-                    <!-- GATEWAY LOGOS BADGE BAR -->
                     <div class="flex items-center justify-between bg-slate-50 p-2.5 px-3.5 rounded-2xl border border-slate-100">
                         <span class="text-[11px] font-bold text-gray-500 uppercase">Supported:</span>
                         <div class="flex items-center gap-2">
@@ -466,7 +459,6 @@
                         </div>
                     </div>
 
-                    <!-- AMOUNT INPUT -->
                     <div>
                         <div class="flex justify-between items-center mb-1.5">
                             <label for="autoDepositAmountInput" class="text-xs font-black text-gray-700">টাকার পরিমাণ লিখুন:</label>
@@ -478,7 +470,6 @@
                         </div>
                     </div>
 
-                    <!-- QUICK SELECT CHIPS -->
                     <div>
                         <span class="block text-[11px] font-bold text-gray-400 uppercase mb-2">টাকার পরিমাণ দ্রুত বেছে নিন</span>
                         <div class="grid grid-cols-3 gap-2">
@@ -492,19 +483,16 @@
                         </div>
                     </div>
 
-                    <!-- SUBMIT BUTTON -->
                     <button id="btnPayGateway" onclick="initiateAutomatedPayment()" class="w-full py-4 rounded-2xl btn-gateway-pay text-sm flex items-center justify-center gap-2 cursor-pointer">
                         <i data-lucide="shield-check" class="w-4 h-4 text-emerald-300"></i>
                         <span>Continue to Automated Payment</span>
                     </button>
 
-                    <!-- SECURITY FOOTER NOTE -->
                     <div class="flex items-center justify-center gap-1.5 text-[10.5px] text-gray-400 font-medium pt-1">
                         <i data-lucide="lock" class="w-3 h-3 text-gray-400"></i>
                         <span>256-Bit SSL Encrypted Instant Payment Gateway</span>
                     </div>
                 </div>
-
             </div>
 
             <!-- ORDERS PAGE -->
@@ -1016,19 +1004,29 @@
             }
         };
 
-        // --- GATEWAY RETURN VERIFICATION & BALANCE UPDATE ---
+        // --- GATEWAY RETURN VERIFICATION & CANCEL PROTECTION ---
         async function checkReturnPaymentStatus() {
             const urlParams = new URLSearchParams(window.location.search);
+            const urlStatus = (urlParams.get('status') || '').toLowerCase();
             let transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid') || urlParams.get('trx_id') || urlParams.get('payment_id');
-            const urlStatus = urlParams.get('status');
 
-            if (transactionId || urlStatus === 'success') {
+            // 1. If User Cancelled/Failed: CLEAR & NEVER ADD BALANCE
+            if (urlStatus === 'cancel' || urlStatus === 'cancelled' || urlStatus === 'failed') {
+                localStorage.removeItem('pending_deposit_amount');
+                window.history.replaceState({}, document.title, window.location.pathname);
+                showAlert('পেমেন্ট বাতিল করা হয়েছে। কোনো ব্যালেন্স যোগ করা হয়নি।');
+                return;
+            }
+
+            // 2. Only proceed if status is success OR a valid transactionId is provided
+            if (urlStatus === 'success' || transactionId) {
                 if (!transactionId) {
                     transactionId = "TXN_" + Date.now();
                 }
 
                 let depositAmount = 0;
                 let verifyData = {};
+                let isVerified = false;
 
                 try {
                     const res = await fetch('/api/payment?action=verify', {
@@ -1037,25 +1035,34 @@
                         body: JSON.stringify({ transaction_id: transactionId })
                     });
                     verifyData = await res.json();
-                    depositAmount = parseFloat(verifyData.amount || verifyData.data?.amount || 0);
-                } catch (e) {}
-
-                if (!depositAmount || depositAmount < 10) {
-                    depositAmount = parseFloat(urlParams.get('amount') || urlParams.get('paymentAmount') || localStorage.getItem('pending_deposit_amount') || 0);
+                    
+                    if (res.ok && (verifyData.status === 'success' || verifyData.status === 'COMPLETED' || verifyData.status === 'approved' || verifyData.data?.status === 'COMPLETED')) {
+                        isVerified = true;
+                        depositAmount = parseFloat(verifyData.amount || verifyData.data?.amount || 0);
+                    }
+                } catch (e) {
+                    console.error("Verification error:", e);
                 }
 
-                if (depositAmount >= 10 && userData) {
+                // Strictly allow fallback only if status is strictly 'success'
+                if (!depositAmount && urlStatus === 'success') {
+                    depositAmount = parseFloat(urlParams.get('amount') || urlParams.get('paymentAmount') || localStorage.getItem('pending_deposit_amount') || 0);
+                    if (depositAmount >= 10) isVerified = true;
+                }
+
+                if (isVerified && depositAmount >= 10 && userData) {
                     await saveGatewayPaymentAndUpdateBalance(depositAmount, transactionId, verifyData);
                     localStorage.removeItem('pending_deposit_amount');
 
                     document.getElementById('gateway-display-txid').textContent = transactionId;
                     document.getElementById('gateway-display-amount').textContent = `৳${depositAmount.toFixed(2)}`;
                     document.getElementById('gateway-success-modal').classList.remove('hidden');
-
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                } else {
-                    window.history.replaceState({}, document.title, window.location.pathname);
+                } else if (!isVerified && urlStatus === 'success') {
+                    showAlert('পেমেন্ট যাচাইকরণ সম্পন্ন হয়নি বা ব্যর্থ হয়েছে।');
                 }
+
+                localStorage.removeItem('pending_deposit_amount');
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
 
@@ -1085,7 +1092,7 @@
                     });
                 });
 
-                // User Notification Record in Firestore
+                // Notification Record
                 await addDoc(collection(db, "users", tgChatId, "notifications"), {
                     title: "ডিপোজিট সফল!",
                     message: `আপনার অ্যাকাউন্টে ৳${depositAmount.toFixed(2)} সফলভাবে যোগ করা হয়েছে। (TXID: ${txid})`,
@@ -1098,21 +1105,18 @@
                 updateUI();
                 await loadUserNotifications();
 
-                // Send Telegram Notification
                 await sendTelegramMessage(tgChatId, `🎉 <b>ডিপোজিট সফল হয়েছে!</b>\n\nপরিমাণ: ৳${depositAmount.toFixed(2)}\nTrxID: <code>${txid}</code>\nআপনার ব্যালেন্স স্বয়ংক্রিয়ভাবে আপডেট হয়েছে।`);
             } catch (err) {
                 console.error("Balance update error:", err);
             }
         }
 
-        // --- NOTIFICATION SYSTEM WITH DYNAMIC 9+ BADGE & INSTANT CLEAR ON CLICK ---
+        // --- NOTIFICATIONS ---
         async function loadUserNotifications() {
             if (!userData) return;
             const tgChatId = String(userData.tgChatId);
-
             let notifications = [];
 
-            // 1. Fetch Admin Broadcast Notices
             if (appConfig.notices && Array.isArray(appConfig.notices)) {
                 appConfig.notices.forEach((n, idx) => {
                     notifications.push({
@@ -1125,7 +1129,6 @@
                 });
             }
 
-            // 2. Fetch User Specific Notifications (Deposits, Refunds, Messages)
             try {
                 const notifRef = collection(db, "users", tgChatId, "notifications");
                 const q = query(notifRef, orderBy("time", "desc"), limit(20));
@@ -1145,25 +1148,18 @@
 
             notifications.sort((a, b) => b.timestamp - a.timestamp);
             allUserNotifications = notifications;
-
             updateNotificationBadgeUI();
         }
 
         function updateNotificationBadgeUI() {
             const tgChatId = String(userData?.tgChatId || '0');
             const lastReadTime = parseInt(localStorage.getItem(`notif_last_read_${tgChatId}`) || '0');
-            
-            // Count unread notifications after last click
             const unreadCount = allUserNotifications.filter(n => n.timestamp > lastReadTime).length;
             const badge = document.getElementById('notif-badge');
 
             if (unreadCount > 0) {
                 badge.classList.remove('hidden');
-                if (unreadCount > 9) {
-                    badge.textContent = "9+";
-                } else {
-                    badge.textContent = String(unreadCount);
-                }
+                badge.textContent = unreadCount > 9 ? "9+" : String(unreadCount);
             } else {
                 badge.classList.add('hidden');
                 badge.textContent = "0";
@@ -1176,15 +1172,11 @@
             modal.classList.toggle('hidden');
 
             if (isOpening) {
-                // When clicked & opened, mark as read immediately
                 const tgChatId = String(userData?.tgChatId || '0');
                 localStorage.setItem(`notif_last_read_${tgChatId}`, String(Date.now()));
-                
-                // Hide badge instantly
                 const badge = document.getElementById('notif-badge');
                 badge.classList.add('hidden');
                 badge.textContent = "0";
-
                 renderNotifications();
             }
         };
@@ -1211,7 +1203,6 @@
             lucide.createIcons();
         }
 
-        // --- TELEGRAM MESSAGE HELPER ---
         async function sendTelegramMessage(chatId, text) {
             const botToken = appConfig.botToken || "";
             if (!botToken || !chatId) return;
@@ -1318,6 +1309,7 @@
             }
         };
 
+        // --- PRODUCT RENDERING WITH HIDE STOCK, API BUTTON & CUSTOM MANUAL ORDER ---
         async function renderProductsBySelection() {
             const container = document.getElementById('product-list-container');
             container.innerHTML = getLoadingHTML();
@@ -1348,8 +1340,17 @@
                 const originalPrice = (parseFloat(item.priceBdt || 0) * 1.15).toFixed(2);
                 const currentPrice = parseFloat(item.priceBdt || 0).toFixed(2);
                 const detailsId = `card-details-${idx}`;
+                
+                // 1. Check API URL & State
                 const hasApi = !!(item.apiUrl && item.apiUrl.trim() !== '');
-                const isManualAllowedForThisProduct = item.allowManual !== false && item.allowManualOrder !== false;
+
+                // 2. Check Hide Stock Setting from Firebase
+                const isStockHidden = !!item.hideStock;
+
+                // 3. Check Manual Order Allowed & specific configurations per product
+                const isManualAllowed = item.allowManual === true;
+                const manualDuration = item.manualDurationMinutes || appConfig.manualOrderTimeoutMinutes || 30;
+                const manualPrice = item.manualPrice !== undefined ? item.manualPrice : item.priceBdt;
 
                 return `
                 <div class="product-card p-4 space-y-3">
@@ -1381,15 +1382,21 @@
 
                     <div class="flex items-center justify-between pt-2 border-t border-gray-100 text-xs">
                         <div class="flex items-center gap-2">
+                            <!-- Stock display logic (hides count if hideStock: true) -->
                             <span class="font-semibold ${outOfStock ? 'text-orange-500' : 'text-emerald-600'}">
-                                Stock: <b>${stock}</b>
+                                ${isStockHidden ? (outOfStock ? 'Stock: <b>Restocking</b>' : 'Stock: <b>Available</b>') : `Stock: <b>${stock}</b>`}
                             </span>
 
+                            <!-- API Button (Active Green if URL exists, Disabled Gray if not) -->
                             ${hasApi ? `
-                                <a href="${item.apiUrl}" target="_blank" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-sm flex items-center gap-1 transition">
+                                <a href="${item.apiUrl}" target="_blank" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm flex items-center gap-1 transition">
                                     <i data-lucide="code" class="w-3 h-3"></i> API
                                 </a>
-                            ` : ''}
+                            ` : `
+                                <span class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-gray-100 text-gray-400 cursor-not-allowed flex items-center gap-1 border border-gray-200 select-none">
+                                    <i data-lucide="code" class="w-3 h-3 text-gray-400"></i> API
+                                </span>
+                            `}
                         </div>
 
                         ${!outOfStock ? `
@@ -1398,9 +1405,9 @@
                                     onclick="buyItem('${item.type}', ${item.priceBdt}, '${item.stockKey}', '${item.category || 'service'}', 'buy-btn-${idx}')">
                                 <span>Buy Now</span>
                             </button>
-                        ` : isManualAllowedForThisProduct ? `
+                        ` : isManualAllowed ? `
                             <button class="btn-order-orange px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1"
-                                    onclick="openManualOrderModal('${item.type}', ${item.priceBdt}, '${item.stockKey}', '${item.category || 'service'}')">
+                                    onclick="openManualOrderModal('${item.type}', ${manualPrice}, '${item.stockKey}', '${item.category || 'service'}', ${manualDuration})">
                                 <i data-lucide="clock" class="w-3.5 h-3.5"></i>
                                 <span>Order Now</span>
                             </button>
@@ -1487,9 +1494,9 @@
             }
         };
 
-        window.openManualOrderModal = function(mailType, price, stockKey, category) {
-            pendingOrderToPlace = { mailType, price: parseFloat(price), stockKey, category };
-            const timeoutMinutes = appConfig.manualOrderTimeoutMinutes || 30;
+        window.openManualOrderModal = function(mailType, price, stockKey, category, customDuration) {
+            const timeoutMinutes = customDuration || appConfig.manualOrderTimeoutMinutes || 30;
+            pendingOrderToPlace = { mailType, price: parseFloat(price), stockKey, category, timeoutMinutes };
 
             document.getElementById('manual-modal-title').textContent = `${mailType} (Order Now)`;
             document.getElementById('manual-modal-price').textContent = `৳${parseFloat(price).toFixed(2)}`;
@@ -1499,8 +1506,7 @@
 
         async function handleConfirmManualOrder() {
             if (!pendingOrderToPlace) return;
-            const { mailType, price, stockKey, category } = pendingOrderToPlace;
-            const timeoutMinutes = appConfig.manualOrderTimeoutMinutes || 30;
+            const { mailType, price, stockKey, category, timeoutMinutes } = pendingOrderToPlace;
 
             const btn = document.getElementById('confirm-manual-order-btn');
             btn.disabled = true;

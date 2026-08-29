@@ -3,625 +3,2053 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Social Smm Shop - Payment & Telegram Auth</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <title>ALL BNB - Automated Shop & Payment</title>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root {
-            --theme-color: #e2136e; 
-            --brand-purple: #7854f7;
-            --brand-blue: #3b5bfd;
-            --telegram-color: #229ED9;
-            --text-dark: #1e293b;
-            --text-gray: #64748b;
+        body {
+            font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif;
+            background-color: #f1f4f9;
+            color: #1e293b;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 16px 10px; }
-        .payment-modal { width: 100%; max-width: 395px; background: #ffffff; border-radius: 24px; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.2); overflow: hidden; position: relative; min-height: 640px; display: flex; flex-direction: column; }
-        .step-container { display: none; flex-direction: column; width: 100%; height: 100%; animation: fadeIn 0.25s ease-in-out; flex: 1; }
-        .step-container.active { display: flex; }
+        input, textarea, #orders-purchase-history .font-mono, #replace-history-list .text-sm, .selectable-text {
+            -webkit-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+            -webkit-touch-callout: default;
+        }
+        .main-header {
+            background: linear-gradient(135deg, #1b64da 0%, #0d4bb5 100%);
+            color: #ffffff;
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            box-shadow: 0 4px 15px rgba(27, 100, 218, 0.25);
+        }
+        .wallet-pill {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(8px);
+            border-radius: 9999px;
+            padding: 5px 12px;
+            transition: all 0.2s ease;
+        }
+        .wallet-pill:active {
+            transform: scale(0.96);
+            background: rgba(255, 255, 255, 0.28);
+        }
+        .category-btn {
+            background: #ffffff;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 10px 12px;
+            font-size: 0.80rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            text-align: center;
+        }
+        .category-btn:hover {
+            border-color: #93c5fd;
+            transform: translateY(-1px);
+        }
+        .category-btn.active {
+            background: #1b64da;
+            color: #ffffff;
+            border-color: #1b64da;
+            box-shadow: 0 4px 12px rgba(27, 100, 218, 0.3);
+        }
+        .product-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
+            transition: all 0.25s ease;
+        }
+        .product-card:hover {
+            box-shadow: 0 8px 22px rgba(27, 100, 218, 0.08);
+            border-color: #bfdbfe;
+        }
+        
+        .btn-buy {
+            background: linear-gradient(135deg, #1b64da 0%, #1551b3 100%);
+            color: white;
+            font-weight: 700;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(27, 100, 218, 0.25);
+        }
+        .btn-buy:hover { background: #1551b3; }
+        .btn-buy:active { transform: scale(0.97); }
+
+        .btn-gateway-pay {
+            background: linear-gradient(135deg, #7854f7 0%, #4f46e5 100%);
+            color: white;
+            font-weight: 700;
+            border-radius: 14px;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 18px rgba(120, 84, 247, 0.35);
+        }
+        .btn-gateway-pay:hover { opacity: 0.95; }
+        .btn-gateway-pay:active { transform: scale(0.97); }
+
+        .btn-order-orange {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            font-weight: 700;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            box-shadow: 0 3px 10px rgba(234, 88, 12, 0.25);
+        }
+        .btn-order-orange:hover { background: #c2410c; }
+        .btn-order-orange:active { transform: scale(0.97); }
+
+        .bottom-nav {
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 448px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 64px;
+            z-index: 50;
+            padding: 0 4px;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 0.70rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 12px;
+            flex: 1;
+        }
+        .nav-item.active { color: #1b64da; }
+        .nav-item.active .nav-icon-wrapper {
+            background: #ebf3ff;
+            color: #1b64da;
+            border-radius: 20px;
+            padding: 2px 12px;
+        }
+        
+        .support-widget-container {
+            position: fixed;
+            bottom: 76px;
+            right: 16px;
+            z-index: 45;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+        .fab-support-main {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #1b64da 0%, #0d47a1 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(27, 100, 218, 0.45);
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            position: relative;
+        }
+        .support-options-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(15px) scale(0.85);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .support-options-menu.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+        .support-sub-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 15px;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-decoration: none;
+        }
+
+        .deposit-method-card {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            transition: all 0.25s ease;
+            position: relative;
+            cursor: pointer;
+        }
+        .deposit-method-card:hover { border-color: #93c5fd; }
+        .deposit-method-card.selected-method {
+            border-color: #1b64da !important;
+            background: #f0f7ff !important;
+            box-shadow: 0 6px 18px rgba(27, 100, 218, 0.15);
+        }
+        .deposit-method-card.selected-method .selected-check { display: flex !important; }
+
+        .quick-amount-pill {
+            background: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            padding: 9px 10px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+        .quick-amount-pill:hover { border-color: #7854f7; color: #7854f7; background: #f5f3ff; }
+        .quick-amount-pill.selected {
+            border-color: #7854f7;
+            background: #7854f7;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(120, 84, 247, 0.25);
+        }
+
+        .tab-btn {
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #64748b;
+            background: #f1f5f9;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .tab-btn.active {
+            background: #ffffff;
+            color: #1b64da;
+            border-color: #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .main-page { display: none; }
+        .main-page.active { display: flex; animation: fadeIn 0.3s ease-in-out; }
+        .sub-page { display: none; }
+        .sub-page.active { display: block; animation: fadeIn 0.25s ease-in-out; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .input-field {
+            background-color: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            color: #1e293b;
+            transition: all 0.2s;
+        }
+        .input-field:focus {
+            border-color: #1b64da;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(27, 100, 218, 0.15);
+            outline: none;
+        }
+
+        #loader {
+            background: radial-gradient(circle at center, #0f172a 0%, #030712 100%);
+            overflow: hidden;
+        }
+        .loader-ring {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            border: 3px solid rgba(59, 130, 246, 0.15);
+            border-top-color: #38bdf8;
+            border-right-color: #818cf8;
+            animation: spin 1s infinite cubic-bezier(0.55, 0.15, 0.45, 0.85);
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.3);
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
         
-        .auth-container { padding: 30px 22px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; flex: 1; }
-        .tg-icon-circle { width: 75px; height: 75px; background: #e0f2fe; color: var(--telegram-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 38px; margin-bottom: 14px; box-shadow: 0 8px 20px rgba(34, 158, 217, 0.2); }
-        .auth-title { font-size: 23px; font-weight: 800; color: var(--text-dark); margin-bottom: 5px; }
-        .auth-sub { font-size: 13px; color: var(--text-gray); margin-bottom: 20px; line-height: 1.4; }
-        
-        .auth-input-group { width: 100%; text-align: left; margin-bottom: 12px; }
-        .auth-input-group label { display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px; }
-        .auth-input { width: 100%; padding: 12px 14px; font-size: 15px; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: 0.2s; font-weight: 600; color: #1e293b; }
-        .auth-input:focus { border-color: var(--telegram-color); box-shadow: 0 0 0 3px rgba(34, 158, 217, 0.15); }
-        
-        .btn-tg-submit { width: 100%; background: var(--telegram-color); color: #ffffff; border: none; padding: 13px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 16px rgba(34, 158, 217, 0.3); transition: 0.2s transform; }
-        .btn-tg-submit:active { transform: scale(0.98); }
-
-        .auth-divider { display: flex; align-items: center; text-align: center; margin: 16px 0 10px; width: 100%; color: #94a3b8; font-size: 11.5px; font-weight: 600; }
-        .auth-divider::before, .auth-divider::after { content: ''; flex: 1; border-bottom: 1px solid #e2e8f0; }
-        .auth-divider span { padding: 0 8px; text-transform: uppercase; }
-
-        .landing-header { width: 100%; background: #ffffff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
-        .header-balance-box { display: flex; flex-direction: column; }
-        .header-balance-box .b-title { font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; }
-        .header-balance-box .b-val { font-size: 19px; font-weight: 800; color: #10b981; }
-        .header-right-actions { display: flex; align-items: center; gap: 8px; }
-        .header-icon-btn { width: 38px; height: 38px; border-radius: 50%; background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; font-size: 15px; }
-        .header-icon-btn .notif-dot { position: absolute; top: 8px; right: 9px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: none; } 
-
-        .step-1-content { padding: 18px 20px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; }
-        .main-avatar-wrap { width: 75px; height: 75px; border-radius: 20px; background: #050b14; border: 2.5px solid #38bdf8; box-shadow: 0 8px 20px rgba(56, 189, 248, 0.35); overflow: hidden; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; }
-        .main-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
-        .shop-heading { font-size: 20px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; }
-        .user-tg-badge { font-size: 12px; color: var(--telegram-color); font-weight: 700; background: #e0f2fe; padding: 4px 12px; border-radius: 20px; margin-top: 4px; display: inline-flex; align-items: center; gap: 5px; }
-        .line-sep { width: 100%; height: 1px; background: #f1f5f9; margin: 12px 0; }
-        .note-card { background-color: #fffdf0; border-left: 4px solid #f59e0b; border-radius: 6px 12px 12px 6px; padding: 10px 12px; text-align: left; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.06); width: 100%; }
-        .note-card h5 { color: #92400e; font-size: 13px; font-weight: 700; margin-bottom: 3px; }
-        .note-card p { font-size: 11.5px; color: #78350f; line-height: 1.4; }
-
-        .input-box-wrap { width: 100%; text-align: left; margin-bottom: 12px; }
-        .input-box-wrap label { display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px; }
-        .amount-field { width: 100%; padding: 11px 14px; font-size: 17px; font-weight: 700; color: #1e293b; border: 2px solid #60a5fa; border-radius: 12px; outline: none; transition: all 0.2s ease; text-align: center; }
-        .amount-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
-        
-        .quick-amount-title { font-size: 11.5px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; margin-bottom: 6px; text-align: left; width: 100%; }
-        .quick-amount-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%; margin-bottom: 16px; }
-        .quick-chip { background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 7px 0; border-radius: 10px; font-size: 13px; font-weight: 700; color: #334155; cursor: pointer; transition: all 0.15s ease; text-align: center; }
-        .quick-chip:hover { border-color: var(--brand-purple); color: var(--brand-purple); background: #f5f3ff; }
-        .quick-chip.selected { border-color: var(--brand-purple); background: #7854f7; color: #ffffff; box-shadow: 0 4px 10px rgba(120, 84, 247, 0.25); }
-
-        .btn-continue-gradient { width: 100%; background: linear-gradient(135deg, var(--brand-purple) 0%, #4f46e5 100%); color: #ffffff; border: none; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 20px rgba(120, 84, 247, 0.35); transition: 0.2s transform; margin-top: auto; }
-        .btn-continue-gradient:active { transform: scale(0.98); }
-
-        /* SUCCESS STEP */
-        .success-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; text-align: center; }
-        .success-icon { font-size: 60px; color: #10b981; margin-bottom: 10px; animation: scaleIn 0.4s ease-out; }
-        .success-title { font-size: 21px; font-weight: 800; color: #1e293b; margin-bottom: 4px; }
-        .success-msg { font-size: 13.5px; color: #64748b; margin-bottom: 16px; line-height: 1.4; }
-        .txid-box { background: #f8fafc; padding: 14px 18px; border-radius: 12px; border: 1px dashed #cbd5e1; font-size: 14px; color: #334155; margin-bottom: 16px; width: 100%; text-align: left; }
-        .txid-box div { margin-bottom: 6px; }
-        .txid-box span { font-weight: 700; color: var(--text-dark); }
-        .txid-box .highlight-txid { color: var(--brand-purple); font-family: monospace; font-size: 15px; }
-        .countdown-badge { background: #eff6ff; color: #2563eb; font-size: 12.5px; font-weight: 700; padding: 8px 14px; border-radius: 20px; margin-bottom: 16px; display: inline-flex; align-items: center; gap: 6px; }
-        @keyframes scaleIn { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
-
-        .toast-popup { position: absolute; top: 15px; left: 50%; transform: translateX(-50%) translateY(-30px); background: #1e293b; color: #ffffff; padding: 10px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: 0.3s all; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); width: 85%; text-align: center; }
-        .toast-popup.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-        .notif-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; flex-direction: column; justify-content: flex-end; opacity: 0; transition: 0.3s opacity; }
-        .notif-overlay.show { display: flex; opacity: 1; }
-        .notif-modal-content { background: #ffffff; width: 100%; height: 80%; border-radius: 24px 24px 0 0; display: flex; flex-direction: column; transform: translateY(100%); transition: 0.3s transform; }
-        .notif-overlay.show .notif-modal-content { transform: translateY(0); }
-        .notif-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid #f1f5f9; }
-        .notif-header h3 { font-size: 17px; font-weight: 700; color: #1e293b; }
-        .notif-header button { background: none; border: none; font-size: 20px; color: #64748b; cursor: pointer; }
-        .notif-list { padding: 14px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; flex: 1; }
-        .notif-item { padding: 12px; border-radius: 12px; background: #f8fafc; border-left: 4px solid var(--text-gray); font-size: 13px; color: #334155; line-height: 1.4; }
-        .notif-item.unread { font-weight: 700; background: #f0fdf4; border-left-color: #10b981; }
-        .notif-time { font-size: 11px; color: #94a3b8; margin-top: 5px; display: block; font-weight: 500; }
+        .premium-loader-spinner {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: conic-gradient(#0000 10%, #1b64da);
+            -webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 4px), #000 0);
+            animation: spin 0.8s infinite linear;
+        }
     </style>
 </head>
-<body>
+<body class="max-w-md mx-auto relative bg-[#f1f4f9] min-h-screen text-[#1e293b]">
 
-<div class="payment-modal">
-    <div id="toastNotification" class="toast-popup"></div>
-
-    <!-- Notification Modal -->
-    <div id="notifModal" class="notif-overlay">
-        <div class="notif-modal-content">
-            <div class="notif-header">
-                <h3>নোটিফিকেশন</h3>
-                <button onclick="closeNotifModal()"><i class="fa-solid fa-xmark"></i></button>
+    <!-- INTRO LOADER -->
+    <div id="loader" class="fixed inset-0 flex flex-col items-center justify-center z-[100] p-6 select-none text-white">
+        <div class="relative flex items-center justify-center mb-6">
+            <div class="loader-ring"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <i data-lucide="zap" class="w-7 h-7 text-sky-400 fill-sky-400 animate-pulse"></i>
             </div>
-            <div id="notifList" class="notif-list"></div>
+        </div>
+        <div class="text-center space-y-2 z-10">
+            <h1 class="font-black text-2xl tracking-wider text-white">ALL BNB</h1>
+            <p class="text-xs text-blue-200">Fast, Secure & Automated System</p>
         </div>
     </div>
 
-    <!-- STEP: TELEGRAM AUTH -->
-    <div id="step-auth" class="step-container active">
-        <div class="auth-container">
-            <div class="tg-icon-circle">
-                <i class="fa-brands fa-telegram"></i>
-            </div>
-            <h2 class="auth-title">টেলিগ্রাম লগইন</h2>
-            <p class="auth-sub">আপনার টেলিগ্রাম ইউজারনেম লিখুন অথবা টেলিগ্রাম অ্যাপ দিয়ে লগইন করুন</p>
-            
-            <div class="auth-input-group">
-                <label>Telegram Username বা ID</label>
-                <input type="text" id="tgInputManual" class="auth-input" placeholder="@yourusername">
-            </div>
+    <!-- MAIN APP WRAPPER -->
+    <div id="app-container" class="min-h-screen flex-col main-page">
 
-            <button class="btn-tg-submit" onclick="handleManualTelegramLogin()">
-                <i class="fa-brands fa-telegram"></i> লগইন করুন
-            </button>
-
-            <div class="auth-divider">
-                <span>অথবা Widget</span>
-            </div>
-
-            <!-- Telegram Login Widget -->
-            <div style="display: flex; justify-content: center; min-height: 40px;">
-                <script async src="https://telegram.org/js/telegram-widget.js?22" 
-                        data-telegram-login="SocialSmmShopBot" 
-                        data-size="large" 
-                        data-radius="12" 
-                        data-onauth="onTelegramAuth(user)" 
-                        data-request-access="write"></script>
-            </div>
-        </div>
-    </div>
-
-    <!-- STEP: MAIN DASHBOARD -->
-    <div id="step-1" class="step-container">
-        <div class="landing-header">
-            <div class="header-balance-box">
-                <span class="b-title">Current Balance</span>
-                <span class="b-val" id="userBalanceDisplay">0.00 BDT</span>
-            </div>
-            <div class="header-right-actions">
-                <div class="header-icon-btn" onclick="openNotifModal()" title="Notifications">
-                    <i class="fa-regular fa-bell"></i>
-                    <span class="notif-dot"></span>
+        <!-- HEADER -->
+        <header class="main-header flex items-center justify-between">
+            <div class="flex items-center gap-2.5 cursor-pointer" onclick="navigateTo('home-page')">
+                <div class="relative">
+                    <img id="header-user-avatar" class="w-9 h-9 rounded-full border-2 border-white/80 object-cover hidden shadow-sm" src="" alt="Profile">
+                    <div id="header-user-fallback" class="w-9 h-9 rounded-full bg-white/20 border-2 border-white/60 flex items-center justify-center font-bold text-sm text-white shadow-sm">
+                        U
+                    </div>
                 </div>
-                <div class="header-icon-btn" onclick="logoutUser()" title="Logout">
-                    <i class="fa-solid fa-right-from-bracket" style="color: #ef4444;"></i>
+                <div class="flex flex-col">
+                    <span class="text-base font-black tracking-tight text-white leading-tight">ALL BNB</span>
+                    <span class="text-[10px] text-blue-100 font-semibold tracking-wide">Automated SMM & Services</span>
                 </div>
             </div>
-        </div>
 
-        <div class="step-1-content">
-            <div class="main-avatar-wrap">
-                <img id="userPhotoDisplay" src="https://i.ibb.co/r2q5RcBg/x.jpg" alt="Logo" onerror="this.src='https://via.placeholder.com/110'">
-            </div>
-            
-            <h2 class="shop-heading">Social Smm Shop</h2>
-            <div class="user-tg-badge" id="userTgBadge">
-                <i class="fa-brands fa-telegram"></i> <span id="tgUsernameText">@user</span>
-            </div>
-            
-            <div class="line-sep"></div>
-            
-            <div class="note-card">
-                <h5>Payment Note</h5>
-                <p>মিনিমাম ডিপোজিট <b>১০ টাকা</b>। বিকাশ, নগদ ও রকেটের মাধ্যমে ইনস্ট্যান্ট অটোমেটিক পেমেন্ট এড হবে।</p>
-            </div>
+            <div class="flex items-center gap-2">
+                <!-- WALLET PILL -->
+                <div id="header-balance-area" class="wallet-pill flex items-center gap-1.5 cursor-pointer" onclick="navigateTo('pay-page')" title="Deposit">
+                    <i data-lucide="wallet" class="w-3.5 h-3.5 text-blue-100"></i>
+                    <span id="header-coin-balance" class="font-bold text-xs text-white">৳0.00</span>
+                </div>
 
-            <div class="input-box-wrap">
-                <label for="amountInput">টাকার পরিমাণ লিখুন (মিনিমাম ১০ ৳)</label>
-                <input type="number" id="amountInput" class="amount-field" value="10" placeholder="10" min="10" oninput="handleAmountInput()">
+                <!-- NOTIFICATION BELL -->
+                <button id="header-notif-btn" onclick="toggleNotificationModal()" class="relative bg-white/20 p-2 rounded-xl text-white hover:bg-white/30 transition shadow-sm" title="নোটিফিকেশন">
+                    <i data-lucide="bell" class="w-4 h-4"></i>
+                    <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full hidden animate-pulse">0</span>
+                </button>
             </div>
+        </header>
 
-            <div class="quick-amount-title">Quick Select Amount</div>
-            <div class="quick-amount-grid">
-                <div class="quick-chip selected" onclick="setQuickAmount(10)">১০ ৳</div>
-                <div class="quick-chip" onclick="setQuickAmount(50)">৫০ ৳</div>
-                <div class="quick-chip" onclick="setQuickAmount(100)">১০০ ৳</div>
-                <div class="quick-chip" onclick="setQuickAmount(200)">২০০ ৳</div>
-                <div class="quick-chip" onclick="setQuickAmount(500)">৫০০ ৳</div>
-                <div class="quick-chip" onclick="setQuickAmount(1000)">১০০০ ৳</div>
+        <!-- FLOATING SUPPORT WIDGET -->
+        <div class="support-widget-container">
+            <div id="support-options-menu" class="support-options-menu">
+                <a id="whatsapp-support-link" href="https://wa.me/8801827750260" target="_blank" class="support-sub-btn bg-[#25D366]">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i>
+                    <span>WhatsApp</span>
+                </a>
+                <a id="telegram-support-link" href="https://t.me/EXPERTearn_team" target="_blank" class="support-sub-btn bg-[#0088cc]">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                    <span>Telegram</span>
+                </a>
             </div>
 
-            <button id="btnPayGateway" class="btn-continue-gradient" onclick="initiatePayment()">
-                <i class="fa-solid fa-lock" style="color: #facc15;"></i> Continue to Payment
+            <button id="support-toggle-btn" onclick="toggleSupportWidget()" class="fab-support-main" title="Customer Support">
+                <span id="support-icon-open"><i data-lucide="headset" class="w-5 h-5"></i></span>
+                <span id="support-icon-close" class="hidden"><i data-lucide="x" class="w-5 h-5"></i></span>
             </button>
         </div>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-grow pb-24">
+
+            <!-- HOME PAGE -->
+            <div id="home-page" class="p-4 space-y-4 sub-page">
+                <div class="grid grid-cols-3 gap-2" id="category-filter-grid"></div>
+
+                <div class="mt-3 space-y-3.5">
+                    <div class="bg-gradient-to-r from-[#1b64da] to-[#0d47a1] text-white p-3.5 rounded-2xl flex items-start gap-3 shadow-md">
+                        <div class="bg-white/20 p-2 rounded-xl">
+                            <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <div>
+                            <h2 id="current-section-title" class="font-bold text-base leading-tight">All Available Services</h2>
+                            <p id="current-section-subtitle" class="text-[11px] text-blue-100 mt-0.5">Explore our full collection of verified accounts & proxies</p>
+                        </div>
+                    </div>
+
+                    <div id="product-list-container" class="space-y-3 min-h-[220px]"></div>
+                </div>
+            </div>
+
+            <!-- INTEGRATED DEPOSIT PAGE (AUTOMATED GATEWAY + MANUAL FALLBACK) -->
+            <div id="pay-page" class="p-4 space-y-4 sub-page">
+                
+                <!-- HERO BANNER -->
+                <div class="bg-gradient-to-br from-[#1b64da] via-[#104fb5] to-[#0b337c] p-5 rounded-3xl text-white shadow-lg relative overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+                    <div class="relative z-10 flex items-center justify-between">
+                        <div>
+                            <span class="bg-white/20 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">Instant & Automated</span>
+                            <h2 class="text-xl font-black mt-1">Add Balance (ডিপোজিট)</h2>
+                            <p class="text-xs text-blue-100 mt-0.5">বিকাশ, নগদ ও রকেটে ইনস্ট্যান্ট অটোমেটিক ব্যালেন্স অ্যাড</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-white/15 border border-white/30 flex items-center justify-center">
+                            <i data-lucide="banknote" class="w-6 h-6 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DEPOSIT TYPE TOGGLE TABS -->
+                <div class="flex items-center justify-between bg-gray-200/70 p-1 rounded-2xl">
+                    <button id="tab-btn-auto" onclick="switchDepositMode('auto')" class="tab-btn active flex-1 flex items-center justify-center gap-1.5">
+                        <i data-lucide="zap" class="w-3.5 h-3.5 text-purple-600"></i>
+                        <span>অটোমেটিক গেটওয়ে (Fast)</span>
+                    </button>
+                    <button id="tab-btn-manual" onclick="switchDepositMode('manual')" class="tab-btn flex-1 flex items-center justify-center gap-1.5">
+                        <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+                        <span>ম্যানুয়াল TrxID ডিপোজিট</span>
+                    </button>
+                </div>
+
+                <!-- 1. AUTOMATED PAYMENT GATEWAY VIEW (YOUR PROVIDED PAGE) -->
+                <div id="auto-gateway-deposit-view" class="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm space-y-4">
+                    
+                    <div class="bg-[#fffdf0] border-l-4 border-[#f59e0b] rounded-xl p-3 text-left space-y-1">
+                        <h5 class="text-[#92400e] text-xs font-bold flex items-center gap-1.5">
+                            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> পেমেন্ট সংক্রান্ত তথ্য:
+                        </h5>
+                        <p class="text-[#78350f] text-[11.5px] leading-relaxed">
+                            মিনিমাম ডিপোজিট <b>১০ টাকা</b>। বিকাশ, নগদ ও রকেটের মাধ্যমে পেমেন্ট সম্পন্ন করলে সাথে সাথে ব্যালেন্স যুক্ত হবে।
+                        </p>
+                    </div>
+
+                    <!-- AMOUNT INPUT -->
+                    <div>
+                        <label for="autoDepositAmountInput" class="block text-xs font-bold text-gray-700 mb-1.5">টাকার পরিমাণ লিখুন (মিনিমাম ১০ ৳):</label>
+                        <div class="relative">
+                            <input id="autoDepositAmountInput" type="number" value="10" min="10" placeholder="10" oninput="handleAutoAmountInput()" class="w-full p-3.5 pl-8 rounded-2xl input-field text-lg font-black text-gray-800 border-2 border-indigo-300 focus:border-indigo-600 text-center">
+                            <span class="absolute left-3.5 top-4 text-gray-400 font-bold text-base">৳</span>
+                        </div>
+                    </div>
+
+                    <!-- QUICK SELECT CHIPS -->
+                    <div>
+                        <span class="block text-[11px] font-bold text-gray-400 uppercase mb-2">Quick Select Amount</span>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" onclick="setAutoQuickAmount(10)" class="quick-amount-pill selected">১০ ৳</button>
+                            <button type="button" onclick="setAutoQuickAmount(50)" class="quick-amount-pill">৫০ ৳</button>
+                            <button type="button" onclick="setAutoQuickAmount(100)" class="quick-amount-pill">১০০ ৳</button>
+                            <button type="button" onclick="setAutoQuickAmount(200)" class="quick-amount-pill">২০০ ৳</button>
+                            <button type="button" onclick="setAutoQuickAmount(500)" class="quick-amount-pill">৫০০ ৳</button>
+                            <button type="button" onclick="setAutoQuickAmount(1000)" class="quick-amount-pill">১,০০০ ৳</button>
+                        </div>
+                    </div>
+
+                    <!-- CONTINUE BUTTON -->
+                    <button id="btnPayGateway" onclick="initiateAutomatedPayment()" class="w-full py-4 rounded-2xl btn-gateway-pay font-extrabold text-sm flex items-center justify-center gap-2">
+                        <i data-lucide="lock" class="w-4 h-4 text-yellow-300"></i>
+                        <span>Continue to Payment</span>
+                    </button>
+                </div>
+
+                <!-- 2. MANUAL TRXID SUBMISSION VIEW (FALLBACK) -->
+                <div id="manual-deposit-view" class="hidden space-y-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-black text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">1</span>
+                                মেথড সিলেক্ট ও নাম্বার কপি
+                            </span>
+                            <span id="selected-method-badge" class="text-[11px] bg-gray-100 text-gray-500 font-bold px-2 py-0.5 rounded-md">মেথড বেছে নিন</span>
+                        </div>
+                        
+                        <div id="dynamic-payment-cards-grid" class="grid grid-cols-2 gap-2.5"></div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm space-y-4">
+                        <div class="flex items-center gap-1.5 border-b pb-2.5">
+                            <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">2</span>
+                            <h3 class="font-bold text-gray-800 text-xs uppercase tracking-wider">ম্যানুয়াল ডিপোজিট সাবমিট</h3>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">টাকার পরিমাণ (BDT)</label>
+                            <input id="deposit-amount" type="number" placeholder="টাকার পরিমাণ লিখুন" class="w-full p-3 rounded-xl input-field text-sm font-bold text-gray-800">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Transaction ID (TrxID)</label>
+                            <input id="deposit-txid" type="text" placeholder="যেমন: 8N7A6D5E" class="w-full p-3 rounded-xl input-field text-sm uppercase font-mono font-semibold">
+                        </div>
+
+                        <button id="deposit-btn" class="w-full py-3.5 rounded-xl btn-buy font-bold text-sm shadow-md flex items-center justify-center gap-2">
+                            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                            <span>Submit TrxID Deposit</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ORDERS PAGE -->
+            <div id="orders-page" class="p-4 space-y-4 sub-page">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-gray-800">Your Orders</h2>
+                        <p class="text-xs text-gray-500">আপনার ক্রয়কৃত সকল আইটেমের তালিকা</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="copy-orders-btn" class="bg-blue-50 text-blue-600 p-2 rounded-lg text-xs font-bold flex items-center gap-1 border border-blue-200 hover:bg-blue-100 transition"><i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy 4h</button>
+                        <button id="download-orders-btn" class="bg-emerald-50 text-emerald-600 p-2 rounded-lg text-xs font-bold flex items-center gap-1 border border-emerald-200 hover:bg-emerald-100 transition"><i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Excel</button>
+                    </div>
+                </div>
+                <div id="orders-purchase-history" class="space-y-3 min-h-[200px]"></div>
+            </div>
+
+            <!-- FEATURES / WALLET TRANSFERS PAGE -->
+            <div id="features-page" class="p-4 space-y-6 sub-page">
+                <h2 class="text-xl font-bold text-gray-800 text-center">Wallet & Transfers</h2>
+                <div class="grid grid-cols-2 gap-3 text-center">
+                    <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+                        <p class="text-xs font-bold text-gray-400">TOTAL SENT</p>
+                        <p id="total-send-display" class="text-xl font-black text-orange-500 mt-1">৳0.00</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+                        <p class="text-xs font-bold text-gray-400">TOTAL RECEIVED</p>
+                        <p id="total-receive-display" class="text-xl font-black text-emerald-500 mt-1">৳0.00</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="features-receive-btn" class="py-3 px-4 rounded-xl font-bold text-white bg-blue-600 shadow-md flex items-center justify-center gap-2">
+                        <i data-lucide="arrow-down-left" class="w-4 h-4"></i> Receive ID
+                    </button>
+                    <button id="features-send-btn" class="py-3 px-4 rounded-xl font-bold text-white bg-orange-500 shadow-md flex items-center justify-center gap-2" onclick="navigateTo('send-page')">
+                        <i data-lucide="send" class="w-4 h-4"></i> Send Money
+                    </button>
+                </div>
+            </div>
+
+            <!-- HISTORY / STATS PAGE -->
+            <div id="history-page" class="p-4 space-y-6 sub-page">
+                <div>
+                    <h3 class="text-md font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <i data-lucide="hourglass" class="w-5 h-5 text-orange-500"></i>
+                        <span>Manual / Pre-Orders Status</span>
+                    </h3>
+                    <div id="manual-orders-history-list" class="space-y-2.5"></div>
+                </div>
+
+                <div class="pt-3 border-t border-gray-200">
+                    <h3 class="text-md font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <i data-lucide="wallet-cards" class="w-5 h-5 text-blue-600"></i>
+                        <span>Deposit History</span>
+                    </h3>
+                    <div id="payment-history-list" class="space-y-2.5"></div>
+                </div>
+
+                <div class="pt-3 border-t border-gray-200">
+                    <h3 class="text-md font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <i data-lucide="history" class="w-5 h-5 text-purple-600"></i>
+                        <span>Replace / Report History</span>
+                    </h3>
+                    <div id="replace-history-list" class="space-y-2.5"></div>
+                </div>
+            </div>
+
+            <!-- PROFILE PAGE -->
+            <div id="profile-page" class="p-4 space-y-5 sub-page">
+                <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col items-center text-center">
+                    <img id="profile-pic" class="w-20 h-20 rounded-full border-2 border-blue-600 object-cover mb-3" src="" alt="Profile" loading="lazy">
+                    <div id="profile-initials-avatar" class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center border-2 border-blue-600 hidden mb-3">
+                        <span id="profile-initials" class="text-2xl font-bold text-blue-700"></span>
+                    </div>
+                    <h3 id="profile-name" class="text-xl font-bold text-gray-800">User</h3>
+                    <p id="profile-username" class="text-xs text-gray-500">@username</p>
+                    <span id="profile-id" class="mt-2 text-xs font-mono bg-gray-100 px-3 py-1 rounded-full text-gray-700">ID: 000000</span>
+                </div>
+            </div>
+
+            <!-- SEND BALANCE SUB-PAGE -->
+            <div id="send-page" class="p-4 space-y-5 sub-page">
+                <div class="flex items-center gap-3 mb-2">
+                    <button onclick="navigateTo('features-page')" class="p-2 rounded-xl bg-white border border-gray-200">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
+                    <h2 class="text-lg font-bold">Send Balance</h2>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-gray-200 space-y-4">
+                    <p class="text-xs text-red-600 bg-red-50 p-2.5 rounded-xl font-medium">প্রতিটি ট্রান্সফারে ৫% সার্ভিস চার্জ প্রযোজ্য। সর্বনিম্ন ৳২০ পাঠাতে পারবেন।</p>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">প্রাপকের Telegram ID</label>
+                        <input id="send-recipient-id" type="text" placeholder="Recipient's Telegram ID" class="w-full p-2.5 rounded-xl input-field text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">টাকার পরিমাণ (BDT)</label>
+                        <input id="send-amount" type="number" placeholder="Amount" class="w-full p-2.5 rounded-xl input-field text-sm">
+                    </div>
+                    <button id="submit-send-btn" class="w-full py-3 rounded-xl btn-buy font-bold text-sm">Submit Send</button>
+                </div>
+            </div>
+
+            <!-- ADMIN PANEL -->
+            <div id="admin-page" class="p-4 space-y-6 sub-page">
+                <h2 class="text-xl font-bold text-center text-gray-800">Admin Control Center</h2>
+
+                <div class="bg-white p-5 rounded-2xl border border-orange-200 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between border-b pb-2">
+                        <h3 class="font-bold text-sm text-orange-950 flex items-center gap-1.5">
+                            <i data-lucide="clock" class="w-4 h-4 text-orange-600"></i>
+                            ম্যানুয়াল প্রি-অর্ডার ডেলিভারি
+                        </h3>
+                        <span id="admin-manual-order-count" class="bg-orange-100 text-orange-800 text-xs px-2 py-0.5 rounded-full font-bold">0 Pending</span>
+                    </div>
+                    <div id="admin-manual-orders-list" class="space-y-3"></div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-gray-200 space-y-4">
+                    <h3 class="font-bold text-sm">Add Items to Stock</h3>
+                    <p class="text-xs text-gray-500">ফরম্যাট: <code>email/pass/token</code></p>
+                    <div>
+                        <select id="mail-type-select" class="w-full p-2.5 rounded-xl input-field text-sm"></select>
+                    </div>
+                    <div>
+                        <textarea id="mail-data-textarea" rows="4" placeholder="One item per line..." class="w-full p-2.5 rounded-xl input-field font-mono text-xs"></textarea>
+                    </div>
+                    <button id="add-mails-btn" class="w-full py-3 rounded-xl btn-buy font-bold text-sm">Add Items to Stock</button>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-gray-200 space-y-3">
+                    <h3 class="font-bold text-sm text-gray-700">Replace / Refund Requests</h3>
+                    <div id="replace-requests-list" class="space-y-3"></div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- BOTTOM NAVIGATION BAR -->
+        <nav class="bottom-nav">
+            <div class="nav-item active" data-page="home-page" onclick="navigateTo('home-page')">
+                <div class="nav-icon-wrapper flex items-center justify-center">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                </div>
+                <span>Home</span>
+            </div>
+            <div class="nav-item" data-page="pay-page" onclick="navigateTo('pay-page')">
+                <div class="nav-icon-wrapper flex items-center justify-center">
+                    <i data-lucide="coins" class="w-5 h-5"></i>
+                </div>
+                <span>Deposit</span>
+            </div>
+            <div class="nav-item" data-page="orders-page" onclick="navigateTo('orders-page')">
+                <div class="nav-icon-wrapper flex items-center justify-center">
+                    <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                </div>
+                <span>Orders</span>
+            </div>
+            <div class="nav-item" data-page="features-page" onclick="navigateTo('features-page')">
+                <div class="nav-icon-wrapper flex items-center justify-center">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                </div>
+                <span>Transfer</span>
+            </div>
+            <div class="nav-item" data-page="history-page" onclick="navigateTo('history-page')">
+                <div class="nav-icon-wrapper flex items-center justify-center">
+                    <i data-lucide="history" class="w-5 h-5"></i>
+                </div>
+                <span>History</span>
+            </div>
+            <div class="nav-item" data-page="profile-page" onclick="navigateTo('profile-page')">
+                <div class="nav-icon-wrapper flex items-center justify-center">
+                    <i data-lucide="user" class="w-5 h-5"></i>
+                </div>
+                <span>Profile</span>
+            </div>
+            <div class="nav-item hidden" id="admin-nav-item" data-page="admin-page" onclick="navigateTo('admin-page')">
+                <div class="nav-icon-wrapper flex items-center justify-center">
+                    <i data-lucide="shield" class="w-5 h-5"></i>
+                </div>
+                <span>Admin</span>
+            </div>
+        </nav>
+
     </div>
 
-    <!-- STEP: SUCCESS -->
-    <div id="step-5" class="step-container">
-        <div class="success-wrapper">
-            <i class="fa-solid fa-circle-check success-icon"></i>
-            <h3 style="color: #10b981; font-size: 17px; font-weight: 700; margin-bottom: 4px;">পেমেন্ট সফল হয়েছে!</h3>
-            <h2 class="success-title">Payment Successful!</h2>
-            <p class="success-msg">আপনার ডিপোজিট সফলভাবে ফায়ারবেস ব্যালেন্সে যুক্ত করা হয়েছে।</p>
+    <!-- GATEWAY PAYMENT SUCCESS MODAL -->
+    <div id="gateway-success-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[85] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 text-center shadow-2xl">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                <i data-lucide="check-circle" class="w-10 h-10 stroke-[2.5]"></i>
+            </div>
+            <h3 class="text-emerald-600 font-bold text-sm">পেমেন্ট সফল হয়েছে!</h3>
+            <h2 class="text-xl font-black text-gray-800">Deposit Completed</h2>
+            <p class="text-xs text-gray-500">আপনার ডিপোজিট সফলভাবে ব্যালেন্সে যুক্ত করা হয়েছে।</p>
             
-            <div class="txid-box">
-                <div>TXID : <span class="highlight-txid" id="displayTxid"></span></div>
-                <div>Amount : <span id="displayAmount"></span></div>
+            <div class="bg-gray-50 p-3.5 rounded-2xl border border-gray-200 text-left space-y-1.5 text-xs">
+                <div>TXID: <span id="gateway-display-txid" class="font-mono font-bold text-purple-700"></span></div>
+                <div>Amount: <span id="gateway-display-amount" class="font-bold text-gray-800"></span></div>
             </div>
 
-            <div class="countdown-badge">
-                <i class="fa-solid fa-hourglass-half fa-spin"></i> <span id="countdownText">৫ সেকেন্ড পর ড্যাশবোর্ডে নিয়ে যাওয়া হবে...</span>
-            </div>
-            
-            <button class="btn-continue-gradient" onclick="returnToDashboardManually()">
+            <button onclick="document.getElementById('gateway-success-modal').classList.add('hidden'); navigateTo('home-page');" class="w-full py-3 rounded-xl btn-buy font-bold text-sm">
                 Return to Shop
             </button>
         </div>
     </div>
-</div>
 
-<script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAEV4zkuTcRYIFP2AMmKJTyDUTzSYLnbbM",
-      authDomain: "used-mail-shop.firebaseapp.com",
-      databaseURL: "https://used-mail-shop-default-rtdb.firebaseio.com",
-      projectId: "used-mail-shop",
-      storageBucket: "used-mail-shop.firebasestorage.app",
-      messagingSenderId: "251382358623",
-      appId: "1:251382358623:web:a567a9349d1fd87277b1ea"
-    };
+    <!-- NOTIFICATION MODAL -->
+    <div id="notification-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[75] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-5 w-full max-w-sm space-y-4 relative shadow-2xl">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-base">নোটিফিকেশন ও নোটিশ</h3>
+                </div>
+                <button onclick="toggleNotificationModal()" class="p-1 text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="notification-list-container" class="space-y-2.5 max-h-[300px] overflow-y-auto"></div>
+        </div>
+    </div>
 
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const database = firebase.database();
-    const auth = firebase.auth();
+    <!-- MANUAL ORDER MODAL -->
+    <div id="manual-order-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[70] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 relative text-center">
+            <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto">
+                <i data-lucide="clock" class="w-7 h-7"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-gray-800" id="manual-modal-title">Order Now (ম্যানুয়াল অর্ডার)</h3>
+                <p class="text-xs text-gray-500 mt-1">ইনস্ট্যান্ট স্টক শেষ, আপনি প্রি-অর্ডার করতে পারেন।</p>
+            </div>
+            <div class="bg-orange-50 p-3.5 rounded-2xl border border-orange-200 text-left text-xs text-orange-950 space-y-1.5">
+                <p>• মূল্য: <b id="manual-modal-price" class="text-blue-700">৳0.00</b></p>
+                <p>• ডেলিভারি সময়সীমা: <b id="manual-modal-duration" class="text-orange-700 font-bold">৩০ মিনিট</b></p>
+                <p>• নির্ধারিত সময়ের মধ্যে অ্যাকাউন্ট ডেলিভারি করা হবে। ব্যর্থ হলে ব্যালেন্স স্বয়ংক্রিয় রিফান্ড হবে।</p>
+            </div>
+            <div class="flex gap-2 pt-1">
+                <button onclick="document.getElementById('manual-order-modal').classList.add('hidden')" class="w-1/2 py-2.5 bg-gray-100 font-bold rounded-xl text-xs">বাতিল</button>
+                <button id="confirm-manual-order-btn" class="w-1/2 py-2.5 btn-order-orange font-bold rounded-xl text-xs">Confirm Order</button>
+            </div>
+        </div>
+    </div>
 
-    let currentUser = null;
-    let redirectTimer = null;
-
-    // ১. সরাসরি ইউজারনেম দিয়ে লগইন (সবচেয়ে দ্রুত ও নিরাপদ)
-    function handleManualTelegramLogin() {
-        const inputVal = document.getElementById('tgInputManual').value.trim();
-        if (!inputVal) {
-            return showToastPopup('দয়া করে টেলিগ্রাম ইউজারনেম লিখুন');
-        }
-
-        const cleanUsername = inputVal.replace(/^@/, '');
-        // একটি নির্দিষ্ট ইউনিক আইডি তৈরি করা
-        let hash = 0;
-        for (let i = 0; i < cleanUsername.length; i++) {
-            hash = (hash << 5) - hash + cleanUsername.charCodeAt(i);
-            hash |= 0;
-        }
-        const generatedId = Math.abs(hash) || Date.now();
-
-        const userObj = {
-            id: generatedId,
-            first_name: cleanUsername,
-            username: '@' + cleanUsername,
-            photo_url: ''
-        };
-
-        handleTelegramLoginSuccess(userObj);
-    }
-
-    // ২. Telegram Login Widget Callback
-    window.onTelegramAuth = function(user) {
-        if (!user || !user.id) return showToastPopup('টেলিগ্রাম লগইন ব্যর্থ হয়েছে!');
-        handleTelegramLoginSuccess(user);
-    };
-
-    // ৩. লগইন সেশন সেটআপ
-    function handleTelegramLoginSuccess(user) {
-        currentUser = {
-            uid: 'tg_' + user.id,
-            id: user.id,
-            first_name: user.first_name || '',
-            last_name: user.last_name || '',
-            username: user.username ? (user.username.startsWith('@') ? user.username : '@' + user.username) : (user.first_name || 'Telegram User'),
-            photo_url: user.photo_url || ''
-        };
-
-        localStorage.setItem('tg_auth_user', JSON.stringify(currentUser));
-        setupUserSession();
-    }
-
-    async function setupUserSession() {
-        if (!currentUser) return;
-
-        document.getElementById('tgUsernameText').textContent = currentUser.username;
-        if (currentUser.photo_url) {
-            document.getElementById('userPhotoDisplay').src = currentUser.photo_url;
-        }
-
-        try {
-            if (!auth.currentUser) {
-                await auth.signInAnonymously();
-            }
-        } catch (err) {}
-
-        // ব্যালেন্স ও নোটিফিকেশন লিসেনার চালু
-        listenUserData(currentUser.uid);
-        listenForNotifications(currentUser.uid);
-
-        changeStep(1);
-        checkReturnPaymentStatus();
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-        // টেলিগ্রাম অ্যাপ থেকে ওপেন হলে অটো লগইন
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
-            const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-            handleTelegramLoginSuccess(tgUser);
-            return;
-        }
-
-        const savedUser = localStorage.getItem('tg_auth_user');
-        if (savedUser) {
-            try {
-                currentUser = JSON.parse(savedUser);
-                setupUserSession();
-            } catch (e) {
-                localStorage.removeItem('tg_auth_user');
-                changeStep('auth');
-            }
-        } else {
-            changeStep('auth');
-        }
-    });
-
-    // ফায়ারবেস থেকে রিয়েলটাইম ব্যালেন্স লিসেন
-    function listenUserData(uid) {
-        const balanceEl = document.getElementById('userBalanceDisplay');
-        const balanceRef = database.ref(`users/${uid}/balance`);
-
-        balanceRef.on('value', snapshot => {
-            if (snapshot.exists() && snapshot.val() !== null) {
-                const balanceVal = parseFloat(snapshot.val()) || 0;
-                balanceEl.textContent = `${balanceVal.toFixed(2)} BDT`;
-            } else {
-                balanceRef.set(0);
-                balanceEl.textContent = "0.00 BDT";
-            }
-        }, error => {
-            console.error("Balance listen error:", error);
-            balanceEl.textContent = "0.00 BDT";
-        });
-    }
-
-    function listenForNotifications(uid) {
-        database.ref(`users/${uid}/notifications`).on('value', snapshot => {
-            const dot = document.querySelector('.notif-dot');
-            if (!dot) return;
-
-            let hasUnread = false;
-            if (snapshot.exists()) {
-                snapshot.forEach(child => {
-                    const item = child.val();
-                    if (item && item.read === false) hasUnread = true;
-                });
-            }
-            dot.style.display = hasUnread ? 'block' : 'none';
-        });
-    }
-
-    function loadNotificationsList() {
-        if (!currentUser) return;
-        const uid = currentUser.uid;
-        const listDiv = document.getElementById('notifList');
-        listDiv.innerHTML = '<div style="text-align:center; padding: 20px; color:#64748b;"><i class="fa-solid fa-spinner fa-spin"></i> লোড হচ্ছে...</div>';
-        
-        database.ref(`users/${uid}/notifications`).once('value', snapshot => {
-            listDiv.innerHTML = '';
-            if (snapshot.exists()) {
-                const notifs = [];
-                snapshot.forEach(child => { notifs.push({ id: child.key, ...child.val() }); });
-                notifs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                
-                notifs.slice(0, 15).forEach(data => {
-                    const div = document.createElement('div');
-                    div.className = `notif-item ${data.read === false ? 'unread' : ''}`;
-                    const dateObj = data.timestamp ? new Date(data.timestamp) : new Date();
-                    div.innerHTML = `${data.message || ''} <span class="notif-time">${dateObj.toLocaleDateString()} - ${dateObj.toLocaleTimeString()}</span>`;
-                    listDiv.appendChild(div);
-
-                    if (data.read === false) {
-                        database.ref(`users/${uid}/notifications/${data.id}`).update({ read: true });
-                    }
-                });
-            } else {
-                listDiv.innerHTML = '<div style="text-align:center; color:#64748b; font-size: 13.5px; margin-top:30px;">কোনো নোটিফিকেশন নেই</div>';
-            }
-        });
-    }
-
-    function setQuickAmount(val) {
-        document.getElementById('amountInput').value = val;
-        document.querySelectorAll('.quick-chip').forEach(chip => {
-            if (parseInt(chip.textContent) === val) chip.classList.add('selected');
-            else chip.classList.remove('selected');
-        });
-    }
-
-    function handleAmountInput() {
-        const val = parseInt(document.getElementById('amountInput').value);
-        document.querySelectorAll('.quick-chip').forEach(chip => {
-            if (parseInt(chip.textContent) === val) chip.classList.add('selected');
-            else chip.classList.remove('selected');
-        });
-    }
-
-    // পেমেন্ট শুরু
-    async function initiatePayment() {
-        if (!currentUser) return showToastPopup('প্রথমে টেলিগ্রাম দিয়ে লগইন করুন');
-        
-        const amountInput = document.getElementById('amountInput').value.trim();
-        const amount = parseFloat(amountInput);
-
-        if (isNaN(amount) || amount < 10) {
-            return showToastPopup('মিনিমাম ডিপোজিট ১০ টাকা');
-        }
-
-        localStorage.setItem('pending_deposit_amount', String(amount));
-
-        const btn = document.getElementById('btnPayGateway');
-        btn.disabled = true; 
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
-
-        const returnUrl = window.location.href.split('?')[0];
-
-        const payload = {
-            amount: String(amount),
-            success_url: returnUrl + "?status=success&amount=" + amount,
-            cancel_url: returnUrl + "?status=cancel",
-            metadata: {
-                uid: currentUser.uid,
-                telegram_id: currentUser.id,
-                username: currentUser.username
-            }
-        };
-
-        try {
-            const res = await fetch('/api/payment?action=create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+    <!-- PURCHASE SUCCESS MODAL -->
+    <div id="purchase-success-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[70] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 relative text-center">
+            <button onclick="document.getElementById('purchase-success-modal').classList.add('hidden')" class="absolute top-4 right-4 p-1 rounded-full bg-gray-100">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <div class="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
+                <i data-lucide="check" class="w-8 h-8 stroke-[3]"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">অর্ডার সফল হয়েছে!</h3>
             
-            const data = await res.json();
-            let payUrl = data.payment_url || data.url || (data.data && data.data.payment_url) || (data.data && data.data.url);
+            <div class="space-y-2 text-left pt-2">
+                <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border">
+                    <span class="font-mono text-xs text-gray-800 truncate" id="purchase-success-email"></span>
+                    <button onclick="copyToClipboard(document.getElementById('purchase-success-email').textContent, this)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                </div>
+                <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border">
+                    <span class="font-mono text-xs text-gray-800" id="purchase-success-password"></span>
+                    <button onclick="copyToClipboard(document.getElementById('purchase-success-password').textContent, this)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                </div>
+            </div>
 
-            if (payUrl) {
-                window.location.href = payUrl;
+            <button onclick="document.getElementById('purchase-success-modal').classList.add('hidden'); navigateTo('orders-page');" class="w-full py-3 rounded-xl btn-buy font-bold text-sm mt-3">View Orders</button>
+        </div>
+    </div>
+
+    <!-- CUSTOM ALERT MODAL -->
+    <div id="custom-alert" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[90] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-5 w-full max-w-xs text-center space-y-4 shadow-xl">
+            <p id="alert-message" class="text-sm font-semibold text-gray-700"></p>
+            <button onclick="document.getElementById('custom-alert').classList.add('hidden')" class="btn-buy w-full py-2.5 rounded-xl text-xs font-bold">OK</button>
+        </div>
+    </div>
+
+    <!-- FIREBASE & CORE LOGIC -->
+    <script type="module">
+        const DEFAULT_ADMIN_UID = "6954647230";
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEV4zkuTcRYIFP2AMmKJTyDUTzSYLnbbM",
+            authDomain: "used-mail-shop.firebaseapp.com",
+            databaseURL: "https://used-mail-shop-default-rtdb.firebaseio.com",
+            projectId: "used-mail-shop",
+            storageBucket: "used-mail-shop.firebasestorage.app",
+            messagingSenderId: "251382358623",
+            appId: "1:251382358623:web:a567a9349d1fd87277b1ea"
+        };
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, limit, runTransaction, getCountFromServer, writeBatch, updateDoc, Timestamp, increment } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let currentUserTg = null;
+        let userData = null;
+        let appConfig = {};
+        let selectedCategory = 'all';
+        let currentSelectedDepositMethod = '';
+        let userPurchasesCache = [];
+        let pendingOrderToPlace = null;
+        let countdownTimerInterval = null;
+
+        const defaultCategories = [
+            { id: "all", name: "All Services", icon: "layout-grid" },
+            { id: "Hotmail", name: "Hotmail", icon: "mail" },
+            { id: "Gmail", name: "Gmail", icon: "tag" },
+            { id: "Proxy", name: "Proxy", icon: "globe" },
+            { id: "VPN", name: "VPN", icon: "shield-check" },
+            { id: "Social", name: "Social", icon: "users" }
+        ];
+
+        const defaultPaymentMethods = [
+            { id: "bKash", name: "বিকাশ (Personal)", number: "01827750260", icon: "https://i.postimg.cc/tCwGVkdH/20250922-113514.png" },
+            { id: "Nagad", name: "নগদ (Personal)", number: "01864260513", icon: "https://i.postimg.cc/Jh9s6jWw/20250922-113350.png" },
+            { id: "Rocket", name: "রকেট (Personal)", number: "018277502604", icon: "https://i.postimg.cc/htsw10Tj/20250922-113924.png" },
+            { id: "Binance", name: "Binance Pay ID", number: "1105989483", icon: "https://i.postimg.cc/L6LFLfxY/20250922-113752.png" }
+        ];
+
+        const loader = document.getElementById('loader');
+        const getLoadingHTML = () => `<div class="flex justify-center p-8"><div class="premium-loader-spinner"></div></div>`;
+
+        window.onload = async () => {
+            try {
+                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand();
+                currentUserTg = window.Telegram.WebApp.initDataUnsafe.user;
+                if (!currentUserTg) {
+                    currentUserTg = { id: "6954647230", first_name: "User", username: "account" };
+                }
+            } catch (e) {
+                currentUserTg = { id: "6954647230", first_name: "User", username: "account" };
+            }
+            lucide.createIcons();
+            setupEventListeners();
+            await initUserSession();
+            
+            // Check return status if redirected back from automated payment gateway
+            await checkReturnPaymentStatus();
+
+            checkAndRefundExpiredOrders();
+            startCountdownTimerRoutine();
+
+            setTimeout(() => {
+                loader.style.transition = 'opacity 0.4s ease';
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 400);
+            }, 800);
+        };
+
+        async function initUserSession() {
+            const tgChatId = String(currentUserTg.id);
+            const userRef = doc(db, "users", tgChatId);
+            let userSnap = await getDoc(userRef);
+
+            if (userSnap.exists()) {
+                userData = userSnap.data();
+                await updateDoc(userRef, {
+                    name: `${currentUserTg.first_name || ''} ${currentUserTg.last_name || ''}`.trim(),
+                    photo_url: currentUserTg.photo_url || null,
+                    lastSeen: serverTimestamp()
+                });
             } else {
-                showToastPopup(data.message || 'পেমেন্ট গেটওয়েতে সমস্যা হচ্ছে!');
-                btn.disabled = false; 
-                btn.innerHTML = '<i class="fa-solid fa-lock" style="color: #facc15;"></i> Continue to Payment';
+                const userName = `${currentUserTg.first_name || ''} ${currentUserTg.last_name || ''}`.trim() || `User ${tgChatId}`;
+                userData = {
+                    tgChatId: tgChatId,
+                    name: userName,
+                    username: currentUserTg.username || null,
+                    photo_url: currentUserTg.photo_url || null,
+                    balance: 0,
+                    createdAt: serverTimestamp()
+                };
+                await setDoc(userRef, userData);
             }
-        } catch (err) {
-            showToastPopup('সার্ভার কানেকশন ব্যর্থ হয়েছে');
-            btn.disabled = false; 
-            btn.innerHTML = '<i class="fa-solid fa-lock" style="color: #facc15;"></i> Continue to Payment';
+
+            const headerAvatar = document.getElementById('header-user-avatar');
+            const headerFallback = document.getElementById('header-user-fallback');
+            if (currentUserTg.photo_url || (userData && userData.photo_url)) {
+                headerAvatar.src = currentUserTg.photo_url || userData.photo_url;
+                headerAvatar.classList.remove('hidden');
+                headerFallback.classList.add('hidden');
+            } else {
+                headerAvatar.classList.add('hidden');
+                headerFallback.classList.remove('hidden');
+                headerFallback.textContent = ((userData && userData.name) || 'U').charAt(0).toUpperCase();
+            }
+
+            await fetchAppConfig();
+
+            const adminId = String(appConfig.adminTelegramId || DEFAULT_ADMIN_UID);
+            if (tgChatId === adminId) {
+                document.getElementById('admin-nav-item')?.classList.remove('hidden');
+            }
+
+            updateUI();
+            showMainPage('app-container');
+            navigateTo('home-page');
         }
-    }
 
-    // পেমেন্ট রিটার্ন ভেরিফিকেশন ও ব্যালেন্স যোগ
-    async function checkReturnPaymentStatus() {
-        const urlParams = new URLSearchParams(window.location.search);
-        let transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid') || urlParams.get('trx_id') || urlParams.get('payment_id');
-        const urlStatus = urlParams.get('status');
+        async function fetchAppConfig() {
+            try {
+                const configRef = doc(db, "config", "main");
+                const configSnap = await getDoc(configRef);
+                appConfig = configSnap.exists() ? configSnap.data() : {};
 
-        if (transactionId || urlStatus === 'success') {
-            if (!transactionId) {
-                transactionId = "TXN_" + Date.now();
+                if (appConfig.telegramSupportUrl) document.getElementById('telegram-support-link').href = appConfig.telegramSupportUrl;
+                if (appConfig.whatsappSupportUrl) document.getElementById('whatsapp-support-link').href = appConfig.whatsappSupportUrl;
+
+                renderDynamicCategories();
+                renderDepositMethods();
+                updateNotificationBadge();
+            } catch (e) {
+                renderDynamicCategories();
+                renderDepositMethods();
+            }
+        }
+
+        // --- AUTOMATED GATEWAY PAYMENT SYSTEM (INTEGRATED FROM YOUR FILE) ---
+        window.switchDepositMode = function(mode) {
+            const autoBtn = document.getElementById('tab-btn-auto');
+            const manualBtn = document.getElementById('tab-btn-manual');
+            const autoView = document.getElementById('auto-gateway-deposit-view');
+            const manualView = document.getElementById('manual-deposit-view');
+
+            if (mode === 'auto') {
+                autoBtn.classList.add('active');
+                manualBtn.classList.remove('active');
+                autoView.classList.remove('hidden');
+                manualView.classList.add('hidden');
+            } else {
+                manualBtn.classList.add('active');
+                autoBtn.classList.remove('active');
+                manualView.classList.remove('hidden');
+                autoView.classList.add('hidden');
+            }
+        };
+
+        window.setAutoQuickAmount = function(val) {
+            document.getElementById('autoDepositAmountInput').value = val;
+            document.querySelectorAll('#auto-gateway-deposit-view .quick-amount-pill').forEach(chip => {
+                if (parseInt(chip.textContent.replace(/[^0-9]/g, '')) === val) chip.classList.add('selected');
+                else chip.classList.remove('selected');
+            });
+        };
+
+        window.handleAutoAmountInput = function() {
+            const val = parseInt(document.getElementById('autoDepositAmountInput').value);
+            document.querySelectorAll('#auto-gateway-deposit-view .quick-amount-pill').forEach(chip => {
+                if (parseInt(chip.textContent.replace(/[^0-9]/g, '')) === val) chip.classList.add('selected');
+                else chip.classList.remove('selected');
+            });
+        };
+
+        window.initiateAutomatedPayment = async function() {
+            if (!userData) return showAlert('ইউজার সেশন লোড হয়নি, কিছুক্ষণ পর চেষ্টা করুন');
+            
+            const amountInput = document.getElementById('autoDepositAmountInput').value.trim();
+            const amount = parseFloat(amountInput);
+
+            if (isNaN(amount) || amount < 10) {
+                return showAlert('মিনিমাম ডিপোজিট ১০ টাকা');
             }
 
-            showToastPopup('পেমেন্ট ভেরিফাই ও ব্যালেন্স যোগ হচ্ছে...');
+            localStorage.setItem('pending_deposit_amount', String(amount));
 
-            let depositAmount = 0;
-            let verifyData = {};
+            const btn = document.getElementById('btnPayGateway');
+            const originalBtnHtml = btn.innerHTML;
+            btn.disabled = true; 
+            btn.innerHTML = `<span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span> Processing...`;
+
+            const returnUrl = window.location.href.split('?')[0];
+
+            const payload = {
+                amount: String(amount),
+                success_url: returnUrl + "?status=success&amount=" + amount,
+                cancel_url: returnUrl + "?status=cancel",
+                metadata: {
+                    uid: String(userData.tgChatId),
+                    telegram_id: userData.tgChatId,
+                    username: userData.username || userData.name
+                }
+            };
 
             try {
-                const res = await fetch('/api/payment?action=verify', {
+                const res = await fetch('/api/payment?action=create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ transaction_id: transactionId })
+                    body: JSON.stringify(payload)
                 });
-                verifyData = await res.json();
-                depositAmount = parseFloat(verifyData.amount || verifyData.data?.amount || 0);
-            } catch (e) {}
+                
+                const data = await res.json();
+                let payUrl = data.payment_url || data.url || (data.data && data.data.payment_url) || (data.data && data.data.url);
 
-            if (!depositAmount || depositAmount < 10) {
-                depositAmount = parseFloat(urlParams.get('amount') || urlParams.get('paymentAmount') || localStorage.getItem('pending_deposit_amount') || 0);
+                if (payUrl) {
+                    window.location.href = payUrl;
+                } else {
+                    showAlert(data.message || 'পেমেন্ট গেটওয়েতে সমস্যা হচ্ছে!');
+                    btn.disabled = false; 
+                    btn.innerHTML = originalBtnHtml;
+                }
+            } catch (err) {
+                showAlert('সার্ভার কানেকশন ব্যর্থ হয়েছে। ম্যানুয়াল ডিপোজিট চেষ্টা করুন।');
+                btn.disabled = false; 
+                btn.innerHTML = originalBtnHtml;
+            }
+        };
+
+        // --- GATEWAY RETURN VERIFICATION & BALANCE UPDATE ---
+        async function checkReturnPaymentStatus() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid') || urlParams.get('trx_id') || urlParams.get('payment_id');
+            const urlStatus = urlParams.get('status');
+
+            if (transactionId || urlStatus === 'success') {
+                if (!transactionId) {
+                    transactionId = "TXN_" + Date.now();
+                }
+
+                let depositAmount = 0;
+                let verifyData = {};
+
+                try {
+                    const res = await fetch('/api/payment?action=verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ transaction_id: transactionId })
+                    });
+                    verifyData = await res.json();
+                    depositAmount = parseFloat(verifyData.amount || verifyData.data?.amount || 0);
+                } catch (e) {}
+
+                if (!depositAmount || depositAmount < 10) {
+                    depositAmount = parseFloat(urlParams.get('amount') || urlParams.get('paymentAmount') || localStorage.getItem('pending_deposit_amount') || 0);
+                }
+
+                if (depositAmount >= 10 && userData) {
+                    await saveGatewayPaymentAndUpdateBalance(depositAmount, transactionId, verifyData);
+                    localStorage.removeItem('pending_deposit_amount');
+
+                    document.getElementById('gateway-display-txid').textContent = transactionId;
+                    document.getElementById('gateway-display-amount').textContent = `৳${depositAmount.toFixed(2)}`;
+                    document.getElementById('gateway-success-modal').classList.remove('hidden');
+
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } else {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }
+        }
+
+        async function saveGatewayPaymentAndUpdateBalance(depositAmount, txid, fullData) {
+            const tgChatId = String(userData.tgChatId);
+            const depositRef = doc(db, "deposits", txid);
+            const userRef = doc(db, "users", tgChatId);
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const depSnap = await transaction.get(depositRef);
+                    if (depSnap.exists()) return; // Already processed
+
+                    transaction.set(depositRef, {
+                        userId: tgChatId,
+                        userName: userData.name,
+                        method: 'InstantPay Gateway',
+                        amount: depositAmount,
+                        transactionId: txid,
+                        status: "approved",
+                        details: fullData || null,
+                        requestedAt: serverTimestamp()
+                    });
+
+                    transaction.update(userRef, {
+                        balance: increment(depositAmount)
+                    });
+                });
+
+                const userSnap = await getDoc(userRef);
+                userData = userSnap.data();
+                updateUI();
+
+                // Send Telegram Notification
+                await sendTelegramMessage(tgChatId, `🎉 <b>ডিপোজিট সফল হয়েছে!</b>\n\nপরিমাণ: ৳${depositAmount.toFixed(2)}\nTrxID: <code>${txid}</code>\nআপনার ব্যালেন্স স্বয়ংক্রিয়ভাবে আপডেট করা হয়েছে।`);
+            } catch (err) {
+                console.error("Balance update error:", err);
+            }
+        }
+
+        // --- TELEGRAM MESSAGE HELPER ---
+        async function sendTelegramMessage(chatId, text) {
+            const botToken = appConfig.botToken || "";
+            if (!botToken || !chatId) return;
+            try {
+                await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: String(chatId),
+                        text: text,
+                        parse_mode: 'HTML'
+                    })
+                });
+            } catch (err) {}
+        }
+
+        async function notifyAdminViaTelegram(alertMessage) {
+            const adminTgId = appConfig.adminTelegramId || DEFAULT_ADMIN_UID;
+            await sendTelegramMessage(adminTgId, alertMessage);
+        }
+
+        function renderDynamicCategories() {
+            const grid = document.getElementById('category-filter-grid');
+            const categories = appConfig.categories && Array.isArray(appConfig.categories) && appConfig.categories.length > 0 
+                                ? appConfig.categories 
+                                : defaultCategories;
+
+            grid.innerHTML = categories.map((cat, index) => {
+                const isActive = (selectedCategory === cat.id || (index === 0 && selectedCategory === 'all')) ? 'active' : '';
+                return `
+                <button class="category-btn ${isActive}" data-category="${cat.id}" onclick="filterByCategory('${cat.id}', this)">
+                    <i data-lucide="${cat.icon || 'tag'}" class="w-3.5 h-3.5"></i>
+                    <span class="truncate">${cat.name}</span>
+                </button>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function renderDepositMethods() {
+            const container = document.getElementById('dynamic-payment-cards-grid');
+            const methods = appConfig.paymentMethods && Array.isArray(appConfig.paymentMethods) && appConfig.paymentMethods.length > 0
+                            ? appConfig.paymentMethods
+                            : defaultPaymentMethods;
+
+            container.innerHTML = methods.map(pm => `
+                <div id="card-${pm.id.toLowerCase()}" onclick="selectAndCopyMethod('${pm.id}', '${pm.number}', this)" class="deposit-method-card p-3 flex flex-col items-center justify-between text-center">
+                    <div class="selected-check hidden absolute top-2 right-2 w-4 h-4 bg-blue-600 text-white rounded-full items-center justify-center shadow">
+                        <i data-lucide="check" class="w-2.5 h-2.5 stroke-[3]"></i>
+                    </div>
+                    <img src="${pm.icon || 'https://i.postimg.cc/mD1YdG5y/mail.png'}" alt="${pm.name}" class="w-9 h-9 rounded-xl mb-1 object-cover shadow-sm" loading="lazy">
+                    <div>
+                        <p class="font-black text-xs text-gray-800">${pm.name}</p>
+                        <p class="text-blue-600 font-mono text-[11px] font-bold mt-0.5">${pm.number}</p>
+                    </div>
+                    <button class="w-full mt-2 text-[10.5px] py-1 px-2 bg-blue-50 text-blue-700 font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-blue-100 transition">
+                        <i data-lucide="copy" class="w-3 h-3"></i><span>Copy Number</span>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        window.selectAndCopyMethod = function(methodName, number, cardElement) {
+            currentSelectedDepositMethod = methodName;
+            document.querySelectorAll('.deposit-method-card').forEach(c => c.classList.remove('selected-method'));
+            if(cardElement) cardElement.classList.add('selected-method');
+
+            const badge = document.getElementById('selected-method-badge');
+            if(badge) {
+                badge.textContent = `সিলেক্টেড: ${methodName}`;
+                badge.className = 'text-[11px] bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-md';
             }
 
-            if (depositAmount >= 10) {
-                await savePaymentAndUpdateBalance(depositAmount, transactionId, verifyData);
-                
-                localStorage.removeItem('pending_deposit_amount');
-                document.getElementById('displayTxid').textContent = transactionId;
-                document.getElementById('displayAmount').textContent = depositAmount.toFixed(2) + " BDT";
-                
-                changeStep(5);
-                window.history.replaceState({}, document.title, window.location.pathname);
-                startSuccessAutoRedirect();
+            navigator.clipboard.writeText(number);
+            const btnText = cardElement.querySelector('button span');
+            if (btnText) {
+                const originalText = btnText.textContent;
+                btnText.textContent = "Copied!";
+                setTimeout(() => { btnText.textContent = originalText; }, 1500);
+            }
+        };
+
+        window.toggleNotificationModal = function() {
+            const modal = document.getElementById('notification-modal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                renderNotifications();
+            }
+        };
+
+        function renderNotifications() {
+            const container = document.getElementById('notification-list-container');
+            const notices = appConfig.notices || [
+                { title: "স্বাগতম!", message: "আমাদের স্বয়ংক্রিয় সেবা ব্যবহার করায় ধন্যবাদ। যেকোনো প্রয়োজনে সাপোর্টে যোগাযোগ করুন।", time: "এখনই" },
+                { title: "ডিপোজিট সতর্কতা", message: "অটোমেটিক গেটওয়ে ব্যবহার করে ১ সেকেন্ডে ব্যালেন্স অ্যাড করতে পারবেন।", time: "আজ" }
+            ];
+
+            container.innerHTML = notices.map(n => `
+                <div class="bg-blue-50/60 p-3 rounded-2xl border border-blue-100 text-left space-y-1">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-xs text-blue-900">${n.title}</h4>
+                        <span class="text-[10px] text-gray-400 font-medium">${n.time || ''}</span>
+                    </div>
+                    <p class="text-xs text-gray-600 leading-relaxed">${n.message}</p>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function updateNotificationBadge() {
+            const count = (appConfig.notices && appConfig.notices.length) || 1;
+            const badge = document.getElementById('notif-badge');
+            if (count > 0) {
+                badge.textContent = count;
+                badge.classList.remove('hidden');
             } else {
-                showToastPopup('পেমেন্ট সম্পূর্ণ হয়নি বা বাতিল হয়েছে');
-                window.history.replaceState({}, document.title, window.location.pathname);
+                badge.classList.add('hidden');
             }
         }
-    }
 
-    async function savePaymentAndUpdateBalance(depositAmount, txid, fullData) {
-        if (!currentUser) return;
-        const uid = currentUser.uid;
+        function updateUI() {
+            if (!userData) return;
+            const balanceFormatted = (userData.balance || 0).toFixed(2);
+            document.getElementById('header-coin-balance').textContent = `৳${balanceFormatted}`;
+        }
 
-        try {
-            const txRef = database.ref(`users/${uid}/deposits/${txid}`);
-            const txSnap = await txRef.once('value');
+        function showMainPage(pageId) {
+            document.querySelectorAll('.main-page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
 
-            if (!txSnap.exists()) {
-                await txRef.set({
-                    txid: txid,
-                    amount: depositAmount,
-                    gateway: 'InstantPay',
-                    details: fullData,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
+        function navigateTo(pageId) {
+            document.querySelectorAll('.sub-page').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(pageId);
+            if (target) target.classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.page === pageId);
+            });
+
+            const routes = {
+                'home-page': renderProductsBySelection,
+                'pay-page': updateUI,
+                'orders-page': loadOrdersHistory,
+                'features-page': loadFeaturesPage,
+                'history-page': () => { loadManualOrdersHistory(); loadPaymentHistory(); loadReplaceHistory(); },
+                'profile-page': loadProfilePage,
+                'admin-page': () => { loadAdminManualOrders(); populateAdminMailTypes(); loadReplaceRequests(); }
+            };
+
+            if (routes[pageId]) routes[pageId]();
+            lucide.createIcons();
+        }
+        window.navigateTo = navigateTo;
+
+        window.filterByCategory = function(category, element) {
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            if(element) element.classList.add('active');
+            selectedCategory = category;
+            renderProductsBySelection();
+        };
+
+        async function getStockCount(collectionName) {
+            if(!collectionName) return 0;
+            try {
+                const q = query(collection(db, collectionName), where("isSold", "==", false));
+                const snapshot = await getCountFromServer(q);
+                return snapshot.data().count;
+            } catch (e) { return 0; }
+        }
+
+        window.toggleCardDetails = function(detailsId, btnElement) {
+            const el = document.getElementById(detailsId);
+            if (el) {
+                const isHidden = el.classList.contains('hidden');
+                el.classList.toggle('hidden');
+                if (btnElement) {
+                    const icon = btnElement.querySelector('i');
+                    if (icon) {
+                        icon.setAttribute('data-lucide', isHidden ? 'chevron-up' : 'chevron-down');
+                        lucide.createIcons();
+                    }
+                }
+            }
+        };
+
+        async function renderProductsBySelection() {
+            const container = document.getElementById('product-list-container');
+            container.innerHTML = getLoadingHTML();
+
+            const allProducts = [...(appConfig.mails || []), ...(appConfig.proxies || []), ...(appConfig.products || [])];
+            let filtered = allProducts;
+
+            if (selectedCategory.toLowerCase() !== 'all') {
+                filtered = allProducts.filter(item => {
+                    const type = (item.type || '').toLowerCase();
+                    const cat = (item.category || '').toLowerCase();
+                    const target = selectedCategory.toLowerCase();
+                    return type.includes(target) || cat.includes(target);
+                });
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="bg-white p-8 rounded-2xl text-center text-gray-400 font-semibold border">এই বিভাগে কোনো আইটেম পাওয়া যায়নি।</div>`;
+                return;
+            }
+
+            const stockPromises = filtered.map(item => getStockCount(item.stockKey));
+            const stockCounts = await Promise.all(stockPromises);
+
+            container.innerHTML = filtered.map((item, idx) => {
+                const stock = stockCounts[idx] || 0;
+                const outOfStock = stock <= 0;
+                const originalPrice = (parseFloat(item.priceBdt || 0) * 1.15).toFixed(2);
+                const currentPrice = parseFloat(item.priceBdt || 0).toFixed(2);
+                const detailsId = `card-details-${idx}`;
+                const hasApi = !!(item.apiUrl && item.apiUrl.trim() !== '');
+                const isManualAllowedForThisProduct = item.allowManual !== false && item.allowManualOrder !== false;
+
+                return `
+                <div class="product-card p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center p-2">
+                                <img src="${item.logoUrl || 'https://i.postimg.cc/mD1YdG5y/mail.png'}" class="w-full h-full object-contain" alt="Logo">
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h4 class="font-extrabold text-gray-800 text-sm">${item.type}</h4>
+                                    <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Instant</span>
+                                </div>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="text-xs text-gray-400 line-through">৳${originalPrice}</span>
+                                    <span class="text-base font-black text-blue-600">৳${currentPrice}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="toggleCardDetails('${detailsId}', this)" class="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition">
+                            <span>Details</span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+
+                    <div id="${detailsId}" class="hidden text-xs text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed font-normal selectable-text">
+                        ${item.details ? item.details.replace(/\n/g, '<br>') : 'এই প্রোডাক্টের জন্য কোনো অতিরিক্ত বিবরণ দেওয়া হয়নি।'}
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2 border-t border-gray-100 text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="font-semibold ${outOfStock ? 'text-orange-500' : 'text-emerald-600'}">
+                                Stock: <b>${stock}</b>
+                            </span>
+
+                            ${hasApi ? `
+                                <a href="${item.apiUrl}" target="_blank" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-sm flex items-center gap-1 transition">
+                                    <i data-lucide="code" class="w-3 h-3"></i> API
+                                </a>
+                            ` : ''}
+                        </div>
+
+                        ${!outOfStock ? `
+                            <button id="buy-btn-${idx}" 
+                                    class="btn-buy px-5 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5" 
+                                    onclick="buyItem('${item.type}', ${item.priceBdt}, '${item.stockKey}', '${item.category || 'service'}', 'buy-btn-${idx}')">
+                                <span>Buy Now</span>
+                            </button>
+                        ` : isManualAllowedForThisProduct ? `
+                            <button class="btn-order-orange px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1"
+                                    onclick="openManualOrderModal('${item.type}', ${item.priceBdt}, '${item.stockKey}', '${item.category || 'service'}')">
+                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                <span>Order Now</span>
+                            </button>
+                        ` : `
+                            <button disabled class="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-400 cursor-not-allowed">
+                                Out of Stock
+                            </button>
+                        `}
+                    </div>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        window.buyItem = async function(mailType, costParam, stockKey, pageType, btnId) {
+            const cost = parseFloat(costParam);
+            if (!confirm(`আপনি কি ৳${cost.toFixed(2)} দিয়ে ${mailType} কিনতে চান?`)) return;
+
+            const btn = document.getElementById(btnId);
+            let originalBtnHtml = '';
+            if (btn) {
+                originalBtnHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = `<span class="animate-spin inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full mr-1"></span> <span>অপেক্ষা করুন...</span>`;
+            }
+
+            try {
+                const itemQuery = query(collection(db, stockKey), where("isSold", "==", false), limit(1));
+                const itemQuerySnapshot = await getDocs(itemQuery);
+
+                if (itemQuerySnapshot.empty) {
+                    throw new Error("দুঃখিত, স্টক শেষ! আপনি 'Order Now' দিয়ে প্রি-অর্ডার করতে পারেন।");
+                }
+
+                const itemDocToPurchase = itemQuerySnapshot.docs[0];
+                const itemData = itemDocToPurchase.data();
+
+                await runTransaction(db, async (transaction) => {
+                    const buyerRef = doc(db, "users", String(userData.tgChatId));
+                    const counterRef = doc(db, "counters", "item_purchase");
+                    const buyerSnap = await transaction.get(buyerRef);
+                    
+                    if (!buyerSnap.exists() || buyerSnap.data().balance < cost) {
+                        throw new Error("আপনার পর্যাপ্ত ব্যালেন্স নেই। ডিপোজিট করুন।");
+                    }
+
+                    const counterSnap = await transaction.get(counterRef);
+                    const saleId = counterSnap.exists() ? counterSnap.data().currentId : 1000;
+
+                    transaction.update(buyerRef, { balance: buyerSnap.data().balance - cost });
+                    transaction.update(itemDocToPurchase.ref, { isSold: true, soldTo: String(userData.tgChatId), soldAt: serverTimestamp() });
+                    
+                    const purchaseLogRef = doc(collection(db, "purchases"));
+                    transaction.set(purchaseLogRef, {
+                        saleId: saleId,
+                        userId: String(userData.tgChatId),
+                        mailType: mailType,
+                        category: pageType,
+                        cost: cost,
+                        purchasedAt: serverTimestamp(),
+                        mail: itemData.email || itemData.ip || itemData.data || 'N/A',
+                        password: itemData.password || null
+                    });
+                    transaction.set(counterRef, { currentId: saleId + 1 }, { merge: true });
                 });
 
-                const balRef = database.ref(`users/${uid}/balance`);
-                const balSnap = await balRef.once('value');
-                const currentBal = parseFloat(balSnap.val()) || 0;
-                const newBalance = currentBal + depositAmount;
+                document.getElementById('purchase-success-email').textContent = itemData.email || itemData.ip || itemData.data;
+                document.getElementById('purchase-success-password').textContent = itemData.password || 'N/A';
+                document.getElementById('purchase-success-modal').classList.remove('hidden');
+
+                const userSnap = await getDoc(doc(db, "users", String(userData.tgChatId)));
+                userData = userSnap.data();
+                updateUI();
+                renderProductsBySelection();
+
+            } catch (e) {
+                showAlert(e.message || "ক্রয় সম্পন্ন করা সম্ভব হয়নি।");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnHtml;
+                    lucide.createIcons();
+                }
+            }
+        };
+
+        window.openManualOrderModal = function(mailType, price, stockKey, category) {
+            pendingOrderToPlace = { mailType, price: parseFloat(price), stockKey, category };
+            const timeoutMinutes = appConfig.manualOrderTimeoutMinutes || 30;
+
+            document.getElementById('manual-modal-title').textContent = `${mailType} (Order Now)`;
+            document.getElementById('manual-modal-price').textContent = `৳${parseFloat(price).toFixed(2)}`;
+            document.getElementById('manual-modal-duration').textContent = `${timeoutMinutes} মিনিট`;
+            document.getElementById('manual-order-modal').classList.remove('hidden');
+        };
+
+        async function handleConfirmManualOrder() {
+            if (!pendingOrderToPlace) return;
+            const { mailType, price, stockKey, category } = pendingOrderToPlace;
+            const timeoutMinutes = appConfig.manualOrderTimeoutMinutes || 30;
+
+            const btn = document.getElementById('confirm-manual-order-btn');
+            btn.disabled = true;
+            btn.textContent = "Processing...";
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const buyerRef = doc(db, "users", String(userData.tgChatId));
+                    const buyerSnap = await transaction.get(buyerRef);
+                    
+                    if (!buyerSnap.exists() || buyerSnap.data().balance < price) {
+                        throw new Error("আপনার পর্যাপ্ত ব্যালেন্স নেই। অনুগ্রহ করে ডিপোজিট করুন।");
+                    }
+
+                    transaction.update(buyerRef, { balance: buyerSnap.data().balance - price });
+
+                    const expiryDate = new Date(Date.now() + timeoutMinutes * 60 * 1000);
+                    const manualOrderRef = doc(collection(db, "manual_orders"));
+                    
+                    transaction.set(manualOrderRef, {
+                        userId: String(userData.tgChatId),
+                        userName: userData.name || 'User',
+                        mailType: mailType,
+                        category: category,
+                        cost: price,
+                        status: "pending",
+                        createdAt: serverTimestamp(),
+                        expiresAt: Timestamp.fromDate(expiryDate),
+                        durationMinutes: timeoutMinutes
+                    });
+                });
+
+                const adminAlert = `⚡ <b>নতুন ম্যানুয়াল অর্ডার এসেছে!</b>\n\n👤 <b>ইউজার:</b> ${userData.name} (<code>${userData.tgChatId}</code>)\n📦 <b>সার্ভিস:</b> ${mailType}\n💰 <b>মূল্য:</b> ৳${price}\n⏳ <b>সময়সীমা:</b> ${timeoutMinutes} মিনিট`;
+                await notifyAdminViaTelegram(adminAlert);
+
+                document.getElementById('manual-order-modal').classList.add('hidden');
+                showAlert(`আপনার ${mailType} অর্ডারটি গ্রহণ করা হয়েছে!`);
                 
-                await balRef.set(newBalance);
+                const userSnap = await getDoc(doc(db, "users", String(userData.tgChatId)));
+                userData = userSnap.data();
+                updateUI();
+                navigateTo('history-page');
 
-                await database.ref(`users/${uid}/notifications`).push({
-                    message: `অভিনন্দন! আপনার একাউন্টে ${depositAmount.toFixed(2)} BDT সফলভাবে যোগ হয়েছে। (TXID: ${txid})`,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP,
-                    read: false
+            } catch(e) {
+                showAlert(e.message || "অর্ডার সাবমিট করতে সমস্যা হয়েছে।");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Confirm Order";
+            }
+        }
+
+        async function handleDepositRequest() {
+            if (!currentSelectedDepositMethod) return showAlert("অনুগ্রহ করে মেথড সিলেক্ট করুন!");
+            const amount = parseFloat(document.getElementById('deposit-amount').value);
+            const transactionId = document.getElementById('deposit-txid').value.trim();
+
+            if (!amount || amount <= 0 || !transactionId) return showAlert("টাকার পরিমাণ ও Transaction ID পূরণ করুন।");
+
+            const btn = document.getElementById('deposit-btn');
+            btn.disabled = true;
+            btn.textContent = "Processing...";
+            try {
+                await addDoc(collection(db, "deposits"), {
+                    userId: String(userData.tgChatId),
+                    userName: userData.name,
+                    method: currentSelectedDepositMethod,
+                    amount,
+                    transactionId,
+                    status: "pending",
+                    requestedAt: serverTimestamp()
                 });
 
-                document.getElementById('userBalanceDisplay').textContent = `${newBalance.toFixed(2)} BDT`;
+                const adminAlert = `💰 <b>নতুন ডিপোজিট রিকোয়েস্ট!</b>\n\n👤 <b>ইউজার:</b> ${userData.name} (<code>${userData.tgChatId}</code>)\n💳 <b>মেথড:</b> ${currentSelectedDepositMethod}\n💵 <b>পরিমাণ:</b> ৳${amount}\n🆔 <b>TrxID:</b> <code>${transactionId}</code>`;
+                await notifyAdminViaTelegram(adminAlert);
+
+                showAlert("আপনার ডিপোজিট অনুরোধ জমা হয়েছে।");
+                document.getElementById('deposit-amount').value = '';
+                document.getElementById('deposit-txid').value = '';
+                navigateTo('history-page');
+            } catch(e) {
+                showAlert("ডিপোজিট সাবমিট করতে সমস্যা হয়েছে।");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Submit TrxID Deposit";
             }
-        } catch (err) {
-            console.error("Balance update error:", err);
         }
-    }
 
-    function startSuccessAutoRedirect() {
-        let seconds = 5;
-        const countdownEl = document.getElementById('countdownText');
-        
-        if (redirectTimer) clearInterval(redirectTimer);
+        async function handleSendBalance() {
+            const recipientId = document.getElementById('send-recipient-id').value.trim();
+            const amount = parseFloat(document.getElementById('send-amount').value);
 
-        redirectTimer = setInterval(() => {
-            seconds--;
-            if (seconds > 0) {
-                countdownEl.textContent = `${seconds} সেকেন্ড পর ড্যাশবোর্ডে নিয়ে যাওয়া হবে...`;
+            if (!recipientId || !amount || amount < 20) {
+                return showAlert("সর্বনিম্ন ৳২০ পাঠাতে হবে এবং প্রাপকের Telegram ID দিতে হবে।");
+            }
+            if (recipientId === String(userData.tgChatId)) {
+                return showAlert("নিজের অ্যাকাউন্টে ব্যালেন্স পাঠানো যাবে না।");
+            }
+
+            const totalCost = amount * 1.05;
+            if (!confirm(`৫% চার্জসহ মোট ৳${totalCost.toFixed(2)} কাটা হবে। আপনি কি নিশ্চিত?`)) return;
+
+            const btn = document.getElementById('submit-send-btn');
+            btn.disabled = true;
+            btn.textContent = "Sending...";
+
+            try {
+                await runTransaction(db, async (t) => {
+                    const senderRef = doc(db, "users", String(userData.tgChatId));
+                    const recipientRef = doc(db, "users", String(recipientId));
+
+                    const senderSnap = await t.get(senderRef);
+                    const recipientSnap = await t.get(recipientRef);
+
+                    if (!senderSnap.exists() || senderSnap.data().balance < totalCost) {
+                        throw new Error("আপনার পর্যাপ্ত ব্যালেন্স নেই।");
+                    }
+                    if (!recipientSnap.exists()) {
+                        throw new Error("প্রাপকের Telegram ID খুঁজে পাওয়া যায়নি।");
+                    }
+
+                    t.update(senderRef, { balance: senderSnap.data().balance - totalCost });
+                    t.update(recipientRef, { balance: increment(amount) });
+
+                    const transferRef = doc(collection(db, "transfers"));
+                    t.set(transferRef, {
+                        fromId: String(userData.tgChatId),
+                        toId: String(recipientId),
+                        amount: amount,
+                        charge: totalCost - amount,
+                        createdAt: serverTimestamp()
+                    });
+                });
+
+                const recMsg = `🎁 <b>আপনি ব্যালেন্স পেয়েছেন!</b>\n\nপরিমাণ: ৳${amount}\nপ্রেরক: ${userData.name} (<code>${userData.tgChatId}</code>)`;
+                await sendTelegramMessage(recipientId, recMsg);
+
+                showAlert("ব্যালেন্স সফলভাবে ট্রান্সফার হয়েছে!");
+                document.getElementById('send-recipient-id').value = '';
+                document.getElementById('send-amount').value = '';
+
+                const userSnap = await getDoc(doc(db, "users", String(userData.tgChatId)));
+                userData = userSnap.data();
+                updateUI();
+                navigateTo('features-page');
+            } catch(e) {
+                showAlert(e.message || "ট্রান্সফার ব্যর্থ হয়েছে।");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Submit Send";
+            }
+        }
+
+        function startCountdownTimerRoutine() {
+            if (countdownTimerInterval) clearInterval(countdownTimerInterval);
+            countdownTimerInterval = setInterval(() => {
+                const timerElements = document.querySelectorAll('.live-order-countdown');
+                const now = new Date().getTime();
+
+                timerElements.forEach(el => {
+                    const expiryTime = parseInt(el.dataset.expiryTime);
+                    const diff = expiryTime - now;
+
+                    if (diff <= 0) {
+                        el.innerHTML = `<span class="text-red-500 font-bold font-mono">00:00 (Expired)</span>`;
+                    } else {
+                        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        const s = Math.floor((diff % (1000 * 60)) / 1000);
+                        el.innerHTML = `<span class="text-orange-600 font-bold font-mono">${m}m ${s < 10 ? '0' : ''}${s}s</span>`;
+                    }
+                });
+            }, 1000);
+        }
+
+        async function checkAndRefundExpiredOrders() {
+            try {
+                const now = new Date();
+                const q = query(collection(db, "manual_orders"), where("status", "==", "pending"));
+                const snap = await getDocs(q);
+
+                snap.docs.forEach(async (docSnap) => {
+                    const po = docSnap.data();
+                    if (po.expiresAt && po.expiresAt.toDate() <= now) {
+                        await runTransaction(db, async (t) => {
+                            const moRef = doc(db, "manual_orders", docSnap.id);
+                            const userRef = doc(db, "users", String(po.userId));
+                            t.update(moRef, { status: "expired_auto_refunded", refundedAt: serverTimestamp() });
+                            t.update(userRef, { balance: increment(parseFloat(po.cost)) });
+                        });
+                    }
+                });
+            } catch(e) {}
+        }
+
+        async function loadOrdersHistory() {
+            const listEl = document.getElementById('orders-purchase-history');
+            listEl.innerHTML = getLoadingHTML();
+            try {
+                const q = query(collection(db, "purchases"), where("userId", "in", [String(userData.tgChatId), Number(userData.tgChatId)]));
+                const snap = await getDocs(q);
+
+                if (snap.empty) {
+                    userPurchasesCache = [];
+                    listEl.innerHTML = `<div class="bg-white p-8 rounded-2xl text-center text-gray-400 font-semibold border">আপনার কোনো অর্ডার ইতিহাস নেই।</div>`;
+                    return;
+                }
+
+                userPurchasesCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                userPurchasesCache.sort((a, b) => (b.purchasedAt?.seconds || 0) - (a.purchasedAt?.seconds || 0));
+
+                listEl.innerHTML = userPurchasesCache.map(p => {
+                    const date = p.purchasedAt?.toDate ? p.purchasedAt.toDate().toLocaleString('en-GB') : 'Just now';
+                    const fullCopy = `${p.mail}|${p.password || ''}`;
+
+                    return `
+                    <div class="product-card p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-extrabold text-sm text-gray-800">${p.mailType}</h4>
+                                <p class="text-[11px] text-gray-400 mt-0.5">${date} • ID: #${p.saleId || 'N/A'}</p>
+                            </div>
+                            <span class="text-sm font-black text-blue-600">৳${p.cost ? p.cost.toFixed(2) : '0.00'}</span>
+                        </div>
+                        <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-100 space-y-1.5 font-mono text-xs">
+                            <div class="flex justify-between items-center">
+                                <span class="truncate text-gray-700">${p.mail || ''}</span>
+                                <button onclick="copyToClipboard('${p.mail}', this)" class="text-blue-600 hover:text-blue-800 p-1"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
+                            </div>
+                            ${p.password ? `<div class="flex justify-between items-center border-t pt-1">
+                                <span class="text-gray-600">${p.password}</span>
+                                <button onclick="copyToClipboard('${p.password}', this)" class="text-blue-600 hover:text-blue-800 p-1"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
+                            </div>` : ''}
+                        </div>
+                        <div class="flex gap-2 pt-1 text-xs">
+                            <button onclick="copyToClipboard('${fullCopy}', this)" class="btn-buy py-2 px-3 rounded-xl font-bold flex-1 text-center">Copy Full</button>
+                        </div>
+                    </div>`;
+                }).join('');
+                lucide.createIcons();
+            } catch (e) {
+                listEl.innerHTML = `<p class="text-center text-red-500 text-xs">${e.message}</p>`;
+            }
+        }
+
+        async function loadManualOrdersHistory() {
+            const list = document.getElementById('manual-orders-history-list');
+            if(!list) return;
+            list.innerHTML = getLoadingHTML();
+            try {
+                const q = query(collection(db, "manual_orders"), where("userId", "in", [String(userData.tgChatId), Number(userData.tgChatId)]));
+                const snap = await getDocs(q);
+                if (snap.empty) return list.innerHTML = '<p class="text-center text-xs text-gray-400 py-2">কোনো ম্যানুয়াল অর্ডার হিস্ট্রি নেই</p>';
+
+                const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                docs.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+                list.innerHTML = docs.map(p => {
+                    const expiryMillis = p.expiresAt ? p.expiresAt.toDate().getTime() : 0;
+                    const isPending = p.status === 'pending';
+
+                    return `
+                    <div class="bg-white p-3.5 rounded-xl border border-gray-200 flex justify-between items-center text-xs shadow-sm">
+                        <div>
+                            <p class="font-bold text-gray-800">${p.mailType} (৳${p.cost})</p>
+                            ${isPending ? `
+                                <div class="flex items-center gap-1 mt-0.5 text-[11px] text-gray-500">
+                                    <span>Time Remaining:</span>
+                                    <span class="live-order-countdown" data-order-id="${p.id}" data-expiry-time="${expiryMillis}">Calculating...</span>
+                                </div>
+                            ` : `
+                                <p class="text-[10px] text-gray-400">মেয়াদ: ${p.durationMinutes || 30} মিনিট</p>
+                            `}
+                        </div>
+                        <span class="font-bold uppercase text-[10px] px-2 py-1 rounded ${
+                            p.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                            p.status === 'pending' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-600'
+                        }">${p.status.replace(/_/g, ' ')}</span>
+                    </div>`;
+                }).join('');
+                lucide.createIcons();
+            } catch(e) {}
+        }
+
+        async function loadPaymentHistory() {
+            const list = document.getElementById('payment-history-list');
+            if(!list) return;
+            list.innerHTML = getLoadingHTML();
+            try {
+                const q = query(collection(db, "deposits"), where("userId", "in", [String(userData.tgChatId), Number(userData.tgChatId)]));
+                const snap = await getDocs(q);
+                if (snap.empty) return list.innerHTML = '<p class="text-center text-xs text-gray-400">কোনো হিস্ট্রি নেই</p>';
+                const docs = snap.docs.map(d => d.data());
+                docs.sort((a,b) => (b.requestedAt?.seconds || 0) - (a.requestedAt?.seconds || 0));
+
+                list.innerHTML = docs.map(d => `
+                    <div class="bg-white p-3 rounded-xl border border-gray-200 flex justify-between items-center text-xs">
+                        <div>
+                            <p class="font-bold text-gray-800">${d.method} (৳${d.amount})</p>
+                            <p class="text-gray-400 font-mono text-[10px]">${d.transactionId}</p>
+                        </div>
+                        <span class="font-bold capitalize ${d.status==='approved'?'text-green-600':d.status==='rejected'?'text-red-500':'text-yellow-600'}">${d.status}</span>
+                    </div>`).join('');
+            } catch(e) {}
+        }
+
+        async function loadReplaceHistory() {
+            const list = document.getElementById('replace-history-list');
+            if(!list) return;
+            list.innerHTML = getLoadingHTML();
+            try {
+                const q = query(collection(db, "replace_requests"), where("userId", "in", [String(userData.tgChatId), Number(userData.tgChatId)]));
+                const snap = await getDocs(q);
+                if (snap.empty) return list.innerHTML = '<p class="text-center text-xs text-gray-400">কোনো রেকর্ড নেই</p>';
+                const docs = snap.docs.map(d => d.data());
+                docs.sort((a,b) => (b.requestedAt?.seconds || 0) - (a.requestedAt?.seconds || 0));
+
+                list.innerHTML = docs.map(r => `
+                    <div class="bg-white p-3 rounded-xl border border-gray-200 flex justify-between items-center text-xs">
+                        <div>
+                            <p class="font-bold text-gray-800">${r.mailType}</p>
+                            <p class="text-gray-500 text-[10px]">${r.reason}</p>
+                        </div>
+                        <span class="font-bold uppercase ${r.status==='approved'?'text-green-600':r.status==='rejected'?'text-red-500':'text-yellow-600'}">${r.status}</span>
+                    </div>`).join('');
+            } catch(e) {}
+        }
+
+        async function loadFeaturesPage() {
+            try {
+                const receivedQuery = query(collection(db, "transfers"), where("toId", "==", String(userData.tgChatId)));
+                const sentQuery = query(collection(db, "transfers"), where("fromId", "==", String(userData.tgChatId)));
+                const [recSnap, sentSnap] = await Promise.all([getDocs(receivedQuery), getDocs(sentQuery)]);
+                
+                const recTotal = recSnap.docs.reduce((sum, d) => sum + (d.data().amount || 0), 0);
+                const sentTotal = sentSnap.docs.reduce((sum, d) => sum + (d.data().amount || 0), 0);
+
+                document.getElementById('total-receive-display').textContent = `৳${recTotal.toFixed(2)}`;
+                document.getElementById('total-send-display').textContent = `৳${sentTotal.toFixed(2)}`;
+            } catch(e) {}
+        }
+
+        function loadProfilePage() {
+            if (!userData) return;
+            document.getElementById('profile-name').textContent = userData.name || 'User';
+            document.getElementById('profile-username').textContent = userData.username ? `@${userData.username}` : '';
+            document.getElementById('profile-id').textContent = `ID: ${userData.tgChatId}`;
+            if (userData.photo_url) {
+                document.getElementById('profile-pic').src = userData.photo_url;
+                document.getElementById('profile-pic').classList.remove('hidden');
+                document.getElementById('profile-initials-avatar').classList.add('hidden');
             } else {
-                clearInterval(redirectTimer);
-                changeStep(1);
+                document.getElementById('profile-pic').classList.add('hidden');
+                document.getElementById('profile-initials-avatar').classList.remove('hidden');
+                document.getElementById('profile-initials').textContent = (userData.name || 'U').charAt(0).toUpperCase();
             }
-        }, 1000);
-    }
-
-    function returnToDashboardManually() {
-        if (redirectTimer) clearInterval(redirectTimer);
-        changeStep(1);
-    }
-
-    function openNotifModal() {
-        document.getElementById('notifModal').classList.add('show');
-        loadNotificationsList();
-    }
-
-    function closeNotifModal() {
-        document.getElementById('notifModal').classList.remove('show');
-    }
-
-    function changeStep(stepId) {
-        document.querySelectorAll('.step-container').forEach(page => page.classList.remove('active'));
-        const targetElement = document.getElementById(`step-${stepId}`);
-        if (targetElement) targetElement.classList.add('active');
-    }
-
-    function showToastPopup(message) {
-        const toast = document.getElementById('toastNotification');
-        if(toast) {
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3500);
         }
-    }
 
-    function logoutUser() {
-        localStorage.removeItem('tg_auth_user');
-        currentUser = null;
-        changeStep('auth');
-        showToastPopup('লগআউট করা হয়েছে');
-    }
-</script>
-</body>    
+        function exportOrdersToExcel() {
+            if (!userPurchasesCache || userPurchasesCache.length === 0) return showAlert("ডাউনলোড করার মতো কোনো অর্ডার নেই।");
+            const dataToExport = userPurchasesCache.map(p => ({
+                "Sale ID": p.saleId || '',
+                "Service": p.mailType || '',
+                "Credentials / Email": p.mail || '',
+                "Password": p.password || '',
+                "Cost (BDT)": p.cost || 0,
+                "Date": p.purchasedAt?.toDate ? p.purchasedAt.toDate().toLocaleString('en-GB') : ''
+            }));
+            const ws = XLSX.utils.json_to_sheet(dataToExport);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Orders");
+            XLSX.writeFile(wb, `Orders_${userData.tgChatId}.xlsx`);
+        }
+
+        function copyLast4HoursOrders() {
+            if (!userPurchasesCache || userPurchasesCache.length === 0) return showAlert("কোনো অর্ডার নেই।");
+            const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
+            const recent = userPurchasesCache.filter(p => p.purchasedAt?.toDate && p.purchasedAt.toDate() >= fourHoursAgo);
+            if (recent.length === 0) return showAlert("বিগত ৪ ঘণ্টার মধ্যে কোনো অর্ডার পাওয়া যায়নি।");
+            const textList = recent.map(p => `${p.mail}${p.password ? '|' + p.password : ''}`).join('\n');
+            copyToClipboard(textList, null, `গত ৪ ঘণ্টার মোট ${recent.length} টি আইটেম কপি করা হয়েছে!`);
+        }
+
+        async function loadAdminManualOrders() {
+            const list = document.getElementById('admin-manual-orders-list');
+            const countBadge = document.getElementById('admin-manual-order-count');
+            if (!list) return;
+
+            list.innerHTML = getLoadingHTML();
+            try {
+                const q = query(collection(db, "manual_orders"), where("status", "==", "pending"));
+                const snap = await getDocs(q);
+
+                if (snap.empty) {
+                    list.innerHTML = '<p class="text-xs text-center text-gray-400 py-3">কোনো পেন্ডিং অর্ডার নেই</p>';
+                    countBadge.textContent = '0 Pending';
+                    return;
+                }
+
+                countBadge.textContent = `${snap.docs.length} Pending`;
+
+                list.innerHTML = snap.docs.map(docSnap => {
+                    const po = docSnap.data();
+                    const poId = docSnap.id;
+                    const expiryMillis = po.expiresAt ? po.expiresAt.toDate().getTime() : 0;
+
+                    return `
+                    <div class="bg-orange-50/70 p-3.5 rounded-2xl border border-orange-200 space-y-2 text-xs">
+                        <div class="flex justify-between items-center font-bold">
+                            <span class="text-gray-800">${po.mailType} - ৳${po.cost}</span>
+                            <span class="live-order-countdown bg-orange-200/80 px-2 py-0.5 rounded-md" data-order-id="${poId}" data-expiry-time="${expiryMillis}">Calculating...</span>
+                        </div>
+                        <p class="text-gray-600 text-[11px]">User: <b>${po.userName}</b> (TG ID: <code>${po.userId}</code>)</p>
+                        
+                        <div class="space-y-1.5 pt-1">
+                            <input id="admin-manual-data-${poId}" type="text" placeholder="Email / IP / Account Info" class="w-full p-2 rounded-xl input-field text-xs">
+                            <input id="admin-manual-pass-${poId}" type="text" placeholder="Password / Key (Optional)" class="w-full p-2 rounded-xl input-field text-xs">
+                        </div>
+
+                        <div class="flex justify-end gap-2 pt-1">
+                            <button onclick="handleAdminCancelManualOrder('${poId}', '${po.userId}', ${po.cost}, '${po.mailType}')" class="bg-red-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs">Reject & Refund</button>
+                            <button onclick="handleAdminApproveManualOrder('${poId}', '${po.userId}', ${po.cost}, '${po.mailType}')" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
+                                <i data-lucide="send" class="w-3.5 h-3.5"></i> Deliver via Bot
+                            </button>
+                        </div>
+                    </div>`;
+                }).join('');
+                lucide.createIcons();
+            } catch (e) {
+                list.innerHTML = `<p class="text-xs text-red-500">${e.message}</p>`;
+            }
+        }
+
+        window.handleAdminApproveManualOrder = async function(orderId, userId, cost, mailType) {
+            const accData = document.getElementById(`admin-manual-data-${orderId}`)?.value.trim();
+            const accPass = document.getElementById(`admin-manual-pass-${orderId}`)?.value.trim() || '';
+
+            if (!accData) return showAlert("দয়া করে অ্যাকাউন্টের ডাটা/ইমেইল লিখুন।");
+
+            try {
+                await runTransaction(db, async (t) => {
+                    const moRef = doc(db, "manual_orders", orderId);
+                    const counterRef = doc(db, "counters", "item_purchase");
+                    const counterSnap = await t.get(counterRef);
+                    const saleId = counterSnap.exists() ? counterSnap.data().currentId : 1000;
+
+                    t.update(moRef, { status: "approved", deliveredData: accData, deliveredPass: accPass, fulfilledAt: serverTimestamp() });
+
+                    const purchaseRef = doc(collection(db, "purchases"));
+                    t.set(purchaseRef, {
+                        saleId: saleId,
+                        userId: String(userId),
+                        mailType: mailType,
+                        category: "manual_order",
+                        cost: parseFloat(cost),
+                        purchasedAt: serverTimestamp(),
+                        mail: accData,
+                        password: accPass || null
+                    });
+                    t.set(counterRef, { currentId: saleId + 1 }, { merge: true });
+                });
+
+                const botMsg = `🎉 <b>আপনার অর্ডার সফলভাবে ডেলিভারি হয়েছে!</b>\n\n📦 <b>সার্ভিস:</b> ${mailType}\n💰 <b>মূল্য:</b> ৳${cost}\n\n🔑 <b>অ্যাকাউন্ট ডাটা:</b>\n<code>${accData}</code>\n${accPass ? `🔒 <b>পাসওয়ার্ড:</b> <code>${accPass}</code>\n` : ''}`;
+                await sendTelegramMessage(userId, botMsg);
+
+                showAlert("অর্ডার ডেলিভারি করা হয়েছে!");
+                loadAdminManualOrders();
+            } catch(e) {
+                showAlert(e.message || "ডেলিভারি করতে সমস্যা হয়েছে।");
+            }
+        };
+
+        window.handleAdminCancelManualOrder = async function(orderId, userId, cost, mailType) {
+            if (!confirm("অর্ডারটি বাতিল করে রিফান্ড করতে চান?")) return;
+            try {
+                await runTransaction(db, async (t) => {
+                    const moRef = doc(db, "manual_orders", orderId);
+                    const userRef = doc(db, "users", String(userId));
+                    t.update(moRef, { status: "cancelled_refunded", refundedAt: serverTimestamp() });
+                    t.update(userRef, { balance: increment(parseFloat(cost)) });
+                });
+
+                showAlert("অর্ডার বাতিল ও রিফান্ড সফল হয়েছে!");
+                loadAdminManualOrders();
+            } catch(e) {
+                showAlert(e.message);
+            }
+        };
+
+        function populateAdminMailTypes() {
+            const selectEl = document.getElementById('mail-type-select');
+            selectEl.innerHTML = '<option value="">Select service to add stock...</option>';
+            [...(appConfig.mails || []), ...(appConfig.proxies || []), ...(appConfig.products || [])].forEach(item => {
+                selectEl.innerHTML += `<option value="${item.stockKey}">${item.type}</option>`;
+            });
+        }
+
+        async function handleAddMails() {
+            const stockKey = document.getElementById('mail-type-select').value;
+            const text = document.getElementById('mail-data-textarea').value.trim();
+            if (!stockKey || !text) return showAlert("সব ঘর পূরণ করুন।");
+
+            const lines = text.split('\n').filter(l => l.trim().length > 0);
+            try {
+                const batch = writeBatch(db);
+                lines.forEach(line => {
+                    const parts = line.split('/');
+                    const itemDoc = doc(collection(db, stockKey));
+                    batch.set(itemDoc, {
+                        email: parts[0] || line,
+                        password: parts[1] || null,
+                        isSold: false,
+                        createdAt: serverTimestamp()
+                    });
+                });
+                await batch.commit();
+                showAlert(`সফলভাবে ${lines.length} টি আইটেম যোগ হয়েছে!`);
+                document.getElementById('mail-data-textarea').value = '';
+            } catch(e) {
+                showAlert("যোগ করতে সমস্যা হয়েছে।");
+            }
+        }
+
+        async function loadReplaceRequests() {
+            const listEl = document.getElementById('replace-requests-list');
+            if (!listEl) return;
+            try {
+                const q = query(collection(db, "replace_requests"), where("status", "==", "pending"));
+                const snap = await getDocs(q);
+                if (snap.empty) return listEl.innerHTML = '<p class="text-xs text-center text-gray-400">No pending reports</p>';
+                listEl.innerHTML = snap.docs.map(docSnap => {
+                    const req = docSnap.data();
+                    return `
+                    <div class="bg-white p-3.5 rounded-xl border space-y-2 text-xs">
+                        <div class="flex justify-between font-bold">
+                            <span>${req.userName} (${req.userId})</span>
+                            <span class="text-blue-600">৳${req.cost}</span>
+                        </div>
+                        <p class="text-gray-600">${req.mailType}: ${req.reason}</p>
+                    </div>`;
+                }).join('');
+            } catch(e) {}
+        }
+
+        window.toggleSupportWidget = function() {
+            const menu = document.getElementById('support-options-menu');
+            const openIcon = document.getElementById('support-icon-open');
+            const closeIcon = document.getElementById('support-icon-close');
+            const isOpen = menu.classList.contains('open');
+            menu.classList.toggle('open');
+            openIcon.classList.toggle('hidden', !isOpen);
+            closeIcon.classList.toggle('hidden', isOpen);
+            lucide.createIcons();
+        };
+
+        function showAlert(msg) {
+            document.getElementById('alert-message').textContent = msg;
+            document.getElementById('custom-alert').classList.remove('hidden');
+        }
+
+        window.copyToClipboard = (text, btn, msg) => {
+            if(!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                if (btn) {
+                    const old = btn.innerHTML;
+                    btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-green-600"></i>`;
+                    lucide.createIcons();
+                    setTimeout(() => { btn.innerHTML = old; lucide.createIcons(); }, 1400);
+                } else if(msg) showAlert(msg);
+            });
+        };
+
+        function setupEventListeners() {
+            document.getElementById('deposit-btn').addEventListener('click', handleDepositRequest);
+            document.getElementById('download-orders-btn').addEventListener('click', exportOrdersToExcel);
+            document.getElementById('copy-orders-btn').addEventListener('click', copyLast4HoursOrders);
+            document.getElementById('confirm-manual-order-btn').addEventListener('click', handleConfirmManualOrder);
+            document.getElementById('submit-send-btn').addEventListener('click', handleSendBalance);
+            document.getElementById('features-receive-btn').addEventListener('click', () => {
+                copyToClipboard(userData.tgChatId, null, `আপনার রিসিভ আইডি:\n${userData.tgChatId}`);
+            });
+            document.getElementById('add-mails-btn').addEventListener('click', handleAddMails);
+        }
+    </script>
+</body>
 </html>

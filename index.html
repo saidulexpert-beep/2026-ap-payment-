@@ -322,33 +322,12 @@
             -webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 4px), #000 0);
             animation: spin 0.8s infinite linear;
         }
-
-        .qty-btn {
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f1f5f9;
-            border-radius: 8px;
-            font-weight: 800;
-            color: #1e293b;
-            transition: all 0.15s;
-        }
-        .qty-btn:active {
-            background: #cbd5e1;
-            transform: scale(0.92);
-        }
-        .qty-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
     </style>
 </head>
 <body class="max-w-md mx-auto relative bg-[#f1f4f9] min-h-screen text-[#1e293b]">
 
     <!-- 1. INTRO LOADER -->
-    <div id="loader" class="fixed inset-0 flex flex-col items-center justify-center z-[100] p-6 select-none text-white transition-opacity duration-300">
+    <div id="loader" class="fixed inset-0 flex flex-col items-center justify-center z-[100] p-6 select-none text-white">
         <div class="float-item float-1"><i data-lucide="mail" class="w-8 h-8"></i></div>
         <div class="float-item float-2"><i data-lucide="shield-check" class="w-9 h-9"></i></div>
         <div class="float-item float-3"><i data-lucide="banknote" class="w-9 h-9"></i></div>
@@ -452,21 +431,6 @@
 
             <!-- AUTOMATED DEPOSIT PAGE -->
             <div id="pay-page" class="p-4 space-y-4 sub-page">
-                
-                <!-- INLINE ORDINARY DEPOSIT STATUS BANNER (No Pop-up) -->
-                <div id="deposit-status-banner" class="hidden p-3.5 rounded-2xl border flex items-start justify-between gap-2.5 transition-all">
-                    <div class="flex items-start gap-2">
-                        <i id="deposit-banner-icon" data-lucide="info" class="w-4 h-4 mt-0.5 shrink-0"></i>
-                        <div>
-                            <h4 id="deposit-banner-title" class="text-xs font-bold leading-tight"></h4>
-                            <p id="deposit-banner-message" class="text-[11px] mt-0.5 leading-snug"></p>
-                        </div>
-                    </div>
-                    <button onclick="dismissDepositBanner()" class="text-gray-400 hover:text-gray-600 p-0.5">
-                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                    </button>
-                </div>
-
                 <div class="bg-gradient-to-br from-[#1b64da] via-[#1551b3] to-[#0a3275] p-5 rounded-3xl text-white shadow-xl relative overflow-hidden">
                     <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
                     <div class="relative z-10 flex items-center justify-between">
@@ -619,7 +583,7 @@
                     <h2 class="text-lg font-bold">Send Balance</h2>
                 </div>
                 <div class="bg-white p-5 rounded-2xl border border-gray-200 space-y-4">
-                    <p class="text-xs text-blue-700 bg-blue-50 p-2.5 rounded-xl font-medium border border-blue-100">প্রতিটি ট্রান্সফারে ২% সার্ভিস চার্জ প্রযোজ্য। সর্বনিম্ন ৳২০ পাঠাতে পারবেন।</p>
+                    <p class="text-xs text-red-600 bg-red-50 p-2.5 rounded-xl font-medium">প্রতিটি ট্রান্সফারে ৫% সার্ভিস চার্জ প্রযোজ্য। সর্বনিম্ন ৳২০ পাঠাতে পারবেন।</p>
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">প্রাপকের Telegram ID</label>
                         <input id="send-recipient-id" type="text" placeholder="Recipient's Telegram ID" class="w-full p-2.5 rounded-xl input-field text-sm">
@@ -715,23 +679,22 @@
 
     </div>
 
-    <!-- FULL SCREEN NOTIFICATION MODAL -->
-    <div id="notification-modal" class="hidden fixed inset-0 bg-[#f8fafc] z-[95] flex flex-col h-full w-full max-w-md mx-auto">
-        <div class="bg-white border-b border-gray-200 px-4 py-3.5 flex items-center justify-between sticky top-0 z-10 shadow-xs">
-            <div class="flex items-center gap-2.5">
-                <div class="p-2 bg-blue-50 text-blue-600 rounded-xl">
-                    <i data-lucide="bell" class="w-5 h-5"></i>
+    <!-- NOTIFICATION MODAL -->
+    <div id="notification-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[75] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-5 w-full max-w-sm space-y-4 relative shadow-2xl">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-base">নোটিফিকেশন ও মেসেজ</h3>
                 </div>
-                <div>
-                    <h3 class="font-bold text-gray-800 text-base leading-tight">নোটিফিকেশন ও নোটিশ</h3>
-                    <p class="text-[11px] text-gray-400">সকল প্রয়োজনীয় আপডেট ও বার্তা</p>
-                </div>
+                <button onclick="toggleNotificationModal()" class="p-1 text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
             </div>
-            <button onclick="toggleNotificationModal()" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
+            <div id="notification-list-container" class="space-y-2.5 max-h-[320px] overflow-y-auto"></div>
         </div>
-        <div id="notification-list-container" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
     </div>
 
     <!-- GATEWAY PAYMENT SUCCESS MODAL -->
@@ -778,7 +741,7 @@
         </div>
     </div>
 
-    <!-- ORDER NOW (MANUAL ORDER) CONFIRMATION MODAL WITH QUANTITY -->
+    <!-- ORDER NOW (MANUAL ORDER) CONFIRMATION MODAL -->
     <div id="manual-order-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[70] p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 relative text-center">
             <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto">
@@ -788,32 +751,11 @@
                 <h3 class="text-lg font-bold text-gray-800" id="manual-modal-title">Order Now (ম্যানুয়াল অর্ডার)</h3>
                 <p class="text-xs text-gray-500 mt-1">বর্তমানে ইনস্ট্যান্ট স্টক শেষ, কিন্তু আপনি প্রি-অর্ডার করতে পারবেন।</p>
             </div>
-
-            <!-- QUANTITY SELECTOR FOR MANUAL ORDER -->
-            <div class="bg-gray-50 p-3 rounded-2xl border border-gray-200 flex items-center justify-between">
-                <div class="text-left">
-                    <span class="text-xs font-bold text-gray-700 block">পরিমাণ (Quantity):</span>
-                    <span id="manual-max-qty-hint" class="text-[10px] text-gray-400 font-medium"></span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button type="button" class="qty-btn" onclick="changeManualQty(-1)">-</button>
-                    <input id="manual-order-qty-input" type="number" value="1" min="1" oninput="handleManualQtyInput(this)" class="w-12 text-center font-black text-sm bg-white border border-gray-300 rounded-lg py-1 focus:outline-none focus:border-orange-500">
-                    <button type="button" class="qty-btn" onclick="changeManualQty(1)">+</button>
-                </div>
-            </div>
-
             <div class="bg-orange-50 p-3.5 rounded-2xl border border-orange-200 text-left text-xs text-orange-950 space-y-1.5">
-                <div class="flex justify-between items-center">
-                    <span>• প্রতি পিস মূল্য:</span>
-                    <b id="manual-modal-unit-price" class="text-gray-700">৳0.00</b>
-                </div>
-                <div class="flex justify-between items-center border-t border-orange-200/70 pt-1">
-                    <span>• মোট মূল্য (Total):</span>
-                    <b id="manual-modal-price" class="text-blue-700 text-sm font-black">৳0.00</b>
-                </div>
+                <p>• মূল্য: <b id="manual-modal-price" class="text-blue-700">৳0.00</b></p>
                 <p>• ডেলিভারি সময়সীমা: <b id="manual-modal-duration" class="text-orange-700 font-bold">৩০ মিনিট</b></p>
-                <p>• নির্ধারিত সময়ের মধ্যে ডেলিভারি সরাসরি আপনার টেলিগ্রাম ইনবক্সে যাবে।</p>
-                <p class="text-[11px] text-red-600 font-semibold">• টাইমের মধ্যে ডেলিভারি না পেলে ব্যালেন্স অটোমেটিক <b>রিফান্ড</b> হবে।</p>
+                <p>• অ্যাডমিন নির্ধারিত সময়ের মধ্যে অ্যাকাউন্ট সরাসরি আপনার <b>টেলিগ্রাম ইনবক্সে</b> পাঠিয়ে দেবে।</p>
+                <p class="text-[11px] text-red-600 font-semibold">• টাইমের মধ্যে ডেলিভারি না পেলে ব্যালেন্স অটোমেটিক <b>রিফান্ড</b> করা হবে।</p>
             </div>
             <div class="flex gap-2 pt-1">
                 <button onclick="document.getElementById('manual-order-modal').classList.add('hidden')" class="w-1/2 py-2.5 bg-gray-100 font-bold rounded-xl text-xs">বাতিল</button>
@@ -832,9 +774,17 @@
                 <i data-lucide="check" class="w-8 h-8 stroke-[3]"></i>
             </div>
             <h3 class="text-xl font-bold text-gray-800">অর্ডার সফল হয়েছে!</h3>
-            <p id="purchase-success-subtitle" class="text-xs text-emerald-700 font-semibold"></p>
             
-            <div id="purchase-success-items-container" class="space-y-2 text-left pt-2 max-h-48 overflow-y-auto"></div>
+            <div class="space-y-2 text-left pt-2">
+                <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border">
+                    <span class="font-mono text-xs text-gray-800 truncate" id="purchase-success-email"></span>
+                    <button onclick="copyToClipboard(document.getElementById('purchase-success-email').textContent, this)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                </div>
+                <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border">
+                    <span class="font-mono text-xs text-gray-800" id="purchase-success-password"></span>
+                    <button onclick="copyToClipboard(document.getElementById('purchase-success-password').textContent, this)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                </div>
+            </div>
 
             <button onclick="document.getElementById('purchase-success-modal').classList.add('hidden'); navigateTo('orders-page');" class="w-full py-3 rounded-xl btn-buy font-bold text-sm mt-3">View Orders</button>
         </div>
@@ -885,46 +835,35 @@
             { id: "Social", name: "Social", icon: "users" }
         ];
 
-        function hideAppLoader() {
-            const loaderEl = document.getElementById('loader');
-            if (loaderEl) {
-                loaderEl.style.opacity = '0';
-                setTimeout(() => {
-                    loaderEl.style.display = 'none';
-                }, 350);
-            }
-        }
-
+        const loader = document.getElementById('loader');
         const getLoadingHTML = () => `<div class="flex justify-center p-8"><div class="premium-loader-spinner"></div></div>`;
 
         window.onload = async () => {
             try {
-                try {
-                    window.Telegram.WebApp.ready();
-                    window.Telegram.WebApp.expand();
-                    currentUserTg = window.Telegram.WebApp.initDataUnsafe.user;
-                    if (!currentUserTg) {
-                        currentUserTg = { id: "6954647230", first_name: "User", username: "account" };
-                    }
-                } catch (e) {
+                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand();
+                currentUserTg = window.Telegram.WebApp.initDataUnsafe.user;
+                if (!currentUserTg) {
                     currentUserTg = { id: "6954647230", first_name: "User", username: "account" };
                 }
-
-                lucide.createIcons();
-                setupEventListeners();
-                
-                await initUserSession();
-                
-                // Safe payment verification & cancellation check
-                await checkReturnPaymentStatus();
-
-                checkAndRefundExpiredOrders();
-                startCountdownTimerRoutine();
-            } catch (err) {
-                console.error("Initialization Error:", err);
-            } finally {
-                hideAppLoader();
+            } catch (e) {
+                currentUserTg = { id: "6954647230", first_name: "User", username: "account" };
             }
+            lucide.createIcons();
+            setupEventListeners();
+            await initUserSession();
+            
+            // Check return status if redirected back from automated payment gateway
+            await checkReturnPaymentStatus();
+
+            checkAndRefundExpiredOrders();
+            startCountdownTimerRoutine();
+
+            setTimeout(() => {
+                loader.style.transition = 'opacity 0.4s ease';
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 400);
+            }, 800);
         };
 
         async function initUserSession() {
@@ -1065,106 +1004,65 @@
             }
         };
 
-        // --- INLINE DEPOSIT BANNER HELPER ---
-        function showDepositStatusBanner(title, message, isError = true) {
-            const banner = document.getElementById('deposit-status-banner');
-            const titleEl = document.getElementById('deposit-banner-title');
-            const msgEl = document.getElementById('deposit-banner-message');
-            const iconEl = document.getElementById('deposit-banner-icon');
-
-            if (!banner) return;
-
-            if (isError) {
-                banner.className = 'p-3.5 rounded-2xl border flex items-start justify-between gap-2.5 transition-all bg-amber-50 border-amber-200 text-amber-900 mb-2';
-                iconEl.setAttribute('data-lucide', 'alert-circle');
-                iconEl.className = 'w-4 h-4 mt-0.5 shrink-0 text-amber-600';
-            } else {
-                banner.className = 'p-3.5 rounded-2xl border flex items-start justify-between gap-2.5 transition-all bg-emerald-50 border-emerald-200 text-emerald-900 mb-2';
-                iconEl.setAttribute('data-lucide', 'check-circle');
-                iconEl.className = 'w-4 h-4 mt-0.5 shrink-0 text-emerald-600';
-            }
-
-            titleEl.textContent = title;
-            msgEl.textContent = message;
-            banner.classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        window.dismissDepositBanner = function() {
-            const banner = document.getElementById('deposit-status-banner');
-            if (banner) banner.classList.add('hidden');
-        };
-
         // --- GATEWAY RETURN VERIFICATION & CANCEL PROTECTION ---
         async function checkReturnPaymentStatus() {
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const urlStatus = (urlParams.get('status') || '').toLowerCase();
-                let transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid') || urlParams.get('trx_id') || urlParams.get('payment_id');
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlStatus = (urlParams.get('status') || '').toLowerCase();
+            let transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid') || urlParams.get('trx_id') || urlParams.get('payment_id');
 
-                if (!urlStatus && !transactionId) return;
+            // 1. If User Cancelled/Failed: CLEAR & NEVER ADD BALANCE
+            if (urlStatus === 'cancel' || urlStatus === 'cancelled' || urlStatus === 'failed') {
+                localStorage.removeItem('pending_deposit_amount');
+                window.history.replaceState({}, document.title, window.location.pathname);
+                showAlert('পেমেন্ট বাতিল করা হয়েছে। কোনো ব্যালেন্স যোগ করা হয়নি।');
+                return;
+            }
 
-                // 1. User Cancelled / Failed: Show ordinary inline message in Deposit page
-                if (urlStatus === 'cancel' || urlStatus === 'cancelled' || urlStatus === 'failed') {
-                    localStorage.removeItem('pending_deposit_amount');
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    navigateTo('pay-page');
-                    setTimeout(() => {
-                        showDepositStatusBanner('পেমেন্ট বাতিল করা হয়েছে', 'আপনার পেমেন্টটি সম্পন্ন হয়নি এবং কোনো ব্যালেন্স যোগ করা হয়নি।', true);
-                    }, 50);
-                    return;
+            // 2. Only proceed if status is success OR a valid transactionId is provided
+            if (urlStatus === 'success' || transactionId) {
+                if (!transactionId) {
+                    transactionId = "TXN_" + Date.now();
                 }
 
-                // 2. Success / Verification Flow
-                if (urlStatus === 'success' || transactionId) {
-                    if (!transactionId) {
-                        transactionId = "TXN_" + Date.now();
+                let depositAmount = 0;
+                let verifyData = {};
+                let isVerified = false;
+
+                try {
+                    const res = await fetch('/api/payment?action=verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ transaction_id: transactionId })
+                    });
+                    verifyData = await res.json();
+                    
+                    if (res.ok && (verifyData.status === 'success' || verifyData.status === 'COMPLETED' || verifyData.status === 'approved' || verifyData.data?.status === 'COMPLETED')) {
+                        isVerified = true;
+                        depositAmount = parseFloat(verifyData.amount || verifyData.data?.amount || 0);
                     }
-
-                    let depositAmount = 0;
-                    let verifyData = {};
-                    let isVerified = false;
-
-                    try {
-                        const res = await fetch('/api/payment?action=verify', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ transaction_id: transactionId })
-                        });
-                        verifyData = await res.json();
-                        
-                        if (res.ok && (verifyData.status === 'success' || verifyData.status === 'COMPLETED' || verifyData.status === 'approved' || verifyData.data?.status === 'COMPLETED')) {
-                            isVerified = true;
-                            depositAmount = parseFloat(verifyData.amount || verifyData.data?.amount || 0);
-                        }
-                    } catch (e) {
-                        console.error("Verification error:", e);
-                    }
-
-                    if (!depositAmount && urlStatus === 'success') {
-                        depositAmount = parseFloat(urlParams.get('amount') || urlParams.get('paymentAmount') || localStorage.getItem('pending_deposit_amount') || 0);
-                        if (depositAmount >= 10) isVerified = true;
-                    }
-
-                    if (isVerified && depositAmount >= 10 && userData) {
-                        await saveGatewayPaymentAndUpdateBalance(depositAmount, transactionId, verifyData);
-                        localStorage.removeItem('pending_deposit_amount');
-
-                        document.getElementById('gateway-display-txid').textContent = transactionId;
-                        document.getElementById('gateway-display-amount').textContent = `৳${depositAmount.toFixed(2)}`;
-                        document.getElementById('gateway-success-modal').classList.remove('hidden');
-                    } else if (!isVerified && urlStatus === 'success') {
-                        navigateTo('pay-page');
-                        setTimeout(() => {
-                            showDepositStatusBanner('যাচাইকরণ ব্যর্থ', 'পেমেন্ট যাচাইকরণ সম্পন্ন করা সম্ভব হয়নি। অনুগ্রহ করে সাপোর্টে যোগাযোগ করুন।', true);
-                        }, 50);
-                    }
-
-                    localStorage.removeItem('pending_deposit_amount');
-                    window.history.replaceState({}, document.title, window.location.pathname);
+                } catch (e) {
+                    console.error("Verification error:", e);
                 }
-            } catch (err) {
-                console.error("Payment status processing error:", err);
+
+                // Strictly allow fallback only if status is strictly 'success'
+                if (!depositAmount && urlStatus === 'success') {
+                    depositAmount = parseFloat(urlParams.get('amount') || urlParams.get('paymentAmount') || localStorage.getItem('pending_deposit_amount') || 0);
+                    if (depositAmount >= 10) isVerified = true;
+                }
+
+                if (isVerified && depositAmount >= 10 && userData) {
+                    await saveGatewayPaymentAndUpdateBalance(depositAmount, transactionId, verifyData);
+                    localStorage.removeItem('pending_deposit_amount');
+
+                    document.getElementById('gateway-display-txid').textContent = transactionId;
+                    document.getElementById('gateway-display-amount').textContent = `৳${depositAmount.toFixed(2)}`;
+                    document.getElementById('gateway-success-modal').classList.remove('hidden');
+                } else if (!isVerified && urlStatus === 'success') {
+                    showAlert('পেমেন্ট যাচাইকরণ সম্পন্ন হয়নি বা ব্যর্থ হয়েছে।');
+                }
+
+                localStorage.removeItem('pending_deposit_amount');
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
 
@@ -1194,6 +1092,7 @@
                     });
                 });
 
+                // Notification Record
                 await addDoc(collection(db, "users", tgChatId, "notifications"), {
                     title: "ডিপোজিট সফল!",
                     message: `আপনার অ্যাকাউন্টে ৳${depositAmount.toFixed(2)} সফলভাবে যোগ করা হয়েছে। (TXID: ${txid})`,
@@ -1212,7 +1111,7 @@
             }
         }
 
-        // --- FULL-SCREEN NOTIFICATIONS ---
+        // --- NOTIFICATIONS ---
         async function loadUserNotifications() {
             if (!userData) return;
             const tgChatId = String(userData.tgChatId);
@@ -1285,12 +1184,12 @@
         function renderNotifications() {
             const container = document.getElementById('notification-list-container');
             if (allUserNotifications.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-xs text-gray-400 font-bold bg-white rounded-2xl border">কোনো নোটিফিকেশন নেই</div>`;
+                container.innerHTML = `<div class="p-6 text-center text-xs text-gray-400 font-bold">কোনো নোটিফিকেশন নেই</div>`;
                 return;
             }
 
             container.innerHTML = allUserNotifications.map(n => `
-                <div class="bg-white p-4 rounded-2xl border border-gray-200 text-left space-y-1.5 shadow-xs">
+                <div class="bg-blue-50/70 p-3.5 rounded-2xl border border-blue-100 text-left space-y-1 shadow-2xs">
                     <div class="flex justify-between items-center">
                         <h4 class="font-bold text-xs text-blue-950 flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-blue-600"></span>
@@ -1298,7 +1197,7 @@
                         </h4>
                         <span class="text-[10px] text-gray-400 font-semibold">${n.timeStr}</span>
                     </div>
-                    <p class="text-xs text-gray-600 leading-relaxed pl-3.5 whitespace-pre-line">${n.message}</p>
+                    <p class="text-xs text-gray-600 leading-relaxed pl-3.5">${n.message}</p>
                 </div>
             `).join('');
             lucide.createIcons();
@@ -1410,55 +1309,7 @@
             }
         };
 
-        // --- QUANTITY CONTROLS FOR INSTANT PRODUCTS ---
-        window.changeCardQty = function(idx, delta, stock, unitPrice) {
-            const input = document.getElementById(`card-qty-input-${idx}`);
-            if (!input) return;
-
-            let currentQty = parseInt(input.value) || 1;
-            let newQty = currentQty + delta;
-            
-            const userBal = userData?.balance || 0;
-            const maxAffordable = Math.floor(userBal / unitPrice);
-            const maxAllowed = Math.min(stock, maxAffordable > 0 ? maxAffordable : 1);
-
-            if (newQty < 1) newQty = 1;
-            if (newQty > maxAllowed) {
-                newQty = maxAllowed;
-                if (maxAffordable < stock && newQty === maxAffordable) {
-                    showAlert('আপনার ব্যালেন্স অনুযায়ী সর্বোচ্চ পরিমাণ নির্বাচিত হয়েছে।');
-                }
-            }
-
-            input.value = newQty;
-            updateCardTotalPrice(idx, newQty, unitPrice);
-        };
-
-        window.handleCardQtyInput = function(idx, inputEl, stock, unitPrice) {
-            let val = parseInt(inputEl.value);
-            const userBal = userData?.balance || 0;
-            const maxAffordable = Math.floor(userBal / unitPrice);
-            const maxAllowed = Math.min(stock, maxAffordable > 0 ? maxAffordable : 1);
-
-            if (isNaN(val) || val < 1) {
-                val = 1;
-            } else if (val > maxAllowed) {
-                val = maxAllowed;
-                showAlert(`আপনি সর্বোচ্চ ${maxAllowed} টি আইটেম একসাথে কিনতে পারবেন (ব্যালেন্স ও স্টক সীমাবদ্ধতা)।`);
-            }
-            inputEl.value = val;
-            updateCardTotalPrice(idx, val, unitPrice);
-        };
-
-        function updateCardTotalPrice(idx, qty, unitPrice) {
-            const totalEl = document.getElementById(`card-total-price-${idx}`);
-            if (totalEl) {
-                const total = (qty * unitPrice).toFixed(2);
-                totalEl.textContent = `৳${total}`;
-            }
-        }
-
-        // --- PRODUCT RENDERING (100% BLANK/HIDDEN STOCK WHEN hideStock: true) ---
+        // --- PRODUCT RENDERING WITH HIDE STOCK, API BUTTON & CUSTOM MANUAL ORDER ---
         async function renderProductsBySelection() {
             const container = document.getElementById('product-list-container');
             container.innerHTML = getLoadingHTML();
@@ -1486,23 +1337,20 @@
             container.innerHTML = filtered.map((item, idx) => {
                 const stock = stockCounts[idx] || 0;
                 const outOfStock = stock <= 0;
-                const unitPrice = parseFloat(item.priceBdt || 0);
-                const originalPrice = (unitPrice * 1.15).toFixed(2);
-                const currentPrice = unitPrice.toFixed(2);
+                const originalPrice = (parseFloat(item.priceBdt || 0) * 1.15).toFixed(2);
+                const currentPrice = parseFloat(item.priceBdt || 0).toFixed(2);
                 const detailsId = `card-details-${idx}`;
                 
+                // 1. Check API URL & State
                 const hasApi = !!(item.apiUrl && item.apiUrl.trim() !== '');
-                
-                // COMPLETELY HIDE STOCK: If true, nothing is rendered
+
+                // 2. Check Hide Stock Setting from Firebase
                 const isStockHidden = !!item.hideStock;
 
+                // 3. Check Manual Order Allowed & specific configurations per product
                 const isManualAllowed = item.allowManual === true;
                 const manualDuration = item.manualDurationMinutes || appConfig.manualOrderTimeoutMinutes || 30;
                 const manualPrice = item.manualPrice !== undefined ? item.manualPrice : item.priceBdt;
-
-                const userBal = userData?.balance || 0;
-                const maxAffordable = Math.floor(userBal / unitPrice);
-                const maxQtyLimit = Math.min(stock, maxAffordable > 0 ? maxAffordable : 1);
 
                 return `
                 <div class="product-card p-4 space-y-3">
@@ -1532,34 +1380,14 @@
                         ${item.details ? item.details.replace(/\n/g, '<br>') : 'এই প্রোডাক্টের জন্য কোনো অতিরিক্ত বিবরণ দেওয়া হয়নি।'}
                     </div>
 
-                    <!-- QUANTITY SELECTION BAR -->
-                    ${!outOfStock ? `
-                        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-gray-600">পরিমাণ:</span>
-                                <div class="flex items-center gap-1 bg-white border border-gray-200 rounded-lg p-0.5">
-                                    <button type="button" class="qty-btn" onclick="changeCardQty(${idx}, -1, ${stock}, ${unitPrice})">-</button>
-                                    <input id="card-qty-input-${idx}" type="number" value="1" min="1" max="${maxQtyLimit}" oninput="handleCardQtyInput(${idx}, this, ${stock}, ${unitPrice})" class="w-10 text-center font-black text-xs bg-transparent focus:outline-none">
-                                    <button type="button" class="qty-btn" onclick="changeCardQty(${idx}, 1, ${stock}, ${unitPrice})">+</button>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-[10px] text-gray-400 block font-semibold">Total:</span>
-                                <span id="card-total-price-${idx}" class="font-black text-blue-700 text-xs">৳${currentPrice}</span>
-                            </div>
-                        </div>
-                    ` : ''}
-
                     <div class="flex items-center justify-between pt-2 border-t border-gray-100 text-xs">
                         <div class="flex items-center gap-2">
-                            <!-- Stock display logic: 100% hidden and blank if isStockHidden is true -->
-                            ${isStockHidden ? '' : `
-                                <span class="font-semibold ${outOfStock ? 'text-orange-500' : 'text-emerald-600'}">
-                                    Stock: <b>${stock}</b>
-                                </span>
-                            `}
+                            <!-- Stock display logic (hides count if hideStock: true) -->
+                            <span class="font-semibold ${outOfStock ? 'text-orange-500' : 'text-emerald-600'}">
+                                ${isStockHidden ? (outOfStock ? 'Stock: <b>Restocking</b>' : 'Stock: <b>Available</b>') : `Stock: <b>${stock}</b>`}
+                            </span>
 
-                            <!-- API Button -->
+                            <!-- API Button (Active Green if URL exists, Disabled Gray if not) -->
                             ${hasApi ? `
                                 <a href="${item.apiUrl}" target="_blank" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm flex items-center gap-1 transition">
                                     <i data-lucide="code" class="w-3 h-3"></i> API
@@ -1574,7 +1402,7 @@
                         ${!outOfStock ? `
                             <button id="buy-btn-${idx}" 
                                     class="btn-buy px-5 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5" 
-                                    onclick="buyItem('${item.type}', ${item.priceBdt}, '${item.stockKey}', '${item.category || 'service'}', 'buy-btn-${idx}', ${idx})">
+                                    onclick="buyItem('${item.type}', ${item.priceBdt}, '${item.stockKey}', '${item.category || 'service'}', 'buy-btn-${idx}')">
                                 <span>Buy Now</span>
                             </button>
                         ` : isManualAllowed ? `
@@ -1594,14 +1422,9 @@
             lucide.createIcons();
         }
 
-        // --- BUY ITEM WITH QUANTITY ---
-        window.buyItem = async function(mailType, costParam, stockKey, pageType, btnId, idx) {
-            const unitCost = parseFloat(costParam);
-            const qtyInput = document.getElementById(`card-qty-input-${idx}`);
-            const quantity = qtyInput ? parseInt(qtyInput.value) || 1 : 1;
-            const totalCost = unitCost * quantity;
-
-            if (!confirm(`আপনি কি ৳${totalCost.toFixed(2)} দিয়ে মোট ${quantity} টি ${mailType} কিনতে চান?`)) return;
+        window.buyItem = async function(mailType, costParam, stockKey, pageType, btnId) {
+            const cost = parseFloat(costParam);
+            if (!confirm(`আপনি কি ৳${cost.toFixed(2)} দিয়ে ${mailType} কিনতে চান?`)) return;
 
             const btn = document.getElementById(btnId);
             let originalBtnHtml = '';
@@ -1612,79 +1435,50 @@
             }
 
             try {
-                const itemQuery = query(collection(db, stockKey), where("isSold", "==", false), limit(quantity));
+                const itemQuery = query(collection(db, stockKey), where("isSold", "==", false), limit(1));
                 const itemQuerySnapshot = await getDocs(itemQuery);
 
-                if (itemQuerySnapshot.empty || itemQuerySnapshot.docs.length < quantity) {
-                    throw new Error(`দুঃখিত, পর্যাপ্ত স্টক নেই! বর্তমানে মাত্র ${itemQuerySnapshot.docs.length} টি স্টক রয়েছে।`);
+                if (itemQuerySnapshot.empty) {
+                    throw new Error("দুঃখিত, স্টক শেষ! আপনি 'Order Now' দিয়ে প্রি-অর্ডার করতে পারেন।");
                 }
 
-                const itemsToPurchase = itemQuerySnapshot.docs;
-                const buyerId = String(userData.tgChatId);
+                const itemDocToPurchase = itemQuerySnapshot.docs[0];
+                const itemData = itemDocToPurchase.data();
 
                 await runTransaction(db, async (transaction) => {
-                    const buyerRef = doc(db, "users", buyerId);
+                    const buyerRef = doc(db, "users", String(userData.tgChatId));
                     const counterRef = doc(db, "counters", "item_purchase");
                     const buyerSnap = await transaction.get(buyerRef);
                     
-                    if (!buyerSnap.exists() || buyerSnap.data().balance < totalCost) {
+                    if (!buyerSnap.exists() || buyerSnap.data().balance < cost) {
                         throw new Error("আপনার পর্যাপ্ত ব্যালেন্স নেই। ডিপোজিট করুন।");
                     }
 
                     const counterSnap = await transaction.get(counterRef);
-                    let saleId = counterSnap.exists() ? counterSnap.data().currentId : 1000;
+                    const saleId = counterSnap.exists() ? counterSnap.data().currentId : 1000;
 
-                    transaction.update(buyerRef, { balance: buyerSnap.data().balance - totalCost });
-
-                    itemsToPurchase.forEach((itemDoc) => {
-                        const itemData = itemDoc.data();
-                        transaction.update(itemDoc.ref, { 
-                            isSold: true, 
-                            soldTo: buyerId, 
-                            soldAt: serverTimestamp() 
-                        });
-
-                        const purchaseLogRef = doc(collection(db, "purchases"));
-                        transaction.set(purchaseLogRef, {
-                            saleId: saleId,
-                            userId: buyerId,
-                            mailType: mailType,
-                            category: pageType,
-                            cost: unitCost,
-                            purchasedAt: serverTimestamp(),
-                            mail: itemData.email || itemData.ip || itemData.data || 'N/A',
-                            password: itemData.password || null
-                        });
-                        saleId++;
+                    transaction.update(buyerRef, { balance: buyerSnap.data().balance - cost });
+                    transaction.update(itemDocToPurchase.ref, { isSold: true, soldTo: String(userData.tgChatId), soldAt: serverTimestamp() });
+                    
+                    const purchaseLogRef = doc(collection(db, "purchases"));
+                    transaction.set(purchaseLogRef, {
+                        saleId: saleId,
+                        userId: String(userData.tgChatId),
+                        mailType: mailType,
+                        category: pageType,
+                        cost: cost,
+                        purchasedAt: serverTimestamp(),
+                        mail: itemData.email || itemData.ip || itemData.data || 'N/A',
+                        password: itemData.password || null
                     });
-
-                    transaction.set(counterRef, { currentId: saleId }, { merge: true });
+                    transaction.set(counterRef, { currentId: saleId + 1 }, { merge: true });
                 });
 
-                const itemsContainer = document.getElementById('purchase-success-items-container');
-                itemsContainer.innerHTML = itemsToPurchase.map((docSnap) => {
-                    const data = docSnap.data();
-                    const email = data.email || data.ip || data.data || 'N/A';
-                    const pass = data.password || 'N/A';
-                    return `
-                    <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200 text-xs space-y-1">
-                        <div class="flex justify-between items-center">
-                            <span class="font-mono text-gray-800 truncate">${email}</span>
-                            <button onclick="copyToClipboard('${email}', this)" class="p-1 text-blue-600 hover:bg-blue-50 rounded"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
-                        </div>
-                        ${data.password ? `
-                            <div class="flex justify-between items-center border-t pt-1">
-                                <span class="font-mono text-gray-600">${pass}</span>
-                                <button onclick="copyToClipboard('${pass}', this)" class="p-1 text-blue-600 hover:bg-blue-50 rounded"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
-                            </div>
-                        ` : ''}
-                    </div>`;
-                }).join('');
-
-                document.getElementById('purchase-success-subtitle').textContent = `মোট ${quantity} টি আইটেম সফলভাবে যোগ হয়েছে!`;
+                document.getElementById('purchase-success-email').textContent = itemData.email || itemData.ip || itemData.data;
+                document.getElementById('purchase-success-password').textContent = itemData.password || 'N/A';
                 document.getElementById('purchase-success-modal').classList.remove('hidden');
 
-                const userSnap = await getDoc(doc(db, "users", buyerId));
+                const userSnap = await getDoc(doc(db, "users", String(userData.tgChatId)));
                 userData = userSnap.data();
                 updateUI();
                 renderProductsBySelection();
@@ -1700,71 +1494,19 @@
             }
         };
 
-        // --- MANUAL ORDER MODAL & QUANTITY ---
         window.openManualOrderModal = function(mailType, price, stockKey, category, customDuration) {
             const timeoutMinutes = customDuration || appConfig.manualOrderTimeoutMinutes || 30;
-            const unitPrice = parseFloat(price);
-            const userBal = userData?.balance || 0;
-            const maxAffordable = Math.floor(userBal / unitPrice);
-
-            pendingOrderToPlace = { 
-                mailType, 
-                unitPrice: unitPrice, 
-                stockKey, 
-                category, 
-                timeoutMinutes,
-                maxAllowed: maxAffordable > 0 ? maxAffordable : 1
-            };
+            pendingOrderToPlace = { mailType, price: parseFloat(price), stockKey, category, timeoutMinutes };
 
             document.getElementById('manual-modal-title').textContent = `${mailType} (Order Now)`;
-            document.getElementById('manual-modal-unit-price').textContent = `৳${unitPrice.toFixed(2)}`;
+            document.getElementById('manual-modal-price').textContent = `৳${parseFloat(price).toFixed(2)}`;
             document.getElementById('manual-modal-duration').textContent = `${timeoutMinutes} মিনিট`;
-            
-            const qtyInput = document.getElementById('manual-order-qty-input');
-            qtyInput.value = "1";
-            document.getElementById('manual-max-qty-hint').textContent = maxAffordable > 0 ? `ব্যালেন্স অনুযায়ী সর্বোচ্চ: ${maxAffordable} টি` : 'পর্যাপ্ত ব্যালেন্স নেই';
-            
-            updateManualModalTotal(1, unitPrice);
             document.getElementById('manual-order-modal').classList.remove('hidden');
         };
 
-        window.changeManualQty = function(delta) {
-            if (!pendingOrderToPlace) return;
-            const input = document.getElementById('manual-order-qty-input');
-            let current = parseInt(input.value) || 1;
-            let next = current + delta;
-
-            if (next < 1) next = 1;
-            if (next > pendingOrderToPlace.maxAllowed) {
-                next = pendingOrderToPlace.maxAllowed;
-                showAlert(`আপনার ব্যালেন্স অনুযায়ী সর্বোচ্চ ${pendingOrderToPlace.maxAllowed} টি প্রি-অর্ডার করতে পারবেন।`);
-            }
-            input.value = next;
-            updateManualModalTotal(next, pendingOrderToPlace.unitPrice);
-        };
-
-        window.handleManualQtyInput = function(inputEl) {
-            if (!pendingOrderToPlace) return;
-            let val = parseInt(inputEl.value);
-            if (isNaN(val) || val < 1) val = 1;
-            if (val > pendingOrderToPlace.maxAllowed) {
-                val = pendingOrderToPlace.maxAllowed;
-                showAlert(`আপনার ব্যালেন্স অনুযায়ী সর্বোচ্চ ${pendingOrderToPlace.maxAllowed} টি প্রি-অর্ডার করতে পারবেন।`);
-            }
-            inputEl.value = val;
-            updateManualModalTotal(val, pendingOrderToPlace.unitPrice);
-        };
-
-        function updateManualModalTotal(qty, unitPrice) {
-            const total = (qty * unitPrice).toFixed(2);
-            document.getElementById('manual-modal-price').textContent = `৳${total}`;
-        }
-
         async function handleConfirmManualOrder() {
             if (!pendingOrderToPlace) return;
-            const { mailType, unitPrice, stockKey, category, timeoutMinutes } = pendingOrderToPlace;
-            const qty = parseInt(document.getElementById('manual-order-qty-input').value) || 1;
-            const totalCost = unitPrice * qty;
+            const { mailType, price, stockKey, category, timeoutMinutes } = pendingOrderToPlace;
 
             const btn = document.getElementById('confirm-manual-order-btn');
             btn.disabled = true;
@@ -1775,11 +1517,11 @@
                     const buyerRef = doc(db, "users", String(userData.tgChatId));
                     const buyerSnap = await transaction.get(buyerRef);
                     
-                    if (!buyerSnap.exists() || buyerSnap.data().balance < totalCost) {
+                    if (!buyerSnap.exists() || buyerSnap.data().balance < price) {
                         throw new Error("আপনার পর্যাপ্ত ব্যালেন্স নেই। অনুগ্রহ করে ডিপোজিট করুন।");
                     }
 
-                    transaction.update(buyerRef, { balance: buyerSnap.data().balance - totalCost });
+                    transaction.update(buyerRef, { balance: buyerSnap.data().balance - price });
 
                     const expiryDate = new Date(Date.now() + timeoutMinutes * 60 * 1000);
                     const manualOrderRef = doc(collection(db, "manual_orders"));
@@ -1789,9 +1531,7 @@
                         userName: userData.name || 'User',
                         mailType: mailType,
                         category: category,
-                        quantity: qty,
-                        unitPrice: unitPrice,
-                        cost: totalCost,
+                        cost: price,
                         status: "pending",
                         createdAt: serverTimestamp(),
                         expiresAt: Timestamp.fromDate(expiryDate),
@@ -1799,11 +1539,11 @@
                     });
                 });
 
-                const adminAlert = `⚡ <b>নতুন ম্যানুয়াল অর্ডার এসেছে!</b>\n\n👤 <b>ইউজার:</b> ${userData.name} (<code>${userData.tgChatId}</code>)\n📦 <b>সার্ভিস:</b> ${mailType}\n🔢 <b>পরিমাণ:</b> ${qty} টি\n💰 <b>মোট মূল্য:</b> ৳${totalCost.toFixed(2)}\n⏳ <b>সময়সীমা:</b> ${timeoutMinutes} মিনিট`;
+                const adminAlert = `⚡ <b>নতুন ম্যানুয়াল অর্ডার এসেছে!</b>\n\n👤 <b>ইউজার:</b> ${userData.name} (<code>${userData.tgChatId}</code>)\n📦 <b>সার্ভিস:</b> ${mailType}\n💰 <b>মূল্য:</b> ৳${price}\n⏳ <b>সময়সীমা:</b> ${timeoutMinutes} মিনিট`;
                 await notifyAdminViaTelegram(adminAlert);
 
                 document.getElementById('manual-order-modal').classList.add('hidden');
-                showAlert(`আপনার ${mailType} (${qty} টি) অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে!`);
+                showAlert(`আপনার ${mailType} অর্ডারটি গ্রহণ করা হয়েছে!`);
                 
                 const userSnap = await getDoc(doc(db, "users", String(userData.tgChatId)));
                 userData = userSnap.data();
@@ -1864,7 +1604,6 @@
             }
         }
 
-        // --- 2% SERVICE CHARGE FOR BALANCE SEND ---
         async function handleSendBalance() {
             const recipientId = document.getElementById('send-recipient-id').value.trim();
             const amount = parseFloat(document.getElementById('send-amount').value);
@@ -1876,10 +1615,8 @@
                 return showAlert("নিজের অ্যাকাউন্টে ব্যালেন্স পাঠানো যাবে না।");
             }
 
-            const charge = amount * 0.02; // 2% Charge
-            const totalCost = amount + charge;
-
-            if (!confirm(`২% চার্জসহ (৳${charge.toFixed(2)}) মোট ৳${totalCost.toFixed(2)} কাটা হবে। আপনি কি নিশ্চিত?`)) return;
+            const totalCost = amount * 1.05;
+            if (!confirm(`৫% চার্জসহ মোট ৳${totalCost.toFixed(2)} কাটা হবে। আপনি কি নিশ্চিত?`)) return;
 
             const btn = document.getElementById('submit-send-btn');
             btn.disabled = true;
@@ -1908,7 +1645,7 @@
                         fromId: String(userData.tgChatId),
                         toId: String(recipientId),
                         amount: amount,
-                        charge: charge,
+                        charge: totalCost - amount,
                         createdAt: serverTimestamp()
                     });
                 });
@@ -2041,12 +1778,11 @@
                 list.innerHTML = docs.map(p => {
                     const expiryMillis = p.expiresAt ? p.expiresAt.toDate().getTime() : 0;
                     const isPending = p.status === 'pending';
-                    const qty = p.quantity || 1;
 
                     return `
                     <div class="bg-white p-3.5 rounded-xl border border-gray-200 flex justify-between items-center text-xs shadow-sm">
                         <div>
-                            <p class="font-bold text-gray-800">${p.mailType} ${qty > 1 ? `(${qty} টি)` : ''} - ৳${p.cost}</p>
+                            <p class="font-bold text-gray-800">${p.mailType} (৳${p.cost})</p>
                             ${isPending ? `
                                 <div class="flex items-center gap-1 mt-0.5 text-[11px] text-gray-500">
                                     <span>Time Remaining:</span>
@@ -2187,24 +1923,23 @@
                     const po = docSnap.data();
                     const poId = docSnap.id;
                     const expiryMillis = po.expiresAt ? po.expiresAt.toDate().getTime() : 0;
-                    const qty = po.quantity || 1;
 
                     return `
                     <div class="bg-orange-50/70 p-3.5 rounded-2xl border border-orange-200 space-y-2 text-xs">
                         <div class="flex justify-between items-center font-bold">
-                            <span class="text-gray-800">${po.mailType} (${qty} টি) - ৳${po.cost}</span>
+                            <span class="text-gray-800">${po.mailType} - ৳${po.cost}</span>
                             <span class="live-order-countdown bg-orange-200/80 px-2 py-0.5 rounded-md" data-order-id="${poId}" data-expiry-time="${expiryMillis}">Calculating...</span>
                         </div>
                         <p class="text-gray-600 text-[11px]">User: <b>${po.userName}</b> (TG ID: <code>${po.userId}</code>)</p>
                         
                         <div class="space-y-1.5 pt-1">
-                            <textarea id="admin-manual-data-${poId}" rows="2" placeholder="Email / Accounts Info (One per line if multiple)" class="w-full p-2 rounded-xl input-field text-xs font-mono"></textarea>
+                            <input id="admin-manual-data-${poId}" type="text" placeholder="Email / IP / Account Info" class="w-full p-2 rounded-xl input-field text-xs">
                             <input id="admin-manual-pass-${poId}" type="text" placeholder="Password / Key (Optional)" class="w-full p-2 rounded-xl input-field text-xs">
                         </div>
 
                         <div class="flex justify-end gap-2 pt-1">
                             <button onclick="handleAdminCancelManualOrder('${poId}', '${po.userId}', ${po.cost}, '${po.mailType}')" class="bg-red-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs">Reject & Refund</button>
-                            <button onclick="handleAdminApproveManualOrder('${poId}', '${po.userId}', ${po.cost}, '${po.mailType}', ${qty})" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
+                            <button onclick="handleAdminApproveManualOrder('${poId}', '${po.userId}', ${po.cost}, '${po.mailType}')" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
                                 <i data-lucide="send" class="w-3.5 h-3.5"></i> Deliver via Bot
                             </button>
                         </div>
@@ -2216,7 +1951,7 @@
             }
         }
 
-        window.handleAdminApproveManualOrder = async function(orderId, userId, cost, mailType, qty = 1) {
+        window.handleAdminApproveManualOrder = async function(orderId, userId, cost, mailType) {
             const accData = document.getElementById(`admin-manual-data-${orderId}`)?.value.trim();
             const accPass = document.getElementById(`admin-manual-pass-${orderId}`)?.value.trim() || '';
 
@@ -2237,7 +1972,6 @@
                         userId: String(userId),
                         mailType: mailType,
                         category: "manual_order",
-                        quantity: qty,
                         cost: parseFloat(cost),
                         purchasedAt: serverTimestamp(),
                         mail: accData,
@@ -2246,7 +1980,7 @@
                     t.set(counterRef, { currentId: saleId + 1 }, { merge: true });
                 });
 
-                const botMsg = `🎉 <b>আপনার প্রি-অর্ডার ডেলিভারি সম্পন্ন হয়েছে!</b>\n\n📦 <b>সার্ভিস:</b> ${mailType} (${qty} টি)\n💰 <b>মূল্য:</b> ৳${cost}\n\n🔑 <b>অ্যাকাউন্ট ডাটা:</b>\n<code>${accData}</code>\n${accPass ? `🔒 <b>পাসওয়ার্ড:</b> <code>${accPass}</code>\n` : ''}`;
+                const botMsg = `🎉 <b>আপনার অর্ডার সফলভাবে ডেলিভারি হয়েছে!</b>\n\n📦 <b>সার্ভিস:</b> ${mailType}\n💰 <b>মূল্য:</b> ৳${cost}\n\n🔑 <b>অ্যাকাউন্ট ডাটা:</b>\n<code>${accData}</code>\n${accPass ? `🔒 <b>পাসওয়ার্ড:</b> <code>${accPass}</code>\n` : ''}`;
                 await sendTelegramMessage(userId, botMsg);
 
                 showAlert("অর্ডার ডেলিভারি করা হয়েছে!");

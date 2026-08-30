@@ -1,467 +1,96 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Social Smm Shop - Payment & Auth</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+export default async function handler(req, res) {
+  // CORS Setup
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, api-key, API-KEY, Authorization'
+  );
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
-    <style>
-        :root {
-            --theme-color: #e2136e; 
-            --brand-purple: #7854f7;
-            --brand-blue: #3b5bfd;
-            --text-dark: #1e293b;
-            --text-gray: #64748b;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 16px 10px; }
-        .payment-modal { width: 100%; max-width: 395px; background: #ffffff; border-radius: 24px; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.2); overflow: hidden; position: relative; min-height: 650px; display: flex; flex-direction: column; }
-        .step-container { display: none; flex-direction: column; width: 100%; height: 100%; animation: fadeIn 0.25s ease-in-out; flex: 1; }
-        .step-container.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .auth-container { padding: 30px 24px; display: flex; flex-direction: column; justify-content: center; flex: 1; }
-        .auth-title { font-size: 24px; font-weight: 800; color: var(--text-dark); text-align: center; margin-bottom: 6px; }
-        .auth-sub { font-size: 13.5px; color: var(--text-gray); text-align: center; margin-bottom: 24px; }
-        .auth-form-group { margin-bottom: 14px; text-align: left; }
-        .auth-form-group label { display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px; }
-        .auth-input { width: 100%; padding: 13px 16px; font-size: 14.5px; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: 0.2s; }
-        .auth-input:focus { border-color: var(--brand-purple); box-shadow: 0 0 0 3px rgba(120, 84, 247, 0.15); }
-        .auth-toggle-link { text-align: center; margin-top: 18px; font-size: 13.5px; color: var(--text-gray); }
-        .auth-toggle-link span { color: var(--brand-purple); font-weight: 700; cursor: pointer; text-decoration: underline; }
+  // NagorikPay API কনফিগারেশন
+  const API_KEY = 'gnXi7etgWNhFyFGZFrOMYyrmnF4A1eGU5SC2QRmUvILOlNc2Ef'.trim();
+  const BASE_URL = 'https://secure-pay.nagorikpay.com/api/payment';
+  
+  const action = req.query.action;
 
-        .landing-header { width: 100%; background: #ffffff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
-        .header-balance-box { display: flex; flex-direction: column; }
-        .header-balance-box .b-title { font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; }
-        .header-balance-box .b-val { font-size: 18px; font-weight: 800; color: #10b981; }
-        .header-right-actions { display: flex; align-items: center; gap: 8px; }
-        .header-icon-btn { width: 38px; height: 38px; border-radius: 50%; background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; font-size: 15px; }
-        .header-icon-btn .notif-dot { position: absolute; top: 8px; right: 9px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: none; } 
-
-        .step-1-content { padding: 20px 24px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; }
-        .main-avatar-wrap { width: 90px; height: 90px; border-radius: 24px; background: #050b14; border: 2.5px solid #38bdf8; box-shadow: 0 10px 25px rgba(56, 189, 248, 0.35); overflow: hidden; margin-bottom: 14px; display: flex; align-items: center; justify-content: center; }
-        .main-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
-        .shop-heading { font-size: 22px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; }
-        .user-email-badge { font-size: 12px; color: var(--brand-purple); font-weight: 700; background: #f5f3ff; padding: 4px 10px; border-radius: 20px; margin-top: 4px; }
-        .line-sep { width: 100%; height: 1px; background: #f1f5f9; margin: 14px 0; }
-        .note-card { background-color: #fffdf0; border-left: 4.5px solid #f59e0b; border-radius: 6px 14px 14px 6px; padding: 12px 14px; text-align: left; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.06); }
-        .note-card h5 { color: #92400e; font-size: 13.5px; font-weight: 700; margin-bottom: 4px; }
-        .note-card p { font-size: 12px; color: #78350f; line-height: 1.4; }
-        .input-box-wrap { width: 100%; text-align: left; margin-bottom: 16px; }
-        .input-box-wrap label { display: block; font-size: 13.5px; font-weight: 700; color: #334155; margin-bottom: 6px; }
-        .amount-field { width: 100%; padding: 12px 16px; font-size: 16.5px; font-weight: 700; color: #1e293b; border: 2px solid #60a5fa; border-radius: 14px; outline: none; transition: all 0.2s ease; text-align: center; }
-        .amount-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
-        .btn-continue-gradient { width: 100%; background: linear-gradient(135deg, var(--brand-purple) 0%, #4f46e5 100%); color: #ffffff; border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(120, 84, 247, 0.35); transition: 0.2s transform; margin-top: auto;}
-
-        .success-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
-        .success-icon { font-size: 65px; color: #10b981; margin-bottom: 12px; animation: scaleIn 0.4s ease-out; }
-        .success-title { font-size: 22px; font-weight: 800; color: #1e293b; margin-bottom: 6px; }
-        .success-msg { font-size: 14.5px; color: #64748b; margin-bottom: 24px; line-height: 1.5; }
-        .txid-box { background: #f8fafc; padding: 16px 20px; border-radius: 12px; border: 1px dashed #cbd5e1; font-size: 15px; color: #334155; margin-bottom: 28px; width: 100%; text-align: left; }
-        .txid-box div { margin-bottom: 8px; }
-        .txid-box span { font-weight: 700; color: var(--text-dark); }
-        .txid-box .highlight-txid { color: var(--brand-purple); font-family: monospace; font-size: 16px; }
-        @keyframes scaleIn { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
-
-        .toast-popup { position: absolute; top: 20px; left: 50%; transform: translateX(-50%) translateY(-30px); background: #1e293b; color: #ffffff; padding: 12px 20px; border-radius: 20px; font-size: 13.5px; font-weight: 600; opacity: 0; pointer-events: none; transition: 0.3s all; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); width: 85%; text-align: center; line-height: 1.4;}
-        .toast-popup.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-        .notif-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; flex-direction: column; justify-content: flex-end; opacity: 0; transition: 0.3s opacity; }
-        .notif-overlay.show { display: flex; opacity: 1; }
-        .notif-modal-content { background: #ffffff; width: 100%; height: 80%; border-radius: 24px 24px 0 0; display: flex; flex-direction: column; transform: translateY(100%); transition: 0.3s transform; }
-        .notif-overlay.show .notif-modal-content { transform: translateY(0); }
-        .notif-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f1f5f9; }
-        .notif-header h3 { font-size: 18px; font-weight: 700; color: #1e293b; }
-        .notif-header button { background: none; border: none; font-size: 20px; color: #64748b; cursor: pointer; }
-        .notif-list { padding: 16px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; flex: 1; }
-        .notif-item { padding: 14px; border-radius: 12px; background: #f8fafc; border-left: 4px solid var(--text-gray); font-size: 14px; color: #334155; line-height: 1.5; }
-        .notif-item.unread { font-weight: 700; background: #f0fdf4; border-left-color: #10b981; }
-        .notif-time { font-size: 11.5px; color: #94a3b8; margin-top: 6px; display: block; font-weight: 500;}
-    </style>
-</head>
-<body>
-
-<div class="payment-modal">
-    <div id="toastNotification" class="toast-popup"></div>
-
-    <div id="notifModal" class="notif-overlay">
-        <div class="notif-modal-content">
-            <div class="notif-header">
-                <h3>নোটিফিকেশন</h3>
-                <button onclick="closeNotifModal()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div id="notifList" class="notif-list"></div>
-        </div>
-    </div>
-
-    <!-- AUTH -->
-    <div id="step-auth" class="step-container">
-        <div class="auth-container">
-            <h2 class="auth-title" id="authTitle">লগইন করুন</h2>
-            <p class="auth-sub" id="authSub">ডিপোজিট সম্পন্ন করতে একাউন্টে প্রবেশ করুন</p>
-            
-            <div class="auth-form-group">
-                <label>Email Address</label>
-                <input type="email" id="authEmail" class="auth-input" placeholder="example@mail.com">
-            </div>
-            <div class="auth-form-group">
-                <label>Password</label>
-                <input type="password" id="authPassword" class="auth-input" placeholder="••••••••">
-            </div>
-
-            <button class="btn-continue-gradient" id="btnAuthSubmit" onclick="handleAuthAction()" style="margin-top: 10px;">
-                Login
-            </button>
-            <div class="auth-toggle-link">
-                <span id="authToggleText" onclick="toggleAuthMode()">নতুন একাউন্ট তৈরি করুন</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN DASHBOARD -->
-    <div id="step-1" class="step-container active">
-        <div class="landing-header">
-            <div class="header-balance-box">
-                <span class="b-title">Current Balance</span>
-                <span class="b-val" id="userBalanceDisplay">0.00 BDT</span>
-            </div>
-            <div class="header-right-actions">
-                <div class="header-icon-btn" onclick="openNotifModal()" title="Notifications">
-                    <i class="fa-regular fa-bell"></i>
-                    <span class="notif-dot"></span>
-                </div>
-                <div class="header-icon-btn" onclick="logoutUser()" title="Logout">
-                    <i class="fa-solid fa-right-from-bracket" style="color: #ef4444;"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="step-1-content">
-            <div class="main-avatar-wrap">
-                <img src="https://i.ibb.co/r2q5RcBg/x.jpg" alt="Logo" onerror="this.src='https://via.placeholder.com/110'">
-            </div>
-            
-            <h2 class="shop-heading">Social Smm Shop</h2>
-            <div class="user-email-badge" id="userEmailBadge">user@mail.com</div>
-            <div class="line-sep"></div>
-            <div class="note-card">
-                <h5>Payment Note</h5>
-                <p>নিরাপদ পেমেন্ট সম্পন্ন করতে টাকার পরিমাণ লিখে Continue বাটনে ক্লিক করুন। বিকাশ, নগদ ও রকেটের মাধ্যমে ইনস্ট্যান্ট পেমেন্ট করা যাবে।</p>
-            </div>
-
-            <div class="input-box-wrap">
-                <label for="amountInput">আপনি কত টাকা ডিপোজিট করতে চান লিখুন</label>
-                <input type="number" id="amountInput" class="amount-field" value="500" placeholder="500" min="10">
-            </div>
-
-            <button id="btnPayGateway" class="btn-continue-gradient" onclick="initiatePayment()">
-                <i class="fa-solid fa-lock" style="color: #facc15;"></i> Continue to Payment
-            </button>
-        </div>
-    </div>
-
-    <!-- SUCCESS -->
-    <div id="step-5" class="step-container">
-        <div class="success-wrapper">
-            <i class="fa-solid fa-circle-check success-icon"></i>
-            <h3 style="color: #10b981; font-size: 18px; font-weight: 700; margin-bottom: 4px;">পেমেন্ট সফলভাবে রিসিভ হয়েছে!</h3>
-            <h2 class="success-title">Payment Successful!</h2>
-            <p class="success-msg">Your transaction has been verified automatically and balance updated.</p>
-            
-            <div class="txid-box">
-                <div>TXID : <span class="highlight-txid" id="displayTxid"></span></div>
-                <div>Amount : <span id="displayAmount"></span></div>
-            </div>
-            
-            <button class="btn-continue-gradient" onclick="changeStep(1)">
-                Return to Shop
-            </button>
-        </div>
-    </div>
-
-<script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAEV4zkuTcRYIFP2AMmKJTyDUTzSYLnbbM",
-      authDomain: "used-mail-shop.firebaseapp.com",
-      databaseURL: "https://used-mail-shop-default-rtdb.firebaseio.com",
-      projectId: "used-mail-shop",
-      storageBucket: "used-mail-shop.firebasestorage.app",
-      messagingSenderId: "251382358623",
-      appId: "1:251382358623:web:a567a9349d1fd87277b1ea"
-    };
-
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+  let body = req.body;
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch (e) {
+      body = {};
     }
-    const auth = firebase.auth();
-    const database = firebase.database();
+  }
+  body = body || {};
 
-    let currentUser = null;
-    let isRegisterMode = false;
+  try {
+    // ১. পেমেন্ট তৈরি (Create)
+    if (action === 'create') {
+      const amountVal = parseFloat(body.amount) || 10;
+      const successUrl = body.success_url || body.redirect_url;
+      const cancelUrl = body.cancel_url || successUrl;
+      const webhookUrl = body.webhook_url || successUrl;
 
-    function toggleAuthMode() {
-        isRegisterMode = !isRegisterMode;
-        document.getElementById('authTitle').textContent = isRegisterMode ? "একাউন্ট খুলুন" : "লগইন করুন";
-        document.getElementById('authSub').textContent = isRegisterMode ? "আপনার ইমেইল ও পাসওয়ার্ড দিয়ে রেজিস্টার করুন" : "ডিপোজিট সম্পন্ন করতে একাউন্টে প্রবেশ করুন";
-        document.getElementById('btnAuthSubmit').textContent = isRegisterMode ? "Register" : "Login";
-        document.getElementById('authToggleText').textContent = isRegisterMode ? "আগে থেকেই একাউন্ট আছে? লগইন করুন" : "নতুন একাউন্ট তৈরি করুন";
-    }
-
-    function handleAuthAction() {
-        const email = document.getElementById('authEmail').value.trim();
-        const password = document.getElementById('authPassword').value.trim();
-
-        if(!email || !password) return showToastPopup('ইমেইল ও পাসওয়ার্ড প্রদান করুন');
-
-        const btn = document.getElementById('btnAuthSubmit');
-        const originalText = btn.textContent;
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
-        btn.disabled = true;
-
-        if (isRegisterMode) {
-            auth.createUserWithEmailAndPassword(email, password).then(userCredential => {
-                database.ref(`users/${userCredential.user.uid}`).set({ email: email, balance: 0, createdAt: firebase.database.ServerValue.TIMESTAMP });
-                showToastPopup('একাউন্ট তৈরি হয়েছে!');
-                btn.innerHTML = originalText; btn.disabled = false;
-            }).catch(err => { showToastPopup(err.message); btn.innerHTML = originalText; btn.disabled = false; });
-        } else {
-            auth.signInWithEmailAndPassword(email, password).catch(err => { showToastPopup('লগইন ব্যর্থ হয়েছে।'); btn.innerHTML = originalText; btn.disabled = false; });
+      const payload = {
+        amount: String(amountVal),
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        webhook_url: webhookUrl,
+        metadata: body.metadata || {
+          phone: body.cus_phone || "01700000000"
         }
-    }
+      };
 
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            currentUser = user;
-            document.getElementById('userEmailBadge').textContent = user.email;
-            listenUserData(user.uid);
-            listenForNotifications(user.uid); 
-            
-            changeStep(1); 
-            checkReturnPaymentStatus(); 
-        } else {
-            currentUser = null;
-            changeStep('auth');
-        }
-    });
+      if (body.cus_name) payload.cus_name = body.cus_name;
+      if (body.cus_email) payload.cus_email = body.cus_email;
 
-    function listenUserData(uid) {
-        database.ref(`users/${uid}/balance`).on('value', snapshot => {
-            const balance = snapshot.val() || 0;
-            document.getElementById('userBalanceDisplay').textContent = `${parseFloat(balance).toFixed(2)} BDT`;
+      const response = await fetch(`${BASE_URL}/create`, {
+        method: 'POST',
+        headers: {
+          'API-KEY': API_KEY,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await response.json();
+      return res.status(200).json(data);
+
+    // ২. পেমেন্ট ভেরিফিকেশন (Verify)
+    } else if (action === 'verify') {
+      const trxId = body.transaction_id || body.trx_id || body.order_id;
+
+      if (!trxId) {
+        return res.status(400).json({ 
+          status: 'ERROR', 
+          message: 'Transaction ID is required for verification' 
         });
+      }
+
+      const response = await fetch(`${BASE_URL}/verify`, {
+        method: 'POST',
+        headers: {
+          'API-KEY': API_KEY,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ transaction_id: trxId })
+      });
+      
+      const data = await response.json();
+      return res.status(200).json(data);
+
+    } else {
+      return res.status(400).json({ error: 'Invalid Action. Use ?action=create or ?action=verify' });
     }
-
-    // NagorikPay Direct & Serverless Handling
-    async function initiatePayment() {
-        if (!currentUser) return showToastPopup('প্রথমে লগইন করুন');
-        const amount = document.getElementById('amountInput').value.trim();
-        if (!amount || parseFloat(amount) <= 0) return showToastPopup('সঠিক এমাউন্ট লিখুন');
-
-        const btn = document.getElementById('btnPayGateway');
-        btn.disabled = true; 
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
-
-        const baseUrl = window.location.origin;
-
-        // NagorikPay API Documentation Required Fields
-        const payload = {
-            cus_name: currentUser.email ? currentUser.email.split('@')[0] : "Customer",
-            cus_email: currentUser.email,
-            amount: String(amount),
-            success_url: baseUrl + "/?status=success",
-            cancel_url: baseUrl + "/?status=cancel",
-            webhook_url: baseUrl + "/api/webhook",
-            metadata: {
-                uid: currentUser.uid,
-                phone: currentUser.email
-            }
-        };
-
-        try {
-            // ১. প্রথম চেষ্টা: Vercel/Backend Endpoint এর মাধ্যমে
-            let res = await fetch('/api/payment?action=create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            let data;
-            if (res.ok) {
-                data = await res.json();
-            } else {
-                // ২. ব্যাকএন্ড না থাকলে সরাসরি NagorikPay API-তে কল পাঠানো
-                const directRes = await fetch('https://secure-pay.nagorikpay.com/api/payment/create', {
-                    method: 'POST',
-                    headers: {
-                        'API-KEY': 'gnXi7etgWNhFyFGZFrOMYyrmnF4A1eGU5SC2QRmUvILOlNc2Ef',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-                data = await directRes.json();
-            }
-
-            let payUrl = data.payment_url || data.url || (data.data && data.data.payment_url) || (data.data && data.data.url);
-
-            if (payUrl) {
-                window.location.href = payUrl;
-            } else {
-                showToastPopup(data.message || 'পেমেন্ট গেটওয়েতে সমস্যা হচ্ছে!');
-                btn.disabled = false; 
-                btn.innerHTML = '<i class="fa-solid fa-lock" style="color: #facc15;"></i> Continue to Payment';
-            }
-        } catch (err) {
-            console.error("Payment Error:", err);
-            showToastPopup('সার্ভার কানেকশন ব্যর্থ হয়েছে। API Key বা CORS চেক করুন।');
-            btn.disabled = false; 
-            btn.innerHTML = '<i class="fa-solid fa-lock" style="color: #facc15;"></i> Continue to Payment';
-        }
-    }
-
-    // NagorikPay Payment Verification
-    async function checkReturnPaymentStatus() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id') || urlParams.get('txid');
-        const urlStatus = urlParams.get('status');
-
-        if (transactionId || urlStatus === 'success') {
-            showToastPopup('পেমেন্ট ভেরিফাই করা হচ্ছে...');
-
-            try {
-                let verified = false;
-                let depositAmount = parseFloat(urlParams.get('paymentAmount') || 0);
-
-                // Verification Check
-                const res = await fetch('/api/payment?action=verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ transaction_id: transactionId })
-                }).catch(() => null);
-
-                if (res && res.ok) {
-                    const data = await res.json();
-                    if (data.status === true || data.status === "SUCCESS" || data.payment_status === "COMPLETED") {
-                        verified = true;
-                        depositAmount = parseFloat(data.amount || depositAmount);
-                    }
-                } else if (urlStatus === 'success') {
-                    // ব্যাকএন্ড ভেরিফিকেশন API না থাকলে ইউআরএল স্ট্যাটাস চেক
-                    verified = true;
-                }
-
-                if (verified && depositAmount > 0) {
-                    savePaymentAndUpdateBalance(depositAmount, transactionId || ("NP" + Date.now()), {});
-                    document.getElementById('displayTxid').textContent = transactionId || "SUCCESS";
-                    document.getElementById('displayAmount').textContent = depositAmount + " BDT";
-                    changeStep(5);
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                } else {
-                    showToastPopup('পেমেন্ট ভেরিফিকেশন সফল হয়নি');
-                }
-            } catch (e) {
-                showToastPopup('ভেরিফিকেশনে সমস্যা দেখা দিয়েছে');
-            }
-        }
-    }
-
-    function savePaymentAndUpdateBalance(depositAmount, txid, fullData) {
-        if (!currentUser) return;
-        const uid = currentUser.uid;
-
-        const txRef = database.ref(`users/${uid}/deposits/${txid}`);
-        txRef.once('value', snapshot => {
-            if (!snapshot.exists()) {
-                txRef.set({
-                    txid: txid,
-                    amount: depositAmount,
-                    gateway: 'NagorikPay',
-                    details: fullData,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                }).then(() => {
-                    database.ref(`users/${uid}/balance`).transaction(currentBalance => {
-                        return (currentBalance || 0) + depositAmount;
-                    });
-
-                    database.ref(`users/${uid}/notifications`).push({
-                        message: `অভিনন্দন! আপনার একাউন্টে ${depositAmount} BDT সফলভাবে অ্যাড হয়েছে। (TXID: ${txid})`,
-                        timestamp: firebase.database.ServerValue.TIMESTAMP,
-                        read: false
-                    });
-                });
-            }
-        });
-    }
-
-    function openNotifModal() {
-        document.getElementById('notifModal').classList.add('show');
-        loadNotificationsList();
-    }
-
-    function closeNotifModal() {
-        document.getElementById('notifModal').classList.remove('show');
-    }
-
-    function loadNotificationsList() {
-        if (!currentUser) return;
-        const uid = currentUser.uid;
-        const listDiv = document.getElementById('notifList');
-        listDiv.innerHTML = '<div style="text-align:center; padding: 20px; color:#64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
-        
-        database.ref(`users/${uid}/notifications`).orderByChild('timestamp').limitToLast(10).once('value', snapshot => {
-            listDiv.innerHTML = '';
-            if (snapshot.exists()) {
-                const notifs = [];
-                snapshot.forEach(child => { notifs.push({ id: child.key, ...child.val() }); });
-                notifs.reverse();
-                
-                notifs.forEach(data => {
-                    const div = document.createElement('div');
-                    div.className = `notif-item ${!data.read ? 'unread' : ''}`;
-                    const dateObj = new Date(data.timestamp);
-                    div.innerHTML = `${data.message} <span class="notif-time">${dateObj.toLocaleDateString()} - ${dateObj.toLocaleTimeString()}</span>`;
-                    listDiv.appendChild(div);
-                    if (!data.read) database.ref(`users/${uid}/notifications/${data.id}`).update({ read: true });
-                });
-            } else {
-                listDiv.innerHTML = '<div style="text-align:center; color:#64748b; font-size: 14px; margin-top:20px;">কোনো নোটিফিকেশন নেই</div>';
-            }
-        });
-    }
-
-    function listenForNotifications(uid) {
-        database.ref(`users/${uid}/notifications`).orderByChild('read').equalTo(false).on('value', snapshot => {
-            const dot = document.querySelector('.notif-dot');
-            if (dot) dot.style.display = snapshot.exists() ? 'block' : 'none';
-        });
-    }
-
-    function changeStep(stepId) {
-        document.querySelectorAll('.step-container').forEach(page => page.classList.remove('active'));
-        const targetElement = document.getElementById(`step-${stepId}`);
-        if (targetElement) targetElement.classList.add('active');
-    }
-
-    function showToastPopup(message) {
-        const toast = document.getElementById('toastNotification');
-        if(toast) {
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3500);
-        }
-    }
-
-    function logoutUser() {
-        auth.signOut().then(() => showToastPopup('লগআউট করা হয়েছে'));
-    }
-</script>
-</div>
-</body>    
-</html>
+  } catch (error) {
+    console.error("NagorikPay Gateway Error:", error);
+    return res.status(500).json({ error: error.message || 'Server Connection Error' });
+  }
+}

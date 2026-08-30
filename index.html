@@ -259,7 +259,7 @@
         });
     }
 
-    // NagorikPay Gateway - Payment Creation
+    // NagorikPay Payment Initiation
     async function initiatePayment() {
         if (!currentUser) return showToastPopup('প্রথমে লগইন করুন');
         const amount = document.getElementById('amountInput').value.trim();
@@ -269,7 +269,7 @@
         btn.disabled = true; 
         btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
 
-        const returnUrl = window.location.origin + window.location.pathname;
+        const returnUrl = window.location.href.split('?')[0];
 
         const payload = {
             amount: String(amount),
@@ -277,8 +277,7 @@
             cancel_url: returnUrl + "?status=cancel",
             webhook_url: returnUrl + "?status=webhook",
             metadata: {
-                uid: currentUser.uid,
-                phone: currentUser.email || "01700000000"
+                phone: "01700000000"
             }
         };
 
@@ -297,7 +296,7 @@
             if (payUrl) {
                 window.location.href = payUrl;
             } else {
-                showToastPopup(data.message || 'পেমেন্ট গেটওয়ে তৈরি করতে সমস্যা হচ্ছে!');
+                showToastPopup(data.message || data.error || 'পেমেন্ট গেটওয়েতে সমস্যা হচ্ছে!');
                 btn.disabled = false; 
                 btn.innerHTML = '<i class="fa-solid fa-lock" style="color: #facc15;"></i> Continue to Payment';
             }
@@ -308,7 +307,7 @@
         }
     }
 
-    // NagorikPay Gateway - Payment Verification
+    // NagorikPay Payment Verification
     async function checkReturnPaymentStatus() {
         const urlParams = new URLSearchParams(window.location.search);
         const transactionId = urlParams.get('transaction_id') || urlParams.get('transactionId') || urlParams.get('trx_id') || urlParams.get('txid');

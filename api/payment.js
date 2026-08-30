@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // NagorikPay API কনফিগারেশন
+  // 🔴 এখানে আপনার NagorikPay মার্চেন্ট ড্যাশবোর্ডের আসল API Key বসান
   const API_KEY = 'gnXi7etgWNhFyFGZFrOMYyrmnF4A1eGU5SC2QRmUvILOlNc2Ef'.trim();
   const BASE_URL = 'https://secure-pay.nagorikpay.com/api/payment';
   
@@ -29,30 +29,40 @@ export default async function handler(req, res) {
   body = body || {};
 
   try {
-    // ১. পেমেন্ট তৈরি (Create)
+    // ১. পেমেন্ট তৈরি (Create Payment)
     if (action === 'create') {
       const amountVal = parseFloat(body.amount) || 10;
-      const successUrl = body.success_url || body.redirect_url;
-      const cancelUrl = body.cancel_url || successUrl;
-      const webhookUrl = body.webhook_url || successUrl;
+      
+      // ডোমেন URL নিশ্চিতকরণ
+      const host = req.headers.host || 'yourdomain.com';
+      const protocol = req.headers['x-forwarded-proto'] || 'https';
+      const defaultUrl = `${protocol}://${host}`;
 
+      let successUrl = body.success_url || defaultUrl;
+      let cancelUrl = body.cancel_url || defaultUrl;
+      let webhookUrl = body.webhook_url || defaultUrl;
+
+      // যদি লোকালহোস্ট বা ভুল URL থাকে
+      if (!successUrl.startsWith('http')) successUrl = defaultUrl;
+      if (!cancelUrl.startsWith('http')) cancelUrl = defaultUrl;
+      if (!webhookUrl.startsWith('http')) webhookUrl = defaultUrl;
+
+      // NagorikPay Strict Payload (শুধু অনুমোদিত ফিল্ডগুলো পাঠানো হচ্ছে)
       const payload = {
         amount: String(amountVal),
         success_url: successUrl,
         cancel_url: cancelUrl,
         webhook_url: webhookUrl,
-        metadata: body.metadata || {
-          phone: body.cus_phone || "01700000000"
+        metadata: {
+          phone: (body.metadata && body.metadata.phone) ? String(body.metadata.phone) : "01700000000"
         }
       };
-
-      if (body.cus_name) payload.cus_name = body.cus_name;
-      if (body.cus_email) payload.cus_email = body.cus_email;
 
       const response = await fetch(`${BASE_URL}/create`, {
         method: 'POST',
         headers: {
           'API-KEY': API_KEY,
+          'api-key': API_KEY,
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
@@ -62,14 +72,14 @@ export default async function handler(req, res) {
       const data = await response.json();
       return res.status(200).json(data);
 
-    // ২. পেমেন্ট ভেরিফিকেশন (Verify)
+    // ২. পেমেন্ট ভেরিফিকেশন (Verify Payment)
     } else if (action === 'verify') {
       const trxId = body.transaction_id || body.trx_id || body.order_id;
 
       if (!trxId) {
         return res.status(400).json({ 
           status: 'ERROR', 
-          message: 'Transaction ID is required for verification' 
+          message: 'Transaction ID is required' 
         });
       }
 
@@ -77,10 +87,11 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: {
           'API-KEY': API_KEY,
+          'api-key': API_KEY,
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ transaction_id: trxId })
+        body: JSON.stringify({ transaction_id: String(trxId) })
       });
       
       const data = await response.json();

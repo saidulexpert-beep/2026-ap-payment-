@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  // CORS Setup
+  // CORS Headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -12,12 +12,13 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // 🔴 এখানে আপনার NagorikPay মার্চেন্ট ড্যাশবোর্ডের আসল API Key বসান
-  const API_KEY = 'khla1gg0zp2wEHkCzr5j1O8gQpwNyA1Wd7W0Mwck11i5QgnCK5;
+  // 🔴 এখানে আপনার NagorikPay মার্চেন্ট প্যানেলের লাইভ API Key বসান
+  const API_KEY = 'khla1gg0zp2wEHkCzr5j1O8gQpwNyA1Wd7W0Mwck11i5QgnCK5';
   const BASE_URL = 'https://secure-pay.nagorikpay.com/api/payment';
   
   const action = req.query.action;
 
+  // Body Parsing
   let body = req.body;
   if (typeof body === 'string') {
     try {
@@ -31,25 +32,19 @@ export default async function handler(req, res) {
   try {
     // ১. পেমেন্ট তৈরি (Create Payment)
     if (action === 'create') {
-      const amountVal = parseFloat(body.amount) || 10;
+      const amountVal = String(parseInt(body.amount, 10) || 10);
       
-      // ডোমেন URL নিশ্চিতকরণ
-      const host = req.headers.host || 'yourdomain.com';
+      const host = req.headers.host;
       const protocol = req.headers['x-forwarded-proto'] || 'https';
-      const defaultUrl = `${protocol}://${host}`;
+      const siteUrl = `${protocol}://${host}`;
 
-      let successUrl = body.success_url || defaultUrl;
-      let cancelUrl = body.cancel_url || defaultUrl;
-      let webhookUrl = body.webhook_url || defaultUrl;
+      let successUrl = body.success_url || `${siteUrl}?status=success`;
+      let cancelUrl = body.cancel_url || `${siteUrl}?status=cancel`;
+      let webhookUrl = body.webhook_url || `${siteUrl}?status=webhook`;
 
-      // যদি লোকালহোস্ট বা ভুল URL থাকে
-      if (!successUrl.startsWith('http')) successUrl = defaultUrl;
-      if (!cancelUrl.startsWith('http')) cancelUrl = defaultUrl;
-      if (!webhookUrl.startsWith('http')) webhookUrl = defaultUrl;
-
-      // NagorikPay Strict Payload (শুধু অনুমোদিত ফিল্ডগুলো পাঠানো হচ্ছে)
+      // NagorikPay Official Payload Format
       const payload = {
-        amount: String(amountVal),
+        amount: amountVal,
         success_url: successUrl,
         cancel_url: cancelUrl,
         webhook_url: webhookUrl,
@@ -62,15 +57,21 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: {
           'API-KEY': API_KEY,
-          'api-key': API_KEY,
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
         body: JSON.stringify(payload)
       });
       
-      const data = await response.json();
-      return res.status(200).json(data);
+      const rawText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (err) {
+        data = { message: rawText };
+      }
+
+      return res.status(response.status || 200).json(data);
 
     // ২. পেমেন্ট ভেরিফিকেশন (Verify Payment)
     } else if (action === 'verify') {
@@ -87,21 +88,20 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: {
           'API-KEY': API_KEY,
-          'api-key': API_KEY,
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ transaction_id: String(trxId) })
+        body: JSON.stringify({ transaction_id: String(trxId).trim() })
       });
       
       const data = await response.json();
-      return res.status(200).json(data);
+      return res.status(response.status || 200).json(data);
 
     } else {
       return res.status(400).json({ error: 'Invalid Action. Use ?action=create or ?action=verify' });
     }
   } catch (error) {
-    console.error("NagorikPay Gateway Error:", error);
-    return res.status(500).json({ error: error.message || 'Server Connection Error' });
+    console.error("NagorikPay API Error:", error);
+    return res.status(500).json({ error: error.message || 'Server Connection Failed' });
   }
 }

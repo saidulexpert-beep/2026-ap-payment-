@@ -680,42 +680,9 @@
                 </div>
             </div>
 
-            <!-- ADMIN PANEL -->
-            <div id="admin-page" class="p-4 space-y-6 sub-page">
-                <h2 class="text-xl font-bold text-center text-gray-800">Admin Control Center</h2>
-
-                <div class="bg-white p-5 rounded-2xl border border-orange-200 shadow-sm space-y-3">
-                    <div class="flex items-center justify-between border-b pb-2">
-                        <h3 class="font-bold text-sm text-orange-950 flex items-center gap-1.5">
-                            <i data-lucide="clock" class="w-4 h-4 text-orange-600"></i>
-                            ম্যানুয়াল প্রি-অর্ডার ডেলিভারি
-                        </h3>
-                        <span id="admin-manual-order-count" class="bg-orange-100 text-orange-800 text-xs px-2 py-0.5 rounded-full font-bold">0 Pending</span>
-                    </div>
-                    <div id="admin-manual-orders-list" class="space-y-3"></div>
-                </div>
-
-                <div class="bg-white p-5 rounded-2xl border border-gray-200 space-y-4">
-                    <h3 class="font-bold text-sm">Add Items to Stock</h3>
-                    <p class="text-xs text-gray-500">ফরম্যাট: <code>email/pass/token</code></p>
-                    <div>
-                        <select id="mail-type-select" class="w-full p-2.5 rounded-xl input-field text-sm"></select>
-                    </div>
-                    <div>
-                        <textarea id="mail-data-textarea" rows="4" placeholder="One item per line..." class="w-full p-2.5 rounded-xl input-field font-mono text-xs"></textarea>
-                    </div>
-                    <button id="add-mails-btn" class="w-full py-3 rounded-xl btn-buy font-bold text-sm">Add Items to Stock</button>
-                </div>
-
-                <div class="bg-white p-5 rounded-2xl border border-gray-200 space-y-3">
-                    <h3 class="font-bold text-sm text-gray-700">Replace / Refund Requests</h3>
-                    <div id="replace-requests-list" class="space-y-3"></div>
-                </div>
-            </div>
-
         </main>
 
-        <!-- BOTTOM NAVIGATION -->
+        <!-- BOTTOM NAVIGATION (NO ADMIN ITEM) -->
         <nav class="bottom-nav">
             <div class="nav-item active" data-page="home-page" onclick="navigateTo('home-page')">
                 <div class="nav-icon-wrapper flex items-center justify-center">
@@ -752,12 +719,6 @@
                     <i data-lucide="user" class="w-5 h-5"></i>
                 </div>
                 <span>Profile</span>
-            </div>
-            <div class="nav-item hidden" id="admin-nav-item" data-page="admin-page" onclick="navigateTo('admin-page')">
-                <div class="nav-icon-wrapper flex items-center justify-center">
-                    <i data-lucide="shield" class="w-5 h-5"></i>
-                </div>
-                <span>Admin</span>
             </div>
         </nav>
 
@@ -931,7 +892,6 @@
 
     <!-- FIREBASE & CORE LOGIC -->
     <script type="module">
-        const DEFAULT_ADMIN_UID = "6954647230";
         const firebaseConfig = {
             apiKey: "AIzaSyAEV4zkuTcRYIFP2AMmKJTyDUTzSYLnbbM",
             authDomain: "used-mail-shop.firebaseapp.com",
@@ -1011,13 +971,21 @@
             try {
                 window.Telegram.WebApp.ready();
                 window.Telegram.WebApp.expand();
-                currentUserTg = window.Telegram.WebApp.initDataUnsafe.user;
-                if (!currentUserTg) {
-                    currentUserTg = { id: "6954647230", first_name: "User", username: "account" };
-                }
+                currentUserTg = window.Telegram.WebApp.initDataUnsafe?.user;
             } catch (e) {
-                currentUserTg = { id: "6954647230", first_name: "User", username: "account" };
+                currentUserTg = null;
             }
+
+            // যদি টেলিগ্রামের ইউজার পাওয়া না যায়, স্বয়ংক্রিয়ভাবে একটি ইউনিক গেস্ট আইডি তৈরি হবে (অ্যাডমিন আইডি কখনোই পাবে না)
+            if (!currentUserTg || !currentUserTg.id) {
+                let storedGuestId = localStorage.getItem('app_guest_user_id');
+                if (!storedGuestId) {
+                    storedGuestId = String(Math.floor(100000000 + Math.random() * 900000000));
+                    localStorage.setItem('app_guest_user_id', storedGuestId);
+                }
+                currentUserTg = { id: storedGuestId, first_name: "Guest", username: `user_${storedGuestId.slice(-4)}` };
+            }
+
             lucide.createIcons();
             setupEventListeners();
             await initUserSession();
@@ -1041,8 +1009,8 @@
             if (userSnap.exists()) {
                 userData = userSnap.data();
                 await updateDoc(userRef, {
-                    name: `${currentUserTg.first_name || ''} ${currentUserTg.last_name || ''}`.trim(),
-                    photo_url: currentUserTg.photo_url || null,
+                    name: `${currentUserTg.first_name || ''} ${currentUserTg.last_name || ''}`.trim() || userData.name || `User ${tgChatId}`,
+                    photo_url: currentUserTg.photo_url || userData.photo_url || null,
                     lastSeen: serverTimestamp()
                 });
             } else {
@@ -1073,11 +1041,6 @@
 
             await fetchAppConfig();
             await loadUserNotifications();
-
-            const adminId = String(appConfig.adminTelegramId || DEFAULT_ADMIN_UID);
-            if (tgChatId === adminId) {
-                document.getElementById('admin-nav-item')?.classList.remove('hidden');
-            }
 
             updateUI();
             showMainPage('app-container');
@@ -1199,7 +1162,6 @@
                         }
                     }
                 } catch(err) {
-                    console.warn("Telegram Bot Check Error:", err);
                     isMember = true;
                 }
             } else {
@@ -1338,7 +1300,6 @@
             const transactionId = urlParams.get('transaction_id') || urlParams.get('transactionId') || urlParams.get('trx_id') || urlParams.get('txid');
             const urlStatus = (urlParams.get('status') || '').toLowerCase();
 
-            // পেমেন্ট বাতিল হলে পেন্ডিং প্রি-অর্ডার মুছে ফেলা হবে
             if (urlStatus === 'cancel' || urlStatus === 'failed') {
                 localStorage.removeItem('pending_preorder_data');
                 showDepositBanner('পেমেন্ট বাতিল করা হয়েছে। প্রি-অর্ডার বাতিল করা হয়েছে।', 'cancel');
@@ -1368,7 +1329,6 @@
                         if (depositAmount > 0 && userData) {
                             await savePaymentAndUpdateBalance(depositAmount, finalTxid, data);
                             
-                            // ডিপোজিট সফল হলে চেক করা হবে কোনো প্রি-অর্ডার পেন্ডিং ছিল কিনা
                             const pendingOrderRaw = localStorage.getItem('pending_preorder_data');
                             if (pendingOrderRaw) {
                                 try {
@@ -1441,7 +1401,6 @@
             }
         }
 
-        // ডিপোজিট সফল হওয়ার পর প্রি-অর্ডার এক্সিকিউট করার ফাংশন
         async function executePendingPreOrder(orderData) {
             const { product, unitPrice, timeoutMinutes, qty, totalPrice } = orderData;
             const tgChatId = String(userData.tgChatId);
@@ -1486,7 +1445,7 @@
                 navigateTo('history-page');
 
             } catch (e) {
-                showToast(e.message || "প্রি-অর্ডার কনফার্ম হতে সমস্যা হয়েছে。", "error");
+                showToast(e.message || "প্রি-অর্ডার কনফার্ম হতে সমস্যা হয়েছে।", "error");
             }
         }
 
@@ -1599,7 +1558,7 @@
         }
 
         async function notifyAdminViaTelegram(alertMessage) {
-            const adminTgId = appConfig.adminTelegramId || DEFAULT_ADMIN_UID;
+            const adminTgId = appConfig.adminTelegramId || "6954647230";
             await sendTelegramMessage(adminTgId, alertMessage);
         }
 
@@ -1648,8 +1607,7 @@
                 'orders-page': loadOrdersHistory,
                 'features-page': loadFeaturesPage,
                 'history-page': () => { loadManualOrdersHistory(); loadPaymentHistory(); loadReplaceHistory(); },
-                'profile-page': () => { loadProfilePage(); renderTelegramTaskUI(); },
-                'admin-page': () => { loadAdminManualOrders(); populateAdminMailTypes(); loadReplaceRequests(); }
+                'profile-page': () => { loadProfilePage(); renderTelegramTaskUI(); }
             };
 
             if (routes[pageId]) routes[pageId]();
@@ -1958,7 +1916,7 @@
             }
         };
 
-        // --- ORDER NOW (MANUAL PRE-ORDER & AUTO DEPOSIT FLOW) ---
+        // --- ORDER NOW (MANUAL PRE-ORDER FLOW) ---
         window.openManualModal = function(index) {
             try {
                 const item = displayedProductsCache[index];
@@ -1991,7 +1949,6 @@
             const total = activeManualModalData.unitPrice * activeManualModalData.qty;
             document.getElementById('manual-modal-price').textContent = `৳${total.toFixed(2)} (${activeManualModalData.qty} টি)`;
 
-            // ব্যালেন্স পর্যাপ্ত না থাকলে নোটিশ দেখানো হবে
             const notice = document.getElementById('manual-modal-balance-notice');
             if (notice) {
                 if ((userData?.balance || 0) < total) {
@@ -2023,19 +1980,16 @@
             updateManualModalPriceDisplay();
         };
 
-        // ম্যানুয়াল অর্ডার কনফার্মেশন ও ডিপোজিট হ্যান্ডলিং
         window.handleConfirmManualOrder = async function() {
             if (!activeManualModalData) return;
             const { product, unitPrice, timeoutMinutes, qty } = activeManualModalData;
             const totalPrice = unitPrice * qty;
             const userBal = userData?.balance || 0;
 
-            // যদি ব্যালেন্স না থাকে বা কম থাকে -> ডিপোজিটে নিয়ে যাবে
             if (userBal < totalPrice) {
                 const shortage = totalPrice - userBal;
                 const depositNeeded = Math.max(10, Math.ceil(shortage));
 
-                // অর্ডারের তথ্য লোকাল স্টোরেজে সেভ রাখা হচ্ছে
                 localStorage.setItem('pending_preorder_data', JSON.stringify({
                     product,
                     unitPrice,
@@ -2048,13 +2002,11 @@
                 document.getElementById('manual-order-modal').classList.add('hidden');
                 showToast(`পর্যাপ্ত ব্যালেন্স নেই! আরও ৳${depositNeeded} ডিপোজিট করুন`, 'info');
 
-                // ডিপোজিট পেজে নিয়ে গিয়ে অটোমেটিক এমাউন্ট সেট করা হচ্ছে
                 navigateTo('pay-page');
                 setAutoQuickAmount(depositNeeded);
                 return;
             }
 
-            // যদি পর্যাপ্ত ব্যালেন্স থাকে -> সরাসরি অর্ডার কাটা হবে
             const btn = document.getElementById('confirm-manual-order-btn');
             btn.disabled = true;
             btn.textContent = "Processing...";
@@ -2457,166 +2409,6 @@
             renderTelegramTaskUI();
         }
 
-        async function loadAdminManualOrders() {
-            const list = document.getElementById('admin-manual-orders-list');
-            const countBadge = document.getElementById('admin-manual-order-count');
-            if (!list) return;
-
-            list.innerHTML = getLoadingHTML();
-            try {
-                const q = query(collection(db, "manual_orders"), where("status", "==", "pending"));
-                const snap = await getDocs(q);
-
-                if (snap.empty) {
-                    list.innerHTML = '<p class="text-xs text-center text-gray-400 py-3">কোনো পেন্ডিং অর্ডার নেই</p>';
-                    countBadge.textContent = '0 Pending';
-                    return;
-                }
-
-                countBadge.textContent = `${snap.docs.length} Pending`;
-
-                list.innerHTML = snap.docs.map(docSnap => {
-                    const po = docSnap.data();
-                    const poId = docSnap.id;
-                    const expiryMillis = po.expiresAt ? po.expiresAt.toDate().getTime() : 0;
-
-                    return `
-                    <div class="bg-orange-50/70 p-3.5 rounded-2xl border border-orange-200 space-y-2 text-xs">
-                        <div class="flex justify-between items-center font-bold">
-                            <span class="text-gray-800">${po.mailType} ${po.quantity ? `(${po.quantity} টি)` : ''} - ৳${po.cost}</span>
-                            <span class="live-order-countdown bg-orange-200/80 px-2 py-0.5 rounded-md" data-order-id="${poId}" data-expiry-time="${expiryMillis}">Calculating...</span>
-                        </div>
-                        <p class="text-gray-600 text-[11px]">User: <b>${po.userName}</b> (TG ID: <code>${po.userId}</code>)</p>
-                        
-                        <div class="space-y-1.5 pt-1">
-                            <input id="admin-manual-data-${poId}" type="text" placeholder="Email / IP / Account Info" class="w-full p-2 rounded-xl input-field text-xs">
-                            <input id="admin-manual-pass-${poId}" type="text" placeholder="Password / Key (Optional)" class="w-full p-2 rounded-xl input-field text-xs">
-                        </div>
-
-                        <div class="flex justify-end gap-2 pt-1">
-                            <button onclick="handleAdminCancelManualOrder('${poId}', '${po.userId}', ${po.cost}, '${po.mailType}')" class="bg-red-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs">Reject & Refund</button>
-                            <button onclick="handleAdminApproveManualOrder('${poId}', '${po.userId}', ${po.cost}, '${po.mailType}')" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
-                                <i data-lucide="send" class="w-3.5 h-3.5"></i> Deliver via Bot
-                            </button>
-                        </div>
-                    </div>`;
-                }).join('');
-                lucide.createIcons();
-            } catch (e) {
-                list.innerHTML = `<p class="text-xs text-red-500">${e.message}</p>`;
-            }
-        }
-
-        window.handleAdminApproveManualOrder = async function(orderId, userId, cost, mailType) {
-            const accData = document.getElementById(`admin-manual-data-${orderId}`)?.value.trim();
-            const accPass = document.getElementById(`admin-manual-pass-${orderId}`)?.value.trim() || '';
-
-            if (!accData) return showToast("অ্যাকাউন্টের ডাটা/ইমেইল লিখুন", "error");
-
-            try {
-                await runTransaction(db, async (t) => {
-                    const moRef = doc(db, "manual_orders", orderId);
-                    const counterRef = doc(db, "counters", "item_purchase");
-                    const counterSnap = await t.get(counterRef);
-                    const saleId = counterSnap.exists() ? counterSnap.data().currentId : 1000;
-
-                    t.update(moRef, { status: "approved", deliveredData: accData, deliveredPass: accPass, fulfilledAt: serverTimestamp() });
-
-                    const purchaseRef = doc(collection(db, "purchases"));
-                    t.set(purchaseRef, {
-                        saleId: saleId,
-                        userId: String(userId),
-                        mailType: mailType,
-                        category: "manual_order",
-                        cost: parseFloat(cost),
-                        purchasedAt: serverTimestamp(),
-                        mail: accData,
-                        password: accPass || null
-                    });
-                    t.set(counterRef, { currentId: saleId + 1 }, { merge: true });
-                });
-
-                const botMsg = `🎉 <b>আপনার অর্ডার সফলভাবে ডেলিভারি হয়েছে!</b>\n\n📦 <b>সার্ভিস:</b> ${mailType}\n💰 <b>মূল্য:</b> ৳${cost}\n\n🔑 <b>অ্যাকাউন্ট ডাটা:</b>\n<code>${accData}</code>\n${accPass ? `🔒 <b>পাসওয়ার্ড:</b> <code>${accPass}</code>\n` : ''}`;
-                await sendTelegramMessage(userId, botMsg);
-
-                showToast("অর্ডার ডেলিভারি সফল হয়েছে!", "success");
-                loadAdminManualOrders();
-            } catch(e) {
-                showToast(e.message || "ডেলিভারি করতে সমস্যা হয়েছে।", "error");
-            }
-        };
-
-        window.handleAdminCancelManualOrder = async function(orderId, userId, cost, mailType) {
-            try {
-                await runTransaction(db, async (t) => {
-                    const moRef = doc(db, "manual_orders", orderId);
-                    const userRef = doc(db, "users", String(userId));
-                    t.update(moRef, { status: "cancelled_refunded", refundedAt: serverTimestamp() });
-                    t.update(userRef, { balance: increment(parseFloat(cost)) });
-                });
-
-                showToast("অর্ডার বাতিল ও রিফান্ড সম্পন্ন!", "info");
-                loadAdminManualOrders();
-            } catch(e) {
-                showToast(e.message, "error");
-            }
-        };
-
-        function populateAdminMailTypes() {
-            const selectEl = document.getElementById('mail-type-select');
-            selectEl.innerHTML = '<option value="">Select service to add stock...</option>';
-            [...(appConfig.mails || []), ...(appConfig.proxies || []), ...(appConfig.products || [])].forEach(item => {
-                selectEl.innerHTML += `<option value="${item.stockKey}">${item.type}</option>`;
-            });
-        }
-
-        async function handleAddMails() {
-            const stockKey = document.getElementById('mail-type-select').value;
-            const text = document.getElementById('mail-data-textarea').value.trim();
-            if (!stockKey || !text) return showToast("সব ঘর পূরণ করুন", "error");
-
-            const lines = text.split('\n').filter(l => l.trim().length > 0);
-            try {
-                const batch = writeBatch(db);
-                lines.forEach(line => {
-                    const parts = line.split('/');
-                    const itemDoc = doc(collection(db, stockKey));
-                    batch.set(itemDoc, {
-                        email: parts[0] || line,
-                        password: parts[1] || null,
-                        isSold: false,
-                        createdAt: serverTimestamp()
-                    });
-                });
-                await batch.commit();
-                showToast(`সফলভাবে ${lines.length} টি আইটেম যোগ হয়েছে!`, "success");
-                document.getElementById('mail-data-textarea').value = '';
-            } catch(e) {
-                showToast("যোগ করতে সমস্যা হয়েছে।", "error");
-            }
-        }
-
-        async function loadReplaceRequests() {
-            const listEl = document.getElementById('replace-requests-list');
-            if (!listEl) return;
-            try {
-                const q = query(collection(db, "replace_requests"), where("status", "==", "pending"));
-                const snap = await getDocs(q);
-                if (snap.empty) return listEl.innerHTML = '<p class="text-xs text-center text-gray-400">No pending reports</p>';
-                listEl.innerHTML = snap.docs.map(docSnap => {
-                    const req = docSnap.data();
-                    return `
-                    <div class="bg-white p-3.5 rounded-xl border space-y-2 text-xs">
-                        <div class="flex justify-between font-bold">
-                            <span>${req.userName} (${req.userId})</span>
-                            <span class="text-blue-600">৳${req.cost}</span>
-                        </div>
-                        <p class="text-gray-600">${req.mailType}: ${req.reason}</p>
-                    </div>`;
-                }).join('');
-            } catch(e) {}
-        }
-
         window.openReplaceModal = function(saleId, mailType, cost) {
             document.getElementById('replace-order-id').value = saleId;
             document.getElementById('replace-mail-type').value = mailType;
@@ -2692,7 +2484,6 @@
             document.getElementById('features-receive-btn').addEventListener('click', () => {
                 copyToClipboard(userData.tgChatId, null, `রিসিভ আইডি কপি হয়েছে: ${userData.tgChatId}`);
             });
-            document.getElementById('add-mails-btn').addEventListener('click', handleAddMails);
         }
     </script>
 </body>
